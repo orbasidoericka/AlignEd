@@ -9,7 +9,8 @@
     "lint": "npm -w apps/web run lint",
     "typecheck": "npm -w apps/web run typecheck",
     "supabase:init": "npx supabase@latest init",
-    "supabase:link": "npx supabase@latest link"
+    "supabase:link": "npx supabase@latest link",
+    "seed:build": "node scripts/build-seed.mjs"
   },
   "keywords": [],
   "author": "",

@@ -1,0 +1,72 @@
+"use client";
+
+import { motion, type MotionStyle, type Transition } from "framer-motion";
+
+import { cn } from "@/lib/utils";
+
+// Vendored from MagicUI (magicui.design/docs/components/border-beam).
+// Adapted: framer-motion imports; default beam colors pulled from the
+// AlignEd palette (amber accent -> teal brand).
+interface BorderBeamProps {
+  size?: number;
+  duration?: number;
+  delay?: number;
+  colorFrom?: string;
+  colorTo?: string;
+  transition?: Transition;
+  className?: string;
+  style?: React.CSSProperties;
+  reverse?: boolean;
+  initialOffset?: number;
+  borderWidth?: number;
+}
+
+export function BorderBeam({
+  className,
+  size = 50,
+  delay = 0,
+  duration = 6,
+  colorFrom = "#f59e0b",
+  colorTo = "#14b8a6",
+  transition,
+  style,
+  reverse = false,
+  initialOffset = 0,
+  borderWidth = 1,
+}: BorderBeamProps) {
+  return (
+    <div
+      className="pointer-events-none absolute inset-0 rounded-[inherit] border-transparent [mask-clip:padding-box,border-box] mask-intersect mask-[linear-gradient(transparent,transparent),linear-gradient(#000,#000)]"
+      style={{ borderWidth, borderStyle: "solid" }}
+    >
+      <motion.div
+        className={cn(
+          "absolute aspect-square bg-linear-to-l from-(--color-from) via-(--color-to) to-transparent",
+          className,
+        )}
+        style={
+          {
+            width: size,
+            offsetPath: `rect(0 auto auto 0 round ${size}px)`,
+            "--color-from": colorFrom,
+            "--color-to": colorTo,
+            ...style,
+          } as unknown as MotionStyle
+        }
+        initial={{ offsetDistance: `${initialOffset}%` }}
+        animate={{
+          offsetDistance: reverse
+            ? [`${100 - initialOffset}%`, `${-initialOffset}%`]
+            : [`${initialOffset}%`, `${100 + initialOffset}%`],
+        }}
+        transition={{
+          repeat: Infinity,
+          ease: "linear",
+          duration,
+          delay: -delay,
+          ...transition,
+        }}
+      />
+    </div>
+  );
+}
