@@ -1,0 +1,24 @@
+---
+description: Security, privacy, and secrets handling for AlignEd
+alwaysApply: true
+---
+
+# Security and Privacy
+
+- AlignEd is anonymous by design: no accounts, no authentication, no PII at
+  rest. Never add a column, log line, or analytics event that could identify
+  a student. The optional school field is display data only, never an
+  aggregation or identification key.
+- Psychometric results + email = sensitive personal information under the
+  Data Privacy Act of 2012 (RA 10173). The email path is send-and-discard:
+  raw addresses are never persisted; only a salted hash is stored for rate
+  limiting. Email sending requires an explicit consent checkbox with DPA copy.
+- Secrets: only NEXT_PUBLIC_* may reach the browser. The service-role key and
+  the Resend key live only in Edge Function env, never hardcoded or logged.
+- Enforce access rules in the database via RLS: public read on reference
+  tables, insert-only (no read-back) on `assessments`.
+- Sanitize and validate input on server and client; never trust client data.
+- Rate-limit the Edge Function (per IP + per hashed email) and keep the
+  honeypot; mitigate XSS via strict security headers (CSP, X-Frame-Options,
+  X-Content-Type-Options) injected in `proxy.ts`.
+- Least privilege everywhere; never expose data that a view does not need.

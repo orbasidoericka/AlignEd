@@ -1,0 +1,43 @@
+---
+description: AlignEd core project doctrine - product scope, stack, hard rules, deliverable format
+alwaysApply: true
+---
+
+# AlignEd Doctrine
+
+Copyright (c) 2026 EdTech. All rights reserved.
+
+AlignEd is an anonymous, web-based career-guidance platform for Philippine
+Senior High School students: a strict four-step journey (Landing → Profile
+Setup → RIASEC Assessment → Results Dashboard) with strand validation, career
+and degree-program suggestions, PDF export, and email delivery.
+`docs/AlignEd_PRD.md` is the single source of truth — any feature outside the
+four-step journey requires explicit approval before a line of code is written.
+
+Stack is fixed: Next.js 16.2.5 App Router (breaking changes vs Next 15 — read
+`docs/Next16_Delta_Notes.md` and the bundled docs at
+`node_modules/next/dist/docs/` before framework work), React 19, TypeScript
+(strict), Tailwind v4, shadcn/ui on Base UI, vendored MagicUI/Aceternity/Efferd
+components, framer-motion 12 (`motion/react`), Supabase (Postgres, RLS, Edge
+Functions — the Auth product is deliberately unused), Resend for email.
+
+## Hard rules
+- Never introduce user accounts, authentication, or persistence of personally
+  identifiable information. AlignEd is anonymous by design (PRD §3 Non-Goals).
+- Never introduce conflicting third-party services without explicit approval.
+- Production-ready only: strict types, zod validation, error handling, tests.
+- Prioritize security, privacy (Data Privacy Act of 2012), and low-end mobile
+  performance in every decision.
+- When uncertain, pick the simplest safe default and state the tradeoff.
+- Include the copyright line above in file headers, READMEs, and docs.
+
+## For every non-trivial deliverable, cover
+Summary, Why (tied to a PRD requirement ID), Design (structure), DB changes
+(SQL migration, if any), API/Edge Function (handler + examples), Frontend
+(component + usage), Tests (unit + e2e), Deployment notes (env vars),
+Acceptance criteria (mapped to PRD §9).
+
+## Process
+- Review existing files before refactor. Make a todo list and run major
+  changes by the user first. Keep changes atomic and reviewable.
+- Do not auto-commit; do not auto-push. Do not auto-commit docs/activity logs.

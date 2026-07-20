@@ -1,0 +1,28 @@
+---
+description: Testing and CI conventions for AlignEd
+globs: apps/web/src/**/*.test.{ts,tsx},apps/web/tests/**,apps/web/vitest.config.ts,apps/web/playwright.config.ts,.github/workflows/**
+alwaysApply: false
+---
+
+# Testing and CI
+
+- Every new feature ships with at least one unit test (Vitest + Testing
+  Library) and, when it touches the journey, a Playwright e2e for the happy
+  path. Vitest config: `apps/web/vitest.config.ts`.
+- Highest-value unit targets (coverage ~90% on `src/lib/riasec/`): scoring
+  determinism (property-based — every answer set yields a valid 3-letter
+  code; ties resolve R→I→A→S→E→C), the strand-validation matrix (all 7
+  strands × verdicts, GAS special case), and the store's re-answer
+  subtraction logic.
+- RPC contract tests run `supabase start` against real migrations + seed and
+  assert `match_courses` ranking semantics, so SQL and TypeScript never drift.
+- E2E journeys: land → profile → full quiz → results → export/email (Resend
+  mocked); mid-quiz refresh → resume; route guards and invalid-email paths.
+- Visual regression: Playwright `toHaveScreenshot` on key pages, light + dark,
+  under `reducedMotion: 'reduce'` emulation; snapshots compared on Linux CI
+  only.
+- Lighthouse CI gate ≥ 90 (Performance/Accessibility/SEO, mobile emulation)
+  on every PR.
+- Use fixtures and the generated `supabase/seed.sql` for reproducible data.
+- CI (GitHub Actions) runs typecheck, lint, unit tests, and build on every PR.
+- Name tests by behavior, not implementation.

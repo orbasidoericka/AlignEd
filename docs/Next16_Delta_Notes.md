@@ -21,7 +21,7 @@
    ISR/`export const revalidate` model still works while `cacheComponents` is
    off** (docs call it the "previous model": guide at
    `01-app/02-guides/caching-without-cache-components`).
-   - **Decision for Phase 3 (directory/course pages):** prefer enabling
+   - **Decision for Phase 3 (results reference-data fetchers):** prefer enabling
      `cacheComponents` and using `'use cache'` + `cacheLife('days')` +
      `cacheTag('reference-data')` on the Supabase reference-data fetchers —
      it is the forward model and gives us tag-based invalidation when seed

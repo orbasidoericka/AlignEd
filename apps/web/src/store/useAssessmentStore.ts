@@ -3,6 +3,9 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
+import { QUESTIONS } from "@/lib/riasec/questions";
+import type { GradeLevel, Strand } from "@/lib/riasec/types";
+
 export type RiasecTrait =
   | "realistic"
   | "investigative"
@@ -18,11 +21,18 @@ export interface AssessmentAnswer {
   value: number;
 }
 
+export interface ProfileState {
+  gradeLevel: GradeLevel | null;
+  strand: Strand | null;
+  school: string;
+}
+
 interface AssessmentState {
   currentStep: number;
   totalQuestions: number;
   answers: Record<string, AssessmentAnswer>;
   scores: RiasecScores;
+  profile: ProfileState;
   lastUpdated: string | null;
 }
 
@@ -30,6 +40,8 @@ interface AssessmentActions {
   setTotalQuestions: (total: number) => void;
   setCurrentStep: (step: number) => void;
   setAnswer: (questionId: string, answer: AssessmentAnswer) => void;
+  setProfile: (patch: Partial<ProfileState>) => void;
+  resetAnswers: () => void;
   reset: () => void;
 }
 
@@ -44,6 +56,12 @@ const emptyScores: RiasecScores = {
   conventional: 0,
 };
 
+const emptyProfile: ProfileState = {
+  gradeLevel: null,
+  strand: null,
+  school: "",
+};
+
 // Persist locally so quiz progress survives refresh before syncing.
 export const useAssessmentStore = create<AssessmentStore>()(
   persist(
@@ -52,6 +70,7 @@ export const useAssessmentStore = create<AssessmentStore>()(
       totalQuestions: 0,
       answers: {},
       scores: { ...emptyScores },
+      profile: { ...emptyProfile },
       lastUpdated: null,
       setTotalQuestions: (total) => set({ totalQuestions: total }),
       setCurrentStep: (step) => set({ currentStep: step }),
@@ -75,26 +94,60 @@ export const useAssessmentStore = create<AssessmentStore>()(
             lastUpdated: new Date().toISOString(),
           };
         }),
+      setProfile: (patch) =>
+        set((state) => ({
+          profile: { ...state.profile, ...patch },
+          lastUpdated: new Date().toISOString(),
+        })),
+      // Retake keeps the profile (PRD FR-3.6): only answers and scores clear.
+      resetAnswers: () =>
+        set({
+          currentStep: 0,
+          answers: {},
+          scores: { ...emptyScores },
+          lastUpdated: new Date().toISOString(),
+        }),
       reset: () =>
         set({
           currentStep: 0,
           totalQuestions: 0,
           answers: {},
           scores: { ...emptyScores },
+          profile: { ...emptyProfile },
           lastUpdated: null,
         }),
     }),
     {
       name: "aligned.assessment.v1",
-      version: 1,
+      version: 2,
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         currentStep: state.currentStep,
         totalQuestions: state.totalQuestions,
         answers: state.answers,
         scores: state.scores,
+        profile: state.profile,
         lastUpdated: state.lastUpdated,
       }),
+      migrate: (persisted, version) => {
+        // v1 payloads predate the profile step; inject an empty profile.
+        if (version < 2) {
+          return {
+            ...(persisted as Omit<AssessmentState, "profile">),
+            profile: { ...emptyProfile },
+          };
+        }
+        return persisted as AssessmentState;
+      },
     },
   ),
 );
+
+export const selectIsProfileComplete = (state: {
+  profile: ProfileState;
+}): boolean =>
+  state.profile.gradeLevel !== null && state.profile.strand !== null;
+
+export const selectIsAssessmentComplete = (state: {
+  answers: Record<string, AssessmentAnswer>;
+}): boolean => Object.keys(state.answers).length >= QUESTIONS.length;

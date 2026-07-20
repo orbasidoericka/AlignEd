@@ -1,0 +1,27 @@
+---
+description: Next.js 16 App Router and strict TypeScript conventions for AlignEd
+globs: apps/web/src/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Next.js 16 + TypeScript
+
+- This repo runs Next.js 16.2.5 — it has breaking changes versus the Next 15
+  in most training data and tutorials. Before writing framework code, check
+  `docs/Next16_Delta_Notes.md` and the bundled docs at
+  `node_modules/next/dist/docs/`.
+- Middleware is now Proxy: the file is `proxy.ts` exporting `proxy`. When any
+  guide says "add middleware", write `proxy.ts`.
+- Caching: prefer the Cache Components model (`'use cache'` + `cacheLife` +
+  `cacheTag`) for reference-data fetchers; classic ISR
+  (`export const revalidate`) works only while `cacheComponents` is off.
+- App Router only. Server Components by default; add "use client" only when
+  interactivity is required.
+- Strict TS: no any, no non-null assertions to silence errors. Explicit return
+  types on exported functions.
+- Validate all external input with zod at the boundary (server AND client).
+- Consistent API shape: return { data, error, meta } with explicit error types.
+- Core domain logic (scoring, strand validation) lives in pure modules under
+  `src/lib/riasec/` — deterministic, side-effect-free, exhaustively unit
+  tested. UI never re-implements or hard-codes their rules.
+- Comments: one sentence, no emojis, only for non-obvious intent.

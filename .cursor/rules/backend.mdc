@@ -1,0 +1,30 @@
+---
+description: Backend conventions for AlignEd - route handlers, Supabase server-side access, Edge Functions, API contracts
+globs: apps/web/src/app/**/route.ts,apps/web/src/lib/**/*.ts,supabase/**
+alwaysApply: false
+---
+
+# Backend
+
+- AlignEd is anonymous: there are exactly two write paths — the insert-only
+  anonymous `assessments` row on quiz completion, and the `send-results`
+  Supabase Edge Function (Resend email). Do not add others without PRD change.
+- Validate every input with zod at the boundary before any DB call.
+- Return the canonical shape: { data, error, meta }. On failure set data null
+  and error { code, message }; never leak stack traces or secrets.
+- Reference data (courses, careers) is public-read via the anon client and
+  rendered on the server; program ranking goes through the `match_courses`
+  RPC — never re-implement its logic in TypeScript.
+- The service-role key exists only inside Edge Functions; it must never appear
+  in Next.js code, client or server.
+- Enforce access rules in the database via RLS (public read on reference
+  tables, insert-only on `assessments`, no read-back); treat server checks as
+  defense in depth, not the only gate.
+- Wrap DB and network calls in try/catch with explicit error types; log with
+  context, never raw emails or secrets.
+- The email path is send-and-discard: raw addresses are never persisted — only
+  a salted hash for rate limiting. Rate-limit per IP and per hashed email;
+  keep the honeypot check.
+- Completion-insert failures must never block results (they render
+  client-side); retry the insert in the background.
+- Keep handlers small; push reusable logic into `src/lib/` helpers.

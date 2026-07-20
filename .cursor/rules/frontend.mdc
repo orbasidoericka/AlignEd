@@ -1,0 +1,35 @@
+---
+description: Frontend conventions for AlignEd - React components, shadcn/ui on Base UI, Tailwind v4, motion, accessibility
+globs: apps/web/src/**/*.tsx
+alwaysApply: false
+---
+
+# Frontend
+
+- Server Components by default; add "use client" only for interactivity
+  (forms, state, effects, event handlers) at the lowest leaf possible.
+- Build UI from the vendored component set: shadcn/ui (on Base UI, not Radix)
+  for every foundational control; MagicUI for micro-interactions; Aceternity
+  for visual identity moments; Efferd for page-level blocks. They live in
+  `src/components/{ui,magic,aceternity,blocks}` — edit locally, never add a
+  runtime dependency on their upstream packages.
+- Tailwind v4: design tokens and keyframes live in `@theme` inside
+  `globals.css`. There is no `tailwind.config.ts` — do not create one. Use v4
+  class spellings (e.g. `bg-linear-to-br`).
+- Every animated component consumes the global `useReducedMotion` gate;
+  `prefers-reduced-motion` must remove all nonessential motion with zero
+  content loss. Motion via `motion/react` behind the root `LazyMotion`
+  provider; animate on viewport entry, never on mount.
+- State: Zustand is scoped to the profile + assessment session store
+  (`src/store/useAssessmentStore.ts`, localStorage-persisted). Server data is
+  never mirrored into client state.
+- Keep components small, composable, and typed; props via explicit interfaces,
+  no any.
+- Validate form input on the client with the same zod schema used server-side.
+- Accessibility: semantic elements, labeled inputs, aria-invalid on errors,
+  logical focus order, visible focus ring, contrast in light and dark themes.
+  The full journey must be keyboard-completable.
+- Responsive: mobile-first for budget Android (360 px up); primary actions in
+  the thumb zone; verify sm, md, lg breakpoints.
+- Show loading, empty, and error states for every async view.
+- Never place secrets in client code; only NEXT_PUBLIC_* values are available.

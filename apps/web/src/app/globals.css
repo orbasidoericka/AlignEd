@@ -1,6 +1,5 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "shadcn/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -13,7 +12,32 @@
   --color-accent-strong-foreground: oklch(var(--accent-strong-foreground));
   --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);
-  --font-heading: var(--font-sans);
+  --font-heading: var(--font-heading);
+
+  /* Friendlier reading sizes for a young mobile audience. */
+  --text-sm: 0.9375rem;
+  --text-sm--line-height: 1.45rem;
+  --text-base: 1.0625rem;
+  --text-base--line-height: 1.65rem;
+  --text-lg: 1.1875rem;
+  --text-lg--line-height: 1.8rem;
+
+  /* Journey stage accents: base = fills/chips, strong = text-safe on light
+     surfaces, soft = background wash only, foreground = text on base fills. */
+  --color-stage-profile: var(--stage-profile);
+  --color-stage-profile-strong: var(--stage-profile-strong);
+  --color-stage-profile-soft: var(--stage-profile-soft);
+  --color-stage-profile-foreground: var(--stage-profile-foreground);
+  --color-stage-assessment: var(--stage-assessment);
+  --color-stage-assessment-strong: var(--stage-assessment-strong);
+  --color-stage-assessment-soft: var(--stage-assessment-soft);
+  --color-stage-assessment-foreground: var(--stage-assessment-foreground);
+  --color-stage-results: var(--stage-results);
+  --color-stage-results-strong: var(--stage-results-strong);
+  --color-stage-results-soft: var(--stage-results-soft);
+  --color-stage-results-foreground: var(--stage-results-foreground);
+  --color-positive: var(--positive);
+  --color-positive-soft: var(--positive-soft);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -50,50 +74,6 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
-
-  /* Animations for vendored MagicUI / Aceternity components */
-  --animate-shiny-text: shiny-text 8s infinite;
-  --animate-shimmer-slide: shimmer-slide var(--speed) ease-in-out infinite alternate;
-  --animate-spin-around: spin-around calc(var(--speed) * 2) infinite linear;
-  --animate-scroll: scroll var(--animation-duration, 40s) var(--animation-direction, forwards) linear infinite;
-
-  @keyframes shiny-text {
-    0%,
-    90%,
-    100% {
-      background-position: calc(-100% - var(--shiny-width)) 0;
-    }
-    30%,
-    60% {
-      background-position: calc(100% + var(--shiny-width)) 0;
-    }
-  }
-  @keyframes shimmer-slide {
-    to {
-      transform: translate(calc(100cqw - 100%), 0);
-    }
-  }
-  @keyframes spin-around {
-    0% {
-      transform: translateZ(0) rotate(0);
-    }
-    15%,
-    35% {
-      transform: translateZ(0) rotate(90deg);
-    }
-    65%,
-    85% {
-      transform: translateZ(0) rotate(270deg);
-    }
-    100% {
-      transform: translateZ(0) rotate(360deg);
-    }
-  }
-  @keyframes scroll {
-    to {
-      transform: translate(calc(-50% - 0.5rem));
-    }
-  }
 }
 
 :root {
@@ -125,6 +105,20 @@
   --accent-strong: 0.78 0.16 80;
   --accent-strong-foreground: 0.22 0.04 70;
   --radius: 0.75rem;
+  --stage-profile: oklch(0.78 0.14 70);
+  --stage-profile-strong: oklch(0.5 0.12 60);
+  --stage-profile-soft: oklch(0.965 0.03 85);
+  --stage-profile-foreground: oklch(0.25 0.06 60);
+  --stage-assessment: oklch(0.62 0.12 240);
+  --stage-assessment-strong: oklch(0.45 0.11 245);
+  --stage-assessment-soft: oklch(0.96 0.02 235);
+  --stage-assessment-foreground: oklch(0.99 0.005 240);
+  --stage-results: oklch(0.64 0.16 15);
+  --stage-results-strong: oklch(0.48 0.16 15);
+  --stage-results-soft: oklch(0.965 0.02 10);
+  --stage-results-foreground: oklch(0.99 0.005 10);
+  --positive: oklch(0.5 0.12 155);
+  --positive-soft: oklch(0.96 0.04 155);
   --sidebar: oklch(0.98 0.01 210);
   --sidebar-foreground: oklch(0.2 0.03 230);
   --sidebar-primary: oklch(0.62 0.14 200);
@@ -163,6 +157,20 @@
   --brand-foreground: 0.18 0.02 240;
   --accent-strong: 0.74 0.16 85;
   --accent-strong-foreground: 0.18 0.04 70;
+  --stage-profile: oklch(0.8 0.13 75);
+  --stage-profile-strong: oklch(0.84 0.11 80);
+  --stage-profile-soft: oklch(0.24 0.03 70);
+  --stage-profile-foreground: oklch(0.24 0.05 70);
+  --stage-assessment: oklch(0.72 0.11 240);
+  --stage-assessment-strong: oklch(0.8 0.09 240);
+  --stage-assessment-soft: oklch(0.23 0.03 240);
+  --stage-assessment-foreground: oklch(0.18 0.03 240);
+  --stage-results: oklch(0.72 0.14 15);
+  --stage-results-strong: oklch(0.82 0.11 15);
+  --stage-results-soft: oklch(0.24 0.03 15);
+  --stage-results-foreground: oklch(0.2 0.04 15);
+  --positive: oklch(0.76 0.12 155);
+  --positive-soft: oklch(0.26 0.04 155);
   --sidebar: oklch(0.2 0.02 240);
   --sidebar-foreground: oklch(0.98 0.01 210);
   --sidebar-primary: oklch(0.72 0.12 200);
@@ -182,6 +190,37 @@
   }
   html {
     @apply font-sans;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-heading;
+    text-wrap: balance;
+  }
+}
+
+/* Print: the results page doubles as the PDF export (PRD FR-8). Single
+   column, grayscale-legible, no interactive chrome. */
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  header,
+  footer,
+  nav,
+  [data-print-hidden] {
+    display: none !important;
+  }
+  main {
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
+  * {
+    box-shadow: none !important;
+    animation: none !important;
+    transition: none !important;
   }
 }
 

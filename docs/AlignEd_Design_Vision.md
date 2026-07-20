@@ -1,7 +1,8 @@
 # AlignEd Design Vision — "Liwanag"
 
-> Creative blueprint for the full user journey. Feeds Phases 2–4 of the
-> Implementation Plan. Status: proposed, pre-implementation.
+> Creative blueprint for the four-step journey defined in `docs/AlignEd_PRD.md`
+> (Landing → Profile → Assessment → Results). Feeds Phases 2–4 of the
+> Implementation Plan. If this document and the PRD conflict, the PRD wins.
 
 ## 1. The Vision
 
@@ -20,9 +21,7 @@ tokens are literally dawn colors — we lean in).
 - **Soft glassmorphism** — already in the floating pill nav; extended to
   overlays and the mobile dock. Feels modern without heavy GPU cost.
 - **Ambient spatial depth** — dot grids (Hero Highlight), mouse-reactive
-  glow, 3D card tilt on the top recommendation. Depth = importance.
-- **Narrative scrolling** — the Future Self reads like a story, not a data
-  sheet (Tracing Beam + typewriter).
+  glow, 3D card tilt on the top program recommendation. Depth = importance.
 - **Gamified progress without points** — progress rings, milestone moments,
   a constellation that fills in as you answer. Progress you can *feel*,
   no leaderboards (this is self-discovery, not competition).
@@ -32,9 +31,9 @@ tokens are literally dawn colors — we lean in).
 **The one rule:** every animation must survive two tests — does it run on a
 ₱6,000 Android phone, and does the page still make sense with it turned off?
 
-## 2. Navigation Reinvention — "The nav is a compass, not a menu"
+## 2. Navigation — "The nav is a compass, not a menu"
 
-Four moves, ordered by impact:
+Three moves, ordered by impact:
 
 ### 2.1 Journey-aware navigation (the big idea)
 The nav reflects *where the student is in their journey*, powered by the
@@ -48,34 +47,41 @@ assessment store (localStorage — works anonymously):
 - Post-completion, the home hero CTA swaps from "Start the assessment" to
   "View your results" — the site converses with returning students.
 
-### 2.2 Mobile bottom dock (app-like, thumb-first)
-Our users are 90% mobile. Top-pill nav stays for brand/orientation, but the
-primary journey moves to a **floating bottom dock** (MagicUI `Dock`,
-glassmorphic): Home · Assessment · Results · Universities. Thumb-zone
-ergonomics, app-like feel, zero app-store friction. The hamburger Sheet
-remains only for secondary links (About, Privacy, Counselors).
+### 2.2 Mobile-first, thumb-first
+Our users are 90% mobile. The top pill nav stays for brand/orientation; the
+journey itself is linear, so primary navigation is the journey's own
+forward CTAs — always in the thumb zone. The hamburger `Sheet` holds only
+secondary links (About, Privacy).
 
-### 2.3 Universal search (⌘K / dock search)
-shadcn `Command` palette over our static dataset (courses, careers,
-universities — all seeded, all client-searchable): "type 'nursing' from any
-page → course, careers, 6 universities, tuition bands." Frictionless
-discovery, zero backend cost. Desktop: ⌘K + header icon. Mobile: dock button.
-
-### 2.4 Focus Mode for the assessment
-During the quiz, global chrome disappears (no header links, no footer, no
-dock) — replaced by a minimal bar: logo, progress, save state ("Saved ✓").
-One decision per screen. Exit attempts get a shadcn `AlertDialog` reassuring
-progress is saved. Fewer exits = the PRD's #1 risk (abandonment) addressed
-by architecture, not nagging.
+### 2.3 Focus Mode for profile + assessment
+From Profile Setup through quiz completion, global chrome disappears (no
+header links, no footer) — replaced by a minimal bar: logo, progress, save
+state ("Saved ✓"). One decision per screen. Exit attempts get a shadcn
+`AlertDialog` reassuring progress is saved. Fewer exits = the PRD's #1 risk
+(abandonment) addressed by architecture, not nagging.
 
 ## 3. Component-Mapped Wireframes (page by page)
 
-### Home (evolve, don't rebuild)
+### Landing (evolve, don't rebuild)
 Keep: Hero Highlight, bento, testimonial marquee, CTA banner.
-Add: **Aceternity Sticky Scroll Reveal** "How it works" (3 chapters:
-Discover yourself → See your matches → Walk your future); **MagicUI
-Marquee** strip of partner-university wordmarks under the hero stats;
-journey-aware hero CTA (2.1).
+Add: **Aceternity Sticky Scroll Reveal** "How it works" (4 chapters:
+Tell us where you are → Discover yourself → See your alignment → Walk out
+with a plan); journey-aware hero CTA (2.1); duration promise ("~8 minutes")
+under the CTA.
+
+### Profile Setup — the doorway (new step, before the quiz)
+Runs inside the Focus Mode shell so the transition into the assessment feels
+like one continuous corridor, not a form then a quiz.
+- **Grade level:** two large tappable cards (shadcn `RadioGroup` restyled) —
+  "Grade 11" / "Grade 12". Nothing else.
+- **SHS Strand:** the seven strands as generous option cards (shadcn
+  `ToggleGroup` single-select or `Select` on narrow screens), each with a
+  five-word descriptor. A `Tooltip` explains *why we ask*: "We'll check how
+  your strand matches your results."
+- **School (optional):** single shadcn `Input`, character counter at 120,
+  clearly labeled optional — visually quieter than the two required fields.
+- Continue button disabled until grade + strand are set; missing fields
+  indicated inline, never with an error modal.
 
 ### Assessment — "Focus Mode"
 - Shell: minimal top bar (shadcn `Progress` + step count), trait
@@ -90,67 +96,55 @@ journey-aware hero CTA (2.1).
 - Completion: MagicUI `Confetti` (one burst, respects reduced motion) →
   results.
 
-### Results Reveal — the payoff (staged, cinematic, skippable)
+### Results Dashboard — the payoff (staged, cinematic, skippable)
 1. **The moment:** full-viewport reveal — MagicUI `SparklesText` renders the
    Holland code ("You're an S-I-A"), `AnimatedGradientText` names it
    ("The Compassionate Investigator").
 2. **The evidence:** shadcn `Chart` radar (six traits) inside Aceternity
-   `CardSpotlight`.
-3. **The matches:** #1 course as Aceternity `3D Card`; matches 2–5 as
-   `CardHoverEffect` grid with match-strength `Badge`s.
-4. **The keepsake:** "Email me my results" — shadcn `Dialog` + `Form` +
-   consent `Checkbox`, MagicUI `PulsatingButton`. (Anonymous-first: email is
-   the only persistence, per Decision of Record.)
+   `CardSpotlight`, with plain-language blurbs for the top three traits.
+3. **The verdict — Strand Validation (the headline feature):** a
+   `BorderBeam`-framed card answering the question the student actually
+   walked in with: *"Does my strand fit me?"* Verdict badge (Aligned /
+   Partially Aligned / Misaligned / Aligned—Flexible for GAS), the shared
+   Holland letters shown as glowing evidence chips, and insight copy that
+   is always constructive — a Misaligned verdict reads as a discovery, not
+   a failing grade, and tells Grade 11 students the shift window is still
+   open.
+4. **The matches:** #1 recommended program as Aceternity `3D Card`;
+   programs 2–5 as `CardHoverEffect` grid with match-strength `Badge`s
+   ("Exact match" / "Strong match"); career suggestions as a compact
+   tag-labeled card grid below. No university names or links anywhere.
+5. **The keepsake:** two equal-weight actions closing the page —
+   **"Download PDF"** (opens the print-optimized view) and **"Email me my
+   results"** (shadcn `Dialog` + `Form` + consent `Checkbox`, MagicUI
+   `PulsatingButton`). Anonymous-first: these two exports are the only ways
+   results leave the device, per the PRD.
 
-### University Directory — exploration, not spreadsheet
-- Aceternity `PlaceholdersAndVanishInput` search ("Try 'engineering in
-  Bulacan'…") with plain-input reduced-motion fallback.
-- Province filter: horizontal scroll chips (shadcn `ToggleGroup`),
-  thumb-reachable; course filter via `Select`.
-- Results: Aceternity `FocusCards` grid (hover dims siblings); public/private
-  + tuition-band `Badge`s; `Skeleton` loading; empty state suggests nearest
-  provinces.
-- Post-assessment personalization: "Show schools matching my results" toggle
-  pre-filters via localStorage code.
-
-### Course Details — the decision page
-- Aceternity `BentoGrid`: overview / core subjects / pros & cons (shadcn
-  `Accordion`) / outlook tiles.
-- Aceternity `Timeline`: SHS → college years → entry job → 5-year career.
-- Universities offering it: compact cards with tuition bands, deep-linked.
-- Exit CTAs: "Meet your Future Self" (BorderBeam) + "See who teaches this."
-
-### Future Self — a story, not a printout
-Aceternity `TracingBeam` down the page; the day unfolds in chapters
-(Morning / Midday / Evening) with MagicUI `TypingAnimation` on the opening
-line of each chapter (then instant text — typewriter as seasoning, not
-gatekeeper). Ends with the career's tools (icon row), real quote styling,
-and CTAs: AR preview · email my results · back to matches.
-
-### AR Preview — the wow, safely fenced
-shadcn `Dialog` walkthrough → camera viewport framed by MagicUI
-`BorderBeam` → GLB model. Capability detection first; fallback is an
-in-page 3D viewer, never a dead end. QR hand-off from desktop.
+### Print / PDF view — the keepsake, materialized
+A dedicated print-optimized rendering of the results: single column, A4,
+grayscale-legible, AlignEd wordmark and generation date in the header, all
+interactive chrome and motion removed. Design it as a document a student
+proudly hands to a parent or counselor — it is the artifact that outlives
+the session.
 
 ## 4. Next Steps for Development
 
 1. **Vendor the new components** (one batch): shadcn `command`,
    `alert-dialog`, `tooltip`, `progress`, `radio-group`, `toggle-group`,
-   `select`, `dialog`, `accordion`, `tabs`, `chart`; MagicUI `dock`,
-   `confetti`, `sparkles-text`, `animated-gradient-text`,
-   `animated-circular-progress-bar`, `pulsating-button`, `typing-animation`,
-   `marquee`; Aceternity `card-spotlight`, `3d-card`, `card-hover-effect`,
-   `focus-cards`, `placeholders-and-vanish-input`, `tracing-beam`,
-   `timeline`, `sticky-scroll-reveal`. Same vendoring discipline as Phase 1
+   `select`, `dialog`, `accordion`, `chart`, `checkbox`; MagicUI `confetti`,
+   `sparkles-text`, `animated-gradient-text`,
+   `animated-circular-progress-bar`, `pulsating-button`; Aceternity
+   `card-spotlight`, `3d-card`, `card-hover-effect`,
+   `sticky-scroll-reveal`. Same vendoring discipline as Phase 1
    (framer-motion adaptation, tokens, reduced-motion gates).
 2. **Build the journey state selector** (`useJourneyStage()` reading the
-   existing assessment store): `new | in-progress | completed` — powers nav
-   states, dock badges, hero CTA swap. Tiny, testable, ships first.
-3. **Implement in Phase 2 order**: Focus Mode assessment → results reveal →
-   journey-aware nav/dock → command palette (it needs the seeded data
-   already in `data/*.csv`).
+   assessment store): `new | profiled | in-progress | completed` — powers
+   nav states, hero CTA swap, and route guards. Tiny, testable, ships first.
+3. **Implement in Phase 2–3 order**: Profile Setup → Focus Mode assessment
+   → results reveal (code → verdict → matches → exports) → journey-aware
+   nav.
 4. **Guardrails stay non-negotiable**: every new animated component behind
    the global reduced-motion gate; Lighthouse ≥ 90 checked per feature; the
-   constellation and dock measured on CPU-throttled mobile before merging.
+   constellation measured on CPU-throttled mobile before merging.
 
 *— Liwanag: the student arrives confused, and leaves carrying a light.*

@@ -1,16 +1,21 @@
 import type { Metadata, Viewport } from "next";
-import { JetBrains_Mono, Sora } from "next/font/google";
+import { JetBrains_Mono, Nunito_Sans, Poppins } from "next/font/google";
 import "./globals.css";
 
 import { Analytics } from "@/components/analytics";
-import { SiteFooter } from "@/components/blocks/site-footer";
-import { SiteHeader } from "@/components/blocks/site-header";
 import { Providers } from "@/components/providers";
 
 // CSS variables map to Tailwind font tokens for consistent typography.
-const sora = Sora({
+const nunitoSans = Nunito_Sans({
   variable: "--font-sans",
   subsets: ["latin"],
+  display: "swap",
+});
+
+const poppins = Poppins({
+  variable: "--font-heading",
+  subsets: ["latin"],
+  weight: ["500", "600", "700", "800"],
   display: "swap",
 });
 
@@ -43,7 +48,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${sora.variable} ${jetbrainsMono.variable} h-full antialiased`}
+      className={`${nunitoSans.variable} ${poppins.variable} ${jetbrainsMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <body className="flex min-h-svh flex-col bg-background font-sans text-foreground">
@@ -54,11 +59,9 @@ export default function RootLayout({
           Skip to content
         </a>
         <Providers>
-          <SiteHeader />
           <div id="content" className="flex flex-1 flex-col">
             {children}
           </div>
-          <SiteFooter />
         </Providers>
         <Analytics />
       </body>
