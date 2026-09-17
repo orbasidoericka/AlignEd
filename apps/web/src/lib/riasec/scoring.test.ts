@@ -39,8 +39,16 @@ describe("computeHollandCode", () => {
     expect(code).toEqual(["A", "S", "E"]);
   });
 
+  // A student who answers "no" to all 42 items lands here: every trait 0.
   it("resolves a flat profile to R-I-A (PRD E2)", () => {
     expect(computeHollandCode(scores({}))).toEqual(["R", "I", "A"]);
+  });
+
+  it("handles a maxed-out trait at the binary ceiling", () => {
+    const code = computeHollandCode(
+      scores({ realistic: 7, conventional: 6, social: 5, artistic: 5 }),
+    );
+    expect(code).toEqual(["R", "C", "A"]);
   });
 
   it("is deterministic: same scores always yield the same code", () => {
@@ -64,18 +72,22 @@ describe("trait metadata", () => {
 });
 
 describe("maxScorePerTrait", () => {
-  it("computes the ceiling for the mock bank (3 questions × 5 points)", () => {
-    expect(maxScorePerTrait(QUESTIONS)).toBe(15);
+  it("computes the ceiling for the bank (7 binary items per trait)", () => {
+    expect(maxScorePerTrait(QUESTIONS)).toBe(7);
   });
 });
 
 describe("question bank", () => {
+  it("holds the 42 statements of the printed instrument", () => {
+    expect(QUESTIONS).toHaveLength(42);
+  });
+
   it("is balanced with the same number of items per trait", () => {
     const counts = new Map<string, number>();
     for (const q of QUESTIONS) {
       counts.set(q.trait, (counts.get(q.trait) ?? 0) + 1);
     }
-    expect([...counts.values()]).toEqual([3, 3, 3, 3, 3, 3]);
+    expect([...counts.values()]).toEqual([7, 7, 7, 7, 7, 7]);
   });
 
   it("has unique question ids", () => {

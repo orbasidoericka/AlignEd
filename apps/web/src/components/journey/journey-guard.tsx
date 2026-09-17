@@ -41,13 +41,16 @@ export function JourneyGuard({ require, children }: JourneyGuardProps) {
       : profileComplete && assessmentComplete;
 
   useEffect(() => {
-    if (!hydrated || allowed) return;
-    if (!profileComplete) {
-      router.replace("/assessment/profile");
-    } else {
-      router.replace("/assessment");
-    }
-  }, [hydrated, allowed, profileComplete, router]);
+    if (!hydrated) return;
+    // The first client render still holds the pre-hydration snapshot, so the
+    // values captured above can say "incomplete" for a student who has data.
+    // Read the store directly instead — by now it is authoritative.
+    const state = useAssessmentStore.getState();
+    const hasProfile = selectIsProfileComplete(state);
+    const hasAssessment = selectIsAssessmentComplete(state);
+    if (require === "profile" ? hasProfile : hasProfile && hasAssessment) return;
+    router.replace(hasProfile ? "/assessment" : "/assessment/profile");
+  }, [hydrated, allowed, profileComplete, assessmentComplete, require, router]);
 
   if (!hydrated || !allowed) {
     return (

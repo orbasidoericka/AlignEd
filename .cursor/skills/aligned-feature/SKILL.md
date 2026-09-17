@@ -24,7 +24,7 @@ criteria (mapped to PRD §9). Keep each snippet small and reviewable.
    the seed via `scripts/build-seed.mjs`; schema changes go through the
    supabase-migration skill (anonymous RLS pattern, indexes).
 3. Domain logic: pure, deterministic modules in `src/lib/riasec/` (scoring,
-   strand validation) — side-effect-free, exhaustively unit tested; UI never
+   matching) — side-effect-free, exhaustively unit tested; UI never
    hard-codes their rules.
 4. API: anonymous insert paths or Edge Functions only, with zod validation,
    returning { data, error, meta } (see backend-endpoint skill).

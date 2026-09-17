@@ -8,7 +8,7 @@ import { ResultsDashboard } from "@/components/journey/results-dashboard";
 export const metadata: Metadata = {
   title: "My Results",
   description:
-    "Your Holland Code, strand verdict, and matched careers and college programs.",
+    "Your Holland Code and matched careers and college programs.",
 };
 
 export default function ResultsPage() {

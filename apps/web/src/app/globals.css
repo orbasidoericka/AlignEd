@@ -6,10 +6,40 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-brand: oklch(var(--brand));
-  --color-brand-foreground: oklch(var(--brand-foreground));
-  --color-accent-strong: oklch(var(--accent-strong));
-  --color-accent-strong-foreground: oklch(var(--accent-strong-foreground));
+  --color-brand: var(--brand);
+  --color-brand-foreground: #ffffff;
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-strong-foreground: var(--highlight-foreground);
+
+  /* Palette extensions. primary-strong is the text-safe primary: never set
+     pastel primary as text on white. highlight = Accent 1 (#F9F3CC). */
+  --color-primary-strong: var(--primary-strong);
+  --color-highlight: var(--highlight);
+  --color-highlight-foreground: var(--highlight-foreground);
+  --color-success-strong: var(--success-strong);
+  /* Chrome surface for the site header and footer: tinted toward the brand
+     blue so they read as distinct bands against the near-white page. */
+  --color-chrome: var(--chrome);
+  --color-chrome-border: var(--chrome-border);
+  /* One fill per RIASEC letter, shared by the landing strip and the results
+     page so a letter keeps its color across the product. Six separate hues at
+     one pastel weight (a category scale, not the 4-color brand palette), all
+     carrying dark text. */
+  --color-trait-r: var(--trait-r);
+  --color-trait-i: var(--trait-i);
+  --color-trait-a: var(--trait-a);
+  --color-trait-s: var(--trait-s);
+  --color-trait-e: var(--trait-e);
+  --color-trait-c: var(--trait-c);
+  --color-trait-foreground: var(--trait-foreground);
+  /* Always-dark notice surface for quiz integrity warnings (rapid answers).
+     Same in both themes on purpose so it interrupts the pastel quiz. */
+  --color-notice-surface: #1c212b;
+  --color-notice-border: rgb(255 255 255 / 0.08);
+  --color-notice-foreground: #f8fafc;
+  --color-notice-muted: #cbd5e1;
+  --shadow-bento:
+    0 1px 2px rgb(15 23 42 / 0.04), 0 8px 24px -12px rgb(63 95 130 / 0.18);
   --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);
   --font-heading: var(--font-heading);
@@ -76,109 +106,265 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-:root {
-  --background: oklch(0.99 0.01 210);
-  --foreground: oklch(0.17 0.03 240);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.17 0.03 240);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.17 0.03 240);
-  --primary: oklch(0.62 0.14 200);
-  --primary-foreground: oklch(0.98 0.01 210);
-  --secondary: oklch(0.95 0.03 210);
-  --secondary-foreground: oklch(0.24 0.04 230);
-  --muted: oklch(0.96 0.02 210);
-  --muted-foreground: oklch(0.48 0.03 230);
-  --accent: oklch(0.85 0.16 85);
-  --accent-foreground: oklch(0.24 0.05 70);
-  --destructive: oklch(0.62 0.24 28);
-  --border: oklch(0.9 0.01 230);
-  --input: oklch(0.9 0.01 230);
-  --ring: oklch(0.66 0.12 200);
-  --chart-1: oklch(0.62 0.14 200);
-  --chart-2: oklch(0.74 0.12 160);
-  --chart-3: oklch(0.78 0.14 85);
-  --chart-4: oklch(0.62 0.16 250);
-  --chart-5: oklch(0.5 0.08 230);
-  --brand: 0.62 0.14 200;
-  --brand-foreground: 0.98 0.01 210;
-  --accent-strong: 0.78 0.16 80;
-  --accent-strong-foreground: 0.22 0.04 70;
-  --radius: 0.75rem;
-  --stage-profile: oklch(0.78 0.14 70);
-  --stage-profile-strong: oklch(0.5 0.12 60);
-  --stage-profile-soft: oklch(0.965 0.03 85);
-  --stage-profile-foreground: oklch(0.25 0.06 60);
-  --stage-assessment: oklch(0.62 0.12 240);
-  --stage-assessment-strong: oklch(0.45 0.11 245);
-  --stage-assessment-soft: oklch(0.96 0.02 235);
-  --stage-assessment-foreground: oklch(0.99 0.005 240);
-  --stage-results: oklch(0.64 0.16 15);
-  --stage-results-strong: oklch(0.48 0.16 15);
-  --stage-results-soft: oklch(0.965 0.02 10);
-  --stage-results-foreground: oklch(0.99 0.005 10);
-  --positive: oklch(0.5 0.12 155);
-  --positive-soft: oklch(0.96 0.04 155);
-  --sidebar: oklch(0.98 0.01 210);
-  --sidebar-foreground: oklch(0.2 0.03 230);
-  --sidebar-primary: oklch(0.62 0.14 200);
-  --sidebar-primary-foreground: oklch(0.98 0.01 210);
-  --sidebar-accent: oklch(0.94 0.04 210);
-  --sidebar-accent-foreground: oklch(0.26 0.04 230);
-  --sidebar-border: oklch(0.9 0.01 230);
-  --sidebar-ring: oklch(0.66 0.12 200);
+/* Ambient hexagon background (components/magic/hexagon-pattern.tsx). The
+   grid is static; highlighted cells breathe like slow LEDs: fade up, fade
+   down, rest dim. Each cell sets its own duration and negative delay inline
+   so they fall out of sync. Always used behind motion-safe:. */
+@theme {
+  --animate-hex-glow: hex-glow 7s ease-in-out infinite;
+
+  @keyframes hex-glow {
+    0%,
+    100% {
+      opacity: 0.08;
+    }
+    35% {
+      opacity: 1;
+    }
+    70% {
+      opacity: 0.08;
+    }
+  }
 }
 
+/* Palette: Main #8EACCD, Secondary #D7E5CA, Accent 1 #F9F3CC (highlight),
+   Accent 2 #D2E0FB (hover/borders). Pastel fills always carry dark text;
+   the -strong tokens are the text-safe (AA) variants. */
+:root {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --chrome: #e4ecf8;
+  --chrome-border: #c2d4ec;
+  /* Six distinct hues at one pastel weight, so no two letters read alike:
+     blue, violet, amber, green, coral, teal. Brand blue stays on R. */
+  --trait-r: #8eaccd;
+  --trait-i: #c3b6e8;
+  --trait-a: #f3d98b;
+  --trait-s: #a9d49a;
+  --trait-e: #f2b49a;
+  --trait-c: #8fd2cd;
+  --trait-foreground: #0f172a;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+  --primary: #8eaccd;
+  --primary-foreground: #0f172a;
+  --primary-strong: #3f5f82;
+  --secondary: #d7e5ca;
+  --secondary-foreground: #2f4220;
+  --success-strong: #4a6b35;
+  --highlight: #f9f3cc;
+  --highlight-foreground: #5c4a12;
+  --muted: #f1f5f9;
+  --muted-foreground: #475569;
+  --accent: #d2e0fb;
+  --accent-foreground: #1e3a5f;
+  --destructive: oklch(0.58 0.22 27);
+  --border: #d2e0fb;
+  --input: #b8c9e0;
+  --ring: #3f5f82;
+  --chart-1: #8eaccd;
+  --chart-2: #d7e5ca;
+  --chart-3: #f9f3cc;
+  --chart-4: #d2e0fb;
+  --chart-5: #3f5f82;
+  --brand: #3f5f82;
+  --accent-strong: #f9f3cc;
+  --radius: 0.75rem;
+  /* Stage remap: profile = highlight yellow, assessment = primary blue,
+     results = secondary green. */
+  --stage-profile: #f9f3cc;
+  --stage-profile-strong: #7a6415;
+  --stage-profile-soft: #fdfaeb;
+  --stage-profile-foreground: #5c4a12;
+  --stage-assessment: #8eaccd;
+  --stage-assessment-strong: #3f5f82;
+  --stage-assessment-soft: #eef3fd;
+  --stage-assessment-foreground: #0f172a;
+  --stage-results: #d7e5ca;
+  --stage-results-strong: #4a6b35;
+  --stage-results-soft: #f3f8ee;
+  --stage-results-foreground: #2f4220;
+  --positive: #4a6b35;
+  --positive-soft: #d7e5ca;
+  --sidebar: var(--card);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--accent);
+  --sidebar-accent-foreground: var(--accent-foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
+}
+
+/* Dark derives from the same hues: pastels stay as fills (dark text), dim
+   washes replace the soft backgrounds, pastels become the text-safe tones. */
 .dark {
-  --background: oklch(0.16 0.02 240);
-  --foreground: oklch(0.98 0.01 210);
-  --card: oklch(0.2 0.02 240);
-  --card-foreground: oklch(0.98 0.01 210);
-  --popover: oklch(0.2 0.02 240);
-  --popover-foreground: oklch(0.98 0.01 210);
-  --primary: oklch(0.72 0.12 200);
-  --primary-foreground: oklch(0.18 0.02 240);
-  --secondary: oklch(0.28 0.03 230);
-  --secondary-foreground: oklch(0.95 0.02 210);
-  --muted: oklch(0.26 0.03 230);
-  --muted-foreground: oklch(0.72 0.02 220);
-  --accent: oklch(0.76 0.14 85);
-  --accent-foreground: oklch(0.2 0.04 70);
+  --background: #0b1220;
+  --foreground: #f1f5f9;
+  --chrome: #16223a;
+  --chrome-border: rgb(210 224 251 / 0.18);
+  /* The pastel letter fills stay as they are on dark; they are fills with
+     dark text, the same way the stage chips work. */
+  --trait-r: #8eaccd;
+  --trait-i: #c3b6e8;
+  --trait-a: #f3d98b;
+  --trait-s: #a9d49a;
+  --trait-e: #f2b49a;
+  --trait-c: #8fd2cd;
+  --trait-foreground: #0f172a;
+  --card: #131c2e;
+  --card-foreground: #f1f5f9;
+  --popover: #131c2e;
+  --popover-foreground: #f1f5f9;
+  --primary: #8eaccd;
+  --primary-foreground: #0f172a;
+  --primary-strong: #b4cae3;
+  --secondary: #2c3a24;
+  --secondary-foreground: #d7e5ca;
+  --success-strong: #b5d19c;
+  --highlight: #332e1a;
+  --highlight-foreground: #f9f3cc;
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+  --accent: #1e2b45;
+  --accent-foreground: #d2e0fb;
   --destructive: oklch(0.66 0.2 28);
-  --border: oklch(1 0 0 / 12%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.68 0.12 200);
-  --chart-1: oklch(0.72 0.12 200);
-  --chart-2: oklch(0.78 0.14 85);
-  --chart-3: oklch(0.64 0.1 160);
-  --chart-4: oklch(0.7 0.12 250);
-  --chart-5: oklch(0.56 0.08 230);
-  --brand: 0.72 0.12 200;
-  --brand-foreground: 0.18 0.02 240;
-  --accent-strong: 0.74 0.16 85;
-  --accent-strong-foreground: 0.18 0.04 70;
-  --stage-profile: oklch(0.8 0.13 75);
-  --stage-profile-strong: oklch(0.84 0.11 80);
-  --stage-profile-soft: oklch(0.24 0.03 70);
-  --stage-profile-foreground: oklch(0.24 0.05 70);
-  --stage-assessment: oklch(0.72 0.11 240);
-  --stage-assessment-strong: oklch(0.8 0.09 240);
-  --stage-assessment-soft: oklch(0.23 0.03 240);
-  --stage-assessment-foreground: oklch(0.18 0.03 240);
-  --stage-results: oklch(0.72 0.14 15);
-  --stage-results-strong: oklch(0.82 0.11 15);
-  --stage-results-soft: oklch(0.24 0.03 15);
-  --stage-results-foreground: oklch(0.2 0.04 15);
-  --positive: oklch(0.76 0.12 155);
-  --positive-soft: oklch(0.26 0.04 155);
-  --sidebar: oklch(0.2 0.02 240);
-  --sidebar-foreground: oklch(0.98 0.01 210);
-  --sidebar-primary: oklch(0.72 0.12 200);
-  --sidebar-primary-foreground: oklch(0.18 0.02 240);
-  --sidebar-accent: oklch(0.28 0.03 230);
-  --sidebar-accent-foreground: oklch(0.96 0.02 210);
-  --sidebar-border: oklch(1 0 0 / 12%);
-  --sidebar-ring: oklch(0.68 0.12 200);
+  --border: rgb(210 224 251 / 0.14);
+  --input: rgb(210 224 251 / 0.22);
+  --ring: #b4cae3;
+  --chart-1: #8eaccd;
+  --chart-2: #b5d19c;
+  --chart-3: #f9f3cc;
+  --chart-4: #d2e0fb;
+  --chart-5: #b4cae3;
+  --brand: #3f5f82;
+  --accent-strong: #f9f3cc;
+  --stage-profile: #f9f3cc;
+  --stage-profile-strong: #f9f3cc;
+  --stage-profile-soft: #221f12;
+  --stage-profile-foreground: #3d3310;
+  --stage-assessment: #8eaccd;
+  --stage-assessment-strong: #b4cae3;
+  --stage-assessment-soft: #141d31;
+  --stage-assessment-foreground: #0f172a;
+  --stage-results: #d7e5ca;
+  --stage-results-strong: #d7e5ca;
+  --stage-results-soft: #182014;
+  --stage-results-foreground: #2f4220;
+  --positive: #b5d19c;
+  --positive-soft: #25331d;
+}
+
+/* Aceternity BackgroundGradient in palette colors. Stage tokens are pastel
+   fills in both themes; the -strong anchors keep the glow visible on light.
+   Rest position (0% 50%) is the calm blue region; panning reveals sage and
+   cream. */
+@utility bg-answer-gradient {
+  background-image:
+    radial-gradient(
+      circle farthest-side at 0 100%,
+      var(--stage-assessment-strong),
+      transparent
+    ),
+    radial-gradient(
+      circle farthest-side at 100% 0,
+      var(--stage-results),
+      transparent
+    ),
+    radial-gradient(
+      circle farthest-side at 100% 100%,
+      var(--stage-profile),
+      transparent
+    ),
+    radial-gradient(
+      circle farthest-side at 0 0,
+      var(--stage-assessment),
+      var(--stage-results-strong)
+    );
+  background-size: 400% 400%;
+  background-position: 0% 50%;
+}
+
+/* Pan for bg-answer-gradient, written as longhands on purpose: the
+   `animation` shorthand would reset animation-play-state and override the
+   paused/running classes BackgroundGradient toggles on interaction. */
+@keyframes gradient-pan {
+  from {
+    background-position: 0% 50%;
+  }
+  to {
+    background-position: 100% 50%;
+  }
+}
+
+/* Background Lines streak (components/aceternity/background-lines.tsx).
+   Two animations share one duration/delay per path:
+   - line-streak-travel: 0-62% a dash launches from the center fast and eases
+     out (a burst, visible within a moment of mount), 62-100% holds.
+   - line-streak-fade: pops in almost at once, fades out as travel ends, then
+     stays invisible for the pause (upstream's repeatDelay).
+   Longhands so per-path inline duration/delay are never reset. */
+@keyframes line-streak-travel {
+  0% {
+    stroke-dasharray: 50 800;
+    stroke-dashoffset: 800;
+    animation-timing-function: cubic-bezier(0.33, 1, 0.68, 1);
+  }
+  62%,
+  100% {
+    stroke-dasharray: 20 800;
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes line-streak-fade {
+  0% {
+    opacity: 0;
+  }
+  3%,
+  40% {
+    opacity: 1;
+  }
+  62%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Shine Border (components/magic/shine-border.tsx): a highlight sweeps the
+   border of a card. Instances set --duration; --border-width sets thickness. */
+@keyframes shine {
+  0%,
+  100% {
+    background-position: 0% 0%;
+  }
+  50% {
+    background-position: 100% 100%;
+  }
+}
+
+@utility animate-shine {
+  animation-name: shine;
+  animation-duration: var(--duration, 14s);
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+@utility animate-line-streak {
+  animation-name: line-streak-travel, line-streak-fade;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  animation-fill-mode: backwards;
+}
+
+@utility animate-gradient-pan {
+  animation-name: gradient-pan;
+  animation-duration: 5s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
 }
 
 @layer base {

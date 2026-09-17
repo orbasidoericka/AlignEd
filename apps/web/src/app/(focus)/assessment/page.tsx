@@ -8,7 +8,7 @@ import { JourneyGuard } from "@/components/journey/journey-guard";
 export const metadata: Metadata = {
   title: "Assessment",
   description:
-    "Answer honest questions about what you enjoy and get your Holland Code in about 8 minutes.",
+    "Answer yes or no to 42 quick statements and get your Holland Code in about 5 minutes.",
 };
 
 export default function AssessmentPage() {

@@ -3,8 +3,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, InfoIcon } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
+import { HexagonPattern } from "@/components/magic/hexagon-pattern";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -12,26 +13,25 @@ import {
   RadioCardIndicator,
   RadioGroup,
 } from "@/components/ui/radio-group";
-import { SCHOOL_MAX_LENGTH, STRANDS } from "@/lib/riasec/types";
-import type { GradeLevel, Strand } from "@/lib/riasec/types";
+import {
+  GRADE_LEVELS,
+  NICKNAME_MAX_LENGTH,
+  SCHOOL_MAX_LENGTH,
+  sanitizeNickname,
+} from "@/lib/riasec/types";
+import type { GradeLevel } from "@/lib/riasec/types";
 import {
   selectIsProfileComplete,
   useAssessmentStore,
 } from "@/store/useAssessmentStore";
 import { cn } from "@/lib/utils";
 
-const strandDescriptors: Record<Strand, string> = {
-  STEM: "Science, tech, engineering, math",
-  ABM: "Business, management, accountancy",
-  HUMSS: "People, society, communication",
-  GAS: "Exploring across many fields",
-  TVL: "Hands-on technical and livelihood",
-  "Arts & Design": "Creative and visual expression",
-  Sports: "Athletics, fitness, and coaching",
-};
+// Pale yellow cannot show on its own yellow wash, so light mode tints with
+// the strong tone; dark mode uses the base.
+const profileCell = "fill-stage-profile-strong/25 dark:fill-stage-profile/40";
 
-// Profile Setup (PRD FR-2): grade + strand as tappable cards, optional
-// school. Stage accent: amber. Everything stays client-side in the store.
+// Profile Setup (PRD FR-2): grade level as tappable cards, optional school.
+// Stage accent: soft yellow. Everything stays client-side in the store.
 export function ProfileForm() {
   const router = useRouter();
   const profile = useAssessmentStore((state) => state.profile);
@@ -48,7 +48,18 @@ export function ProfileForm() {
   };
 
   return (
-    <div className="flex flex-1 flex-col bg-stage-profile-soft">
+    <div className="relative isolate flex flex-1 flex-col overflow-hidden bg-stage-profile-soft">
+      {/* Strong tone at low opacity: the pale base does not show on its own wash. */}
+      <HexagonPattern
+        radius={48}
+        gap={6}
+        hexagons={[
+          [1, 0, profileCell],
+          [4, 1, profileCell],
+          [6, 0, profileCell],
+        ]}
+        className="-z-10 stroke-stage-profile-strong/25 mask-[radial-gradient(ellipse_at_top,white,transparent_85%)] print:hidden dark:stroke-stage-profile-strong/10"
+      />
       <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-4 py-10">
         <header className="flex flex-col gap-2">
           <p className="font-heading text-sm font-bold text-stage-profile-strong">
@@ -58,10 +69,44 @@ export function ProfileForm() {
             Tell us where you are
           </h1>
           <p className="text-base text-muted-foreground">
-            Two quick questions so we can check how your strand matches your
-            results. No name needed.
+            A nickname and your grade level so we can match you to careers and
+            college programs. No real name needed.
           </p>
         </header>
+
+        {/* Nickname */}
+        <div className="flex flex-col gap-2">
+          <label
+            htmlFor="nickname"
+            className="text-lg font-semibold text-foreground"
+          >
+            What should we call you?
+          </label>
+          <Input
+            id="nickname"
+            value={profile.nickname}
+            onChange={(event) =>
+              setProfile({ nickname: sanitizeNickname(event.target.value) })
+            }
+            placeholder="MARI-EL"
+            autoCapitalize="characters"
+            autoComplete="off"
+            spellCheck={false}
+            aria-invalid={showHints && profile.nickname.length === 0}
+            aria-describedby="nickname-hint"
+            className="h-12 rounded-xl bg-card text-base font-bold tracking-widest uppercase"
+          />
+          <p id="nickname-hint" className="text-xs text-muted-foreground">
+            Letters and hyphens only, up to {NICKNAME_MAX_LENGTH} characters (
+            {profile.nickname.length}/{NICKNAME_MAX_LENGTH}). Not your real
+            name — it stays on this device.
+          </p>
+          {showHints && profile.nickname.length === 0 && (
+            <p className="text-sm font-semibold text-destructive" role="alert">
+              Enter a nickname to continue.
+            </p>
+          )}
+        </div>
 
         {/* Grade level */}
         <fieldset className="flex flex-col gap-3">
@@ -74,9 +119,9 @@ export function ProfileForm() {
             onValueChange={(value) =>
               setProfile({ gradeLevel: value as GradeLevel })
             }
-            className="grid grid-cols-2 gap-3"
+            className="grid grid-cols-2 gap-3 sm:grid-cols-3"
           >
-            {(["11", "12"] as const).map((grade) => (
+            {GRADE_LEVELS.map((grade) => (
               <RadioCard
                 key={grade}
                 value={grade}
@@ -94,47 +139,6 @@ export function ProfileForm() {
           {showHints && profile.gradeLevel === null && (
             <p className="text-sm font-semibold text-destructive" role="alert">
               Choose your grade level to continue.
-            </p>
-          )}
-        </fieldset>
-
-        {/* Strand */}
-        <fieldset className="flex flex-col gap-3">
-          <legend className="mb-2 flex items-center gap-2 text-lg font-semibold text-foreground">
-            What is your SHS strand?
-          </legend>
-          <p className="-mt-2 flex items-center gap-1.5 text-sm text-muted-foreground">
-            <InfoIcon className="size-4 shrink-0" aria-hidden />
-            We ask because your results include a check of how your strand
-            matches your interests.
-          </p>
-          <RadioGroup
-            aria-label="SHS strand"
-            value={profile.strand}
-            onValueChange={(value) => setProfile({ strand: value as Strand })}
-            className="grid grid-cols-1 gap-3 sm:grid-cols-2"
-          >
-            {STRANDS.map((strand) => (
-              <RadioCard
-                key={strand}
-                value={strand}
-                className="text-stage-profile-strong data-checked:bg-stage-profile/15"
-              >
-                <RadioCardIndicator />
-                <span className="flex flex-col gap-0.5">
-                  <span className="font-heading text-base font-bold text-foreground">
-                    {strand}
-                  </span>
-                  <span className="text-sm font-normal text-muted-foreground">
-                    {strandDescriptors[strand]}
-                  </span>
-                </span>
-              </RadioCard>
-            ))}
-          </RadioGroup>
-          {showHints && profile.strand === null && (
-            <p className="text-sm font-semibold text-destructive" role="alert">
-              Choose your strand to continue.
             </p>
           )}
         </fieldset>

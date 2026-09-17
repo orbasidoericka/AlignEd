@@ -16,8 +16,8 @@ disable-model-invocation: true
    Efferd (`blocks/`) for page structure. Style with Tailwind v4 utilities;
    tokens live in `@theme` in `globals.css` (no tailwind.config.ts).
 4. For forms, validate with the same zod schema used server-side; show inline
-   errors with aria-invalid. Enum fields (grade level, strand) are pickers,
-   never free text.
+   errors with aria-invalid. Enum fields (grade level) are pickers, never
+   free text.
 5. Handle loading, empty, and error states for async data.
 6. Motion via `motion/react` under the root `LazyMotion` provider; every
    animation consumes the global `useReducedMotion` gate and triggers on

@@ -8,112 +8,132 @@ export interface RiasecQuestion {
   text: string;
 }
 
-// Mock-phase bank: 18 items, 3 per trait, written at a Filipino SHS reading
-// level. The production bank (30-48 items per PRD FR-3.1) replaces this list
-// without changing its shape.
+// Production bank (PRD FR-3.1): the 42 statements of the printed RIASEC test,
+// reproduced verbatim and kept in printed order — ids are the printed item
+// numbers so each entry is checkable against the source. The trait key is
+// fixed by the instrument's answer columns: do not reword, reorder, or
+// re-assign traits.
 export const QUESTIONS: readonly RiasecQuestion[] = [
+  { id: "q1", trait: "realistic", text: "I like to work on cars" },
+  { id: "q2", trait: "investigative", text: "I like to do puzzles" },
+  { id: "q3", trait: "artistic", text: "I am good at working independently" },
+  { id: "q4", trait: "social", text: "I like to work in teams" },
   {
-    id: "r1",
-    trait: "realistic",
-    text: "I enjoy fixing things with my hands, like gadgets, bikes, or appliances.",
-  },
-  {
-    id: "r2",
-    trait: "realistic",
-    text: "I would rather build a project than write a report about it.",
-  },
-  {
-    id: "r3",
-    trait: "realistic",
-    text: "Working outdoors or with tools sounds better than sitting at a desk all day.",
-  },
-  {
-    id: "i1",
-    trait: "investigative",
-    text: "I like figuring out why things happen, not just what happened.",
-  },
-  {
-    id: "i2",
-    trait: "investigative",
-    text: "Solving a hard math or science problem feels satisfying to me.",
-  },
-  {
-    id: "i3",
-    trait: "investigative",
-    text: "I often look things up on my own just because I am curious.",
-  },
-  {
-    id: "a1",
-    trait: "artistic",
-    text: "I express myself best through art, music, writing, or design.",
-  },
-  {
-    id: "a2",
-    trait: "artistic",
-    text: "I enjoy imagining new ideas more than following exact instructions.",
-  },
-  {
-    id: "a3",
-    trait: "artistic",
-    text: "People say I have a creative or unique way of doing things.",
-  },
-  {
-    id: "s1",
-    trait: "social",
-    text: "Friends often come to me when they need advice or someone to listen.",
-  },
-  {
-    id: "s2",
-    trait: "social",
-    text: "I feel energized when I get to help someone learn something new.",
-  },
-  {
-    id: "s3",
-    trait: "social",
-    text: "I would enjoy a job where I take care of or guide other people.",
-  },
-  {
-    id: "e1",
+    id: "q5",
     trait: "enterprising",
-    text: "I like convincing people to support my ideas or join my plans.",
+    text: "I am an ambitious person, I set goals for myself",
   },
   {
-    id: "e2",
+    id: "q6",
+    trait: "conventional",
+    text: "I like to organize things, (files, desks/offices)",
+  },
+  { id: "q7", trait: "realistic", text: "I like to build things" },
+  { id: "q8", trait: "artistic", text: "I like to read about art and music" },
+  {
+    id: "q9",
+    trait: "conventional",
+    text: "I like to have clear instructions to follow",
+  },
+  {
+    id: "q10",
     trait: "enterprising",
-    text: "Leading a group project excites me more than it scares me.",
+    text: "I like to try to influence or persuade people",
   },
+  { id: "q11", trait: "investigative", text: "I like to do experiments" },
+  { id: "q12", trait: "social", text: "I like to teach or train people" },
   {
-    id: "e3",
+    id: "q13",
+    trait: "social",
+    text: "I like trying to help people solve their problems",
+  },
+  { id: "q14", trait: "realistic", text: "I like to take care of animals" },
+  {
+    id: "q15",
+    trait: "conventional",
+    text: "I wouldn't mind working 8 hours per day in an office",
+  },
+  { id: "q16", trait: "enterprising", text: "I like selling things" },
+  { id: "q17", trait: "artistic", text: "I enjoy creative writing" },
+  { id: "q18", trait: "investigative", text: "I enjoy science" },
+  {
+    id: "q19",
     trait: "enterprising",
-    text: "I can see myself starting my own business someday.",
+    text: "I am quick to take on new responsibilities",
+  },
+  { id: "q20", trait: "social", text: "I am interested in healing people" },
+  {
+    id: "q21",
+    trait: "investigative",
+    text: "I enjoy trying to figure out how things work",
   },
   {
-    id: "c1",
-    trait: "conventional",
-    text: "I feel calm when my notes, files, and schedule are organized.",
+    id: "q22",
+    trait: "realistic",
+    text: "I like putting things together or assembling things",
+  },
+  { id: "q23", trait: "artistic", text: "I am a creative person" },
+  { id: "q24", trait: "conventional", text: "I pay attention to details" },
+  { id: "q25", trait: "conventional", text: "I like to do filing or typing" },
+  {
+    id: "q26",
+    trait: "investigative",
+    text: "I like to analyze things (problems/ situations)",
   },
   {
-    id: "c2",
-    trait: "conventional",
-    text: "I am good at following steps carefully without missing details.",
+    id: "q27",
+    trait: "artistic",
+    text: "I like to play instruments or sing",
   },
   {
-    id: "c3",
-    trait: "conventional",
-    text: "I enjoy tasks with clear rules, like budgeting or record keeping.",
+    id: "q28",
+    trait: "social",
+    text: "I enjoy learning about other cultures",
   },
+  {
+    id: "q29",
+    trait: "enterprising",
+    text: "I would like to start my own business",
+  },
+  { id: "q30", trait: "realistic", text: "I like to cook" },
+  { id: "q31", trait: "artistic", text: "I like acting in plays" },
+  { id: "q32", trait: "realistic", text: "I am a practical person" },
+  {
+    id: "q33",
+    trait: "investigative",
+    text: "I like working with numbers or charts",
+  },
+  {
+    id: "q34",
+    trait: "social",
+    text: "I like to get into discussions about issues",
+  },
+  {
+    id: "q35",
+    trait: "conventional",
+    text: "I am good at keeping records of my work",
+  },
+  { id: "q36", trait: "enterprising", text: "I like to lead" },
+  { id: "q37", trait: "realistic", text: "I like working outdoors" },
+  {
+    id: "q38",
+    trait: "conventional",
+    text: "I would like to work in an office",
+  },
+  { id: "q39", trait: "investigative", text: "I'm good at math" },
+  { id: "q40", trait: "social", text: "I like helping people" },
+  { id: "q41", trait: "artistic", text: "I like to draw" },
+  { id: "q42", trait: "enterprising", text: "I like to give speeches" },
 ];
 
-export interface LikertOption {
-  value: 1 | 2 | 3 | 4 | 5;
+export interface AnswerOption {
+  value: 0 | 1;
   label: string;
-  emoji: string;
 }
 
-export const LIKERT_OPTIONS: readonly LikertOption[] = [
-  { value: 1, label: "Not me at all", emoji: "😅" },
-  { value: 2, label: "Not really", emoji: "🤔" },
-  { value: 3, label: "Somewhat me", emoji: "😐" },
-  { value: 4, label: "Mostly me", emoji: "🙂" },
-  { value: 5, label: "Totally me", emoji: "🤩" },
+// Binary answers (PRD FR-3.2): agreeing scores a point, the printed test's
+// filled-in circle. "No" is stored as 0 so it still counts as answered.
+export const ANSWER_OPTIONS: readonly AnswerOption[] = [
+  { value: 1, label: "Yes" },
+  { value: 0, label: "No" },
 ];

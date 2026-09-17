@@ -1,8 +1,24 @@
 // Copyright (c) 2026 EdTech. All rights reserved.
+"use client";
 
-// Pure-SVG six-axis radar. Chart-lib-agnostic props (scores + max) so the
-// PRD's later Recharts phase can swap the internals without touching callers.
+// Six-axis RIASEC radar on shadcn Chart (Recharts). Props are unchanged from
+// the earlier hand-rolled SVG so callers do not move.
 
+import { useReducedMotion } from "framer-motion";
+import {
+  PolarAngleAxis,
+  PolarGrid,
+  PolarRadiusAxis,
+  Radar,
+  RadarChart,
+} from "recharts";
+
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from "@/components/ui/chart";
 import { TRAIT_META, TRAIT_ORDER } from "@/lib/riasec/scoring";
 import type { RiasecScores } from "@/store/useAssessmentStore";
 import { cn } from "@/lib/utils";
@@ -13,99 +29,64 @@ interface RiasecRadarProps {
   className?: string;
 }
 
-const SIZE = 300;
-const CENTER = SIZE / 2;
-const RADIUS = 110;
-const RINGS = [0.25, 0.5, 0.75, 1];
-
-function pointAt(axisIndex: number, ratio: number): [number, number] {
-  // Start at 12 o'clock, go clockwise; six axes 60 degrees apart.
-  const angle = (Math.PI / 180) * (axisIndex * 60 - 90);
-  return [
-    CENTER + RADIUS * ratio * Math.cos(angle),
-    CENTER + RADIUS * ratio * Math.sin(angle),
-  ];
-}
-
-function polygonPoints(ratios: number[]): string {
-  return ratios
-    .map((ratio, i) => pointAt(i, ratio).map((n) => n.toFixed(1)).join(","))
-    .join(" ");
-}
+const chartConfig = {
+  score: { label: "Score", color: "var(--chart-1)" },
+} satisfies ChartConfig;
 
 export function RiasecRadar({ scores, max, className }: RiasecRadarProps) {
+  // Recharts animates in JS, outside MotionConfig and the CSS media query.
+  const reduceMotion = useReducedMotion();
   const safeMax = max > 0 ? max : 1;
-  const ratios = TRAIT_ORDER.map((trait) =>
-    Math.min(1, Math.max(0, scores[trait] / safeMax)),
-  );
+  const data = TRAIT_ORDER.map((trait) => ({
+    letter: TRAIT_META[trait].letter,
+    label: TRAIT_META[trait].label,
+    score: scores[trait],
+  }));
 
   return (
     <figure className={cn("flex flex-col items-center", className)}>
-      <svg
-        viewBox={`0 0 ${SIZE} ${SIZE}`}
-        className="w-full max-w-80"
-        role="img"
-        aria-label={`Radar chart of your six RIASEC trait scores out of ${safeMax}: ${TRAIT_ORDER.map(
-          (trait) => `${TRAIT_META[trait].label} ${scores[trait]}`,
-        ).join(", ")}`}
+      {/* Visual only; the sr-only table below carries the data. */}
+      <ChartContainer
+        config={chartConfig}
+        className="aspect-square w-full max-w-sm"
+        aria-hidden
       >
-        {RINGS.map((ring) => (
-          <polygon
-            key={ring}
-            points={polygonPoints(TRAIT_ORDER.map(() => ring))}
-            fill="none"
-            className="stroke-border"
-            strokeWidth={1}
+        <RadarChart data={data} outerRadius="76%">
+          <ChartTooltip
+            cursor={false}
+            content={
+              <ChartTooltipContent
+                labelFormatter={(value, payload) => {
+                  const label = payload?.[0]?.payload?.label;
+                  return label ? `${value}: ${label}` : value;
+                }}
+              />
+            }
           />
-        ))}
-        {TRAIT_ORDER.map((trait, i) => {
-          const [x, y] = pointAt(i, 1);
-          return (
-            <line
-              key={trait}
-              x1={CENTER}
-              y1={CENTER}
-              x2={x}
-              y2={y}
-              className="stroke-border"
-              strokeWidth={1}
-            />
-          );
-        })}
-        <polygon
-          points={polygonPoints(ratios)}
-          className="fill-stage-results/25 stroke-stage-results"
-          strokeWidth={2.5}
-          strokeLinejoin="round"
-        />
-        {ratios.map((ratio, i) => {
-          const [x, y] = pointAt(i, ratio);
-          return (
-            <circle
-              key={TRAIT_ORDER[i]}
-              cx={x}
-              cy={y}
-              r={4}
-              className="fill-stage-results"
-            />
-          );
-        })}
-        {TRAIT_ORDER.map((trait, i) => {
-          const [x, y] = pointAt(i, 1.18);
-          return (
-            <text
-              key={trait}
-              x={x}
-              y={y}
-              textAnchor="middle"
-              dominantBaseline="middle"
-              className="fill-foreground font-heading text-[15px] font-semibold"
-            >
-              {TRAIT_META[trait].letter}
-            </text>
-          );
-        })}
-      </svg>
+          <PolarGrid className="stroke-border" />
+          <PolarAngleAxis
+            dataKey="letter"
+            tick={{
+              className: "fill-foreground font-heading text-[15px] font-semibold",
+            }}
+          />
+          <PolarRadiusAxis
+            domain={[0, safeMax]}
+            tick={false}
+            axisLine={false}
+          />
+          <Radar
+            dataKey="score"
+            fill="var(--color-score)"
+            fillOpacity={0.5}
+            stroke="var(--primary-strong)"
+            strokeWidth={2.5}
+            strokeLinejoin="round"
+            dot={{ r: 4, fill: "var(--primary-strong)", fillOpacity: 1 }}
+            isAnimationActive={!reduceMotion}
+          />
+        </RadarChart>
+      </ChartContainer>
       <figcaption className="sr-only">
         <table>
           <caption>Your RIASEC trait scores</caption>

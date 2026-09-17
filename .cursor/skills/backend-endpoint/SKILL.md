@@ -12,7 +12,7 @@ AlignEd has exactly two kinds of write paths (PRD §6): the anonymous
 
 ## Steps
 1. Define a zod schema for input and infer its TypeScript type; constrain
-   enums exactly (grade level 11/12, the seven strands).
+   enums exactly (grade level 7–12).
 2. Choose the path: client-side anon insert (RLS insert-only) for assessment
    completion; an Edge Function (Deno, service role) for anything needing
    secrets, rate limiting, or email.
@@ -45,8 +45,7 @@ const completionSchema = z.object({
     conventional: z.number().int().min(0),
   }),
   hollandCode: z.string().regex(/^[RIASEC]{3}$/),
-  gradeLevel: z.union([z.literal(11), z.literal(12)]),
-  strand: z.enum(["STEM", "ABM", "HUMSS", "GAS", "TVL", "Arts & Design", "Sports"]),
+  gradeLevel: z.enum(["7", "8", "9", "10", "11", "12"]),
   school: z.string().max(120).optional(),
 });
 

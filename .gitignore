@@ -61,3 +61,6 @@ supabase/.branches
 
 # claude / agent local settings (personal, not shared)
 .claude/settings.local.json
+
+# local tooling
+.playwright-mcp/

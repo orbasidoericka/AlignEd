@@ -1,8 +1,7 @@
 // Copyright (c) 2026 EdTech. All rights reserved.
 "use client";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
+import { useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { CheckIcon, XIcon } from "lucide-react";
 
@@ -19,16 +18,22 @@ import {
 import { Button } from "@/components/ui/button";
 import { useAssessmentStore } from "@/store/useAssessmentStore";
 
+const noopSubscribe = () => () => {};
+
 // Minimal Focus Mode top bar: brand, autosave state, guarded exit. Exit
 // attempts get a reassurance dialog instead of silent data anxiety.
 export function FocusBar() {
   const router = useRouter();
   const lastUpdated = useAssessmentStore((state) => state.lastUpdated);
-  const [mounted, setMounted] = useState(false);
+  // False on the server and during hydration, so the persisted "Saved" chip
+  // never causes a hydration mismatch.
+  const hydrated = useSyncExternalStore(
+    noopSubscribe,
+    () => true,
+    () => false,
+  );
 
-  useEffect(() => setMounted(true), []);
-
-  const saved = mounted && lastUpdated !== null;
+  const saved = hydrated && lastUpdated !== null;
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-sm">
@@ -86,9 +91,6 @@ export function FocusBar() {
           </AlertDialog>
         </div>
       </div>
-      <span className="sr-only">
-        <Link href="/">AlignEd home</Link>
-      </span>
     </header>
   );
 }

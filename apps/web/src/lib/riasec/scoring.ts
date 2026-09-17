@@ -14,49 +14,20 @@ export const TRAIT_ORDER: readonly RiasecTrait[] = [
   "conventional",
 ];
 
+// Short friendly labels. Descriptions of each letter come from the official
+// sheet in career-pathways.ts.
 export interface TraitMeta {
   letter: RiasecLetter;
   label: string;
-  blurb: string;
 }
 
 export const TRAIT_META: Record<RiasecTrait, TraitMeta> = {
-  realistic: {
-    letter: "R",
-    label: "The Builder",
-    blurb:
-      "You like working with your hands, tools, and real things you can touch. Practical work feels natural to you.",
-  },
-  investigative: {
-    letter: "I",
-    label: "The Thinker",
-    blurb:
-      "You love asking why and digging for answers. Problems that make other people give up make you curious.",
-  },
-  artistic: {
-    letter: "A",
-    label: "The Creator",
-    blurb:
-      "You see the world a little differently and express it through ideas, design, words, or performance.",
-  },
-  social: {
-    letter: "S",
-    label: "The Helper",
-    blurb:
-      "You understand people and enjoy supporting them. Teaching, guiding, and caring come naturally to you.",
-  },
-  enterprising: {
-    letter: "E",
-    label: "The Mover",
-    blurb:
-      "You like to lead, persuade, and make things happen. Goals and challenges give you energy.",
-  },
-  conventional: {
-    letter: "C",
-    label: "The Organizer",
-    blurb:
-      "You bring order to chaos. Details, systems, and well-run plans are your quiet superpower.",
-  },
+  realistic: { letter: "R", label: "The Builder" },
+  investigative: { letter: "I", label: "The Thinker" },
+  artistic: { letter: "A", label: "The Creator" },
+  social: { letter: "S", label: "The Helper" },
+  enterprising: { letter: "E", label: "The Mover" },
+  conventional: { letter: "C", label: "The Organizer" },
 };
 
 export type HollandCode = readonly [RiasecLetter, RiasecLetter, RiasecLetter];
@@ -90,12 +61,12 @@ export function traitForLetter(letter: RiasecLetter): RiasecTrait {
   return trait;
 }
 
-// Highest possible per-trait score for a bank (5-point Likert), used to
-// normalize the radar chart.
+// Highest possible per-trait score for a bank, used to normalize the radar
+// chart. Answers are binary, so the ceiling is one point per item.
 export function maxScorePerTrait(questions: readonly RiasecQuestion[]): number {
   const counts = new Map<RiasecTrait, number>();
   for (const q of questions) {
     counts.set(q.trait, (counts.get(q.trait) ?? 0) + 1);
   }
-  return Math.max(...counts.values(), 0) * 5;
+  return Math.max(...counts.values(), 0);
 }

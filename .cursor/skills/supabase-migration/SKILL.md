@@ -18,7 +18,7 @@ delete).
 3. Define the table with snake_case names, a uuid primary key, and
    created_at timestamptz default now().
 4. Constrain student inputs in the schema: check constraints for enums
-   (grade level 11/12, the seven strands), length caps for free text.
+   (grade level 7–12), length caps for free text.
 5. Enable RLS and pick the matching pattern: public read (reference data) or
    insert-only (anonymous writes).
 6. Add indexes for foreign keys and query patterns (e.g. `riasec_tag`);

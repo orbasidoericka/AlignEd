@@ -1,69 +1,47 @@
 // Copyright (c) 2026 EdTech. All rights reserved.
 
 import type { Metadata } from "next";
-import Link from "next/link";
-import {
-  ClipboardPen,
-  Compass,
-  PartyPopper,
-  ShieldCheck,
-  Sparkles,
-} from "lucide-react";
+import { ClipboardPen, Compass, PartyPopper, ShieldCheck } from "lucide-react";
 
 import { BlurFade } from "@/components/magic/blur-fade";
+import { Highlighter } from "@/components/magic/highlighter";
+import {
+  HexagonPattern,
+  scatterHexagons,
+} from "@/components/magic/hexagon-pattern";
 import { NumberTicker } from "@/components/magic/number-ticker";
+import { ShineBorder } from "@/components/magic/shine-border";
+import { SectionLink } from "@/components/blocks/section-link";
 import { HeroCta } from "@/components/journey/hero-cta";
 import { buttonVariants } from "@/components/ui/button";
+import { RIASEC_PATHWAYS } from "@/lib/riasec/career-pathways";
+import { letterChip } from "@/lib/riasec/letter-chip-styles";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
   description:
-    "Free, anonymous career guidance for Senior High School students. Check how your strand fits your interests in about 8 minutes.",
+    "Free, anonymous career guidance for Senior High School students. Discover your Holland Code and matching careers in about 5 minutes.",
 };
 
-// Cheerful geometric avatar used in the testimonial bubbles. Decorative,
-// deterministic per palette entry, no external assets.
-function StudentAvatar({
-  face,
-  className,
-}: {
-  face: "amber" | "blue" | "pink" | "teal";
-  className?: string;
-}) {
-  const palettes = {
-    amber: { bg: "fill-stage-profile", skin: "#8a5a2b" },
-    blue: { bg: "fill-stage-assessment", skin: "#6b4423" },
-    pink: { bg: "fill-stage-results", skin: "#7a4a26" },
-    teal: { bg: "fill-primary", skin: "#8a5a2b" },
-  } as const;
-  const p = palettes[face];
-  return (
-    <svg
-      viewBox="0 0 48 48"
-      className={cn("size-12 shrink-0 overflow-hidden rounded-full", className)}
-      aria-hidden
-    >
-      <circle cx="24" cy="24" r="24" className={p.bg} opacity="0.25" />
-      <path d="M8 44c2-9 8-13 16-13s14 4 16 13" fill={p.skin} />
-      <circle cx="24" cy="20" r="9" fill={p.skin} />
-      <circle cx="21" cy="19" r="1.4" fill="#1a1a1a" />
-      <circle cx="27" cy="19" r="1.4" fill="#1a1a1a" />
-      <path
-        d="M20.5 23.5c1.2 1.6 5.8 1.6 7 0"
-        stroke="#1a1a1a"
-        strokeWidth="1.4"
-        strokeLinecap="round"
-        fill="none"
-      />
-    </svg>
-  );
-}
+// The six letters, with the first sentence of each official description
+// (single source of truth: lib/riasec/career-pathways.ts). Chip colors come
+// from the shared per-letter map, so they match the results page.
+const traitPreview = (["R", "I", "A", "S", "E", "C"] as const).map((letter) => {
+  const profile = RIASEC_PATHWAYS[letter];
+  return {
+    letter,
+    name: profile.name,
+    // "These people are often good at mechanical or athletic jobs."
+    summary: `${profile.description.split(". ")[0]}.`,
+    chip: letterChip(letter),
+  };
+});
 
 const journeySteps = [
   {
     step: "Step 1",
     title: "Tell us where you are",
-    body: "Your grade level and SHS strand. Two taps, no name, no sign-up.",
+    body: "Your grade level. One tap, no name, no sign-up.",
     icon: ClipboardPen,
     wash: "bg-stage-profile-soft",
     chip: "bg-stage-profile text-stage-profile-foreground",
@@ -72,7 +50,7 @@ const journeySteps = [
   {
     step: "Step 2",
     title: "Discover yourself",
-    body: "Answer honest questions about what you enjoy. About 8 minutes, saved as you go.",
+    body: "Answer yes or no to 42 quick statements. About 5 minutes, saved as you go.",
     icon: Compass,
     wash: "bg-stage-assessment-soft",
     chip: "bg-stage-assessment text-stage-assessment-foreground",
@@ -81,7 +59,7 @@ const journeySteps = [
   {
     step: "Step 3",
     title: "See your alignment",
-    body: "Your Holland Code, a strand fit verdict, and the careers and programs that match you.",
+    body: "Your Holland Code, and the careers and programs that match you.",
     icon: PartyPopper,
     wash: "bg-stage-results-soft",
     chip: "bg-stage-results text-stage-results-foreground",
@@ -89,68 +67,71 @@ const journeySteps = [
   },
 ] as const;
 
-// Illustrative quotes for the MVP; replaced with real UAT feedback later.
-const testimonials = [
-  {
-    quote:
-      "I always felt pressured to take nursing. Seeing my code helped me explain to my parents why I want to teach instead.",
-    name: "Andrea",
-    detail: "Grade 12 · HUMSS",
-    face: "pink" as const,
-  },
-  {
-    quote:
-      "I took it twice because I did not believe it the first time. Same result. STEM really is my lane.",
-    name: "Miguel",
-    detail: "Grade 11 · STEM",
-    face: "blue" as const,
-  },
-  {
-    quote:
-      "The strand check told me I lean artistic even in GAS. Now I know what to look for in college programs.",
-    name: "Jasmine",
-    detail: "Grade 11 · GAS",
-    face: "amber" as const,
-  },
-  {
-    quote:
-      "It took one class period and I did not have to make an account. My results were waiting after recess.",
-    name: "Paolo",
-    detail: "Grade 12 · TVL",
-    face: "teal" as const,
-  },
-] as const;
+// Pale yellow and sage vanish on the near-white hero, so light mode tints
+// those cells with their strong tones; dark mode uses the pastel bases.
+const heroYellowCell = "fill-stage-profile-strong/30 dark:fill-stage-profile/60";
+const heroGreenCell = "fill-stage-results-strong/35 dark:fill-stage-results";
+
+// Lit cells scattered across the hero grid (about 20 x 10 cells at desktop
+// width); computed once at module load, identical on server and client.
+const heroCells = scatterHexagons({
+  count: 16,
+  cols: 20,
+  rows: 10,
+  classNames: ["fill-stage-assessment", heroGreenCell, heroYellowCell],
+  seed: 7,
+});
 
 export default function HomePage() {
   return (
     <div className="flex flex-col">
-      {/* Hero: clean light surface, soft stage-color shape accents */}
-      <section className="relative overflow-hidden">
-        <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-          <div className="absolute -top-24 -left-24 size-96 rounded-full bg-stage-profile-soft blur-2xl" />
-          <div className="absolute top-40 -right-32 size-96 rounded-full bg-stage-assessment-soft blur-2xl" />
-          <div className="absolute -bottom-40 left-1/3 size-96 rounded-full bg-stage-results-soft blur-2xl" />
-        </div>
+      {/* Hero: static hexagon field (the RIASEC hexagon) whose lit cells
+          breathe in and out at random, masked to fade toward the edges */}
+      <section className="relative isolate overflow-hidden">
+        <HexagonPattern
+          radius={40}
+          gap={4}
+          hexagons={heroCells}
+          className="-z-10 stroke-primary/50 mask-[radial-gradient(720px_circle_at_center,white,transparent)] print:hidden dark:stroke-primary/25"
+        />
 
         <div className="mx-auto flex w-full max-w-4xl flex-col items-center px-4 pt-16 pb-20 text-center sm:pt-24">
-          <BlurFade>
-            <p className="flex items-center gap-2 rounded-full border border-border bg-card px-4 py-1.5 text-sm font-semibold text-muted-foreground">
-              <Sparkles className="size-4 text-stage-profile" aria-hidden />
-              For Senior High School students
-            </p>
-          </BlurFade>
-
           <BlurFade delay={0.08}>
-            <h1 className="mt-6 text-5xl leading-[1.08] font-extrabold tracking-tight text-foreground sm:text-6xl md:text-7xl">
-              Align your passion with your profession
+            {/* Two hand-drawn marks, drawn one after the other: the marker
+                sweeps "passion", then the line underscores "profession". */}
+            <h1 className="text-5xl leading-[1.22] font-extrabold tracking-tight text-foreground sm:text-6xl md:text-7xl">
+              Align your{" "}
+              <Highlighter
+                color="#f5c749"
+                darkColor="#8a6a12"
+                padding={10}
+                strokeWidth={3}
+                iterations={2}
+                animationDuration={2200}
+                delay={700}
+              >
+                passion
+              </Highlighter>{" "}
+              with your{" "}
+              <Highlighter
+                action="underline"
+                color="#3f5f82"
+                darkColor="#b4cae3"
+                padding={8}
+                strokeWidth={6}
+                iterations={2}
+                animationDuration={1600}
+                delay={2600}
+              >
+                profession
+              </Highlighter>
             </h1>
           </BlurFade>
 
           <BlurFade delay={0.16}>
             <p className="mx-auto mt-6 max-w-xl text-lg text-muted-foreground">
-              Does your strand really fit you? Take a short personality
-              assessment and get your Holland Code, a clear strand verdict, and
-              careers and college programs that match who you are.
+              Take a short personality assessment and get your Holland Code,
+              plus the careers and college programs that match who you are.
             </p>
           </BlurFade>
 
@@ -160,18 +141,18 @@ export default function HomePage() {
           >
             <div className="flex flex-col items-center gap-3 sm:flex-row">
               <HeroCta />
-              <Link
-                href="#how-it-works"
+              <SectionLink
+                href="/#how-it-works"
                 className={cn(
                   buttonVariants({ variant: "outline", size: "lg" }),
                   "h-13 rounded-full px-7 text-lg font-semibold",
                 )}
               >
                 See how it works
-              </Link>
+              </SectionLink>
             </div>
             <p className="text-sm font-medium text-muted-foreground">
-              Takes about 8 minutes. Free, anonymous, no sign-up.
+              Takes about 5 minutes. Free, anonymous, no sign-up.
             </p>
           </BlurFade>
 
@@ -202,7 +183,7 @@ export default function HomePage() {
       {/* How it works: one card per journey stage, color-committed */}
       <section
         id="how-it-works"
-        className="mx-auto w-full max-w-6xl scroll-mt-20 px-4 py-16 sm:px-6"
+        className="mx-auto w-full max-w-6xl scroll-mt-24 px-4 py-16 sm:px-6"
       >
         <BlurFade inView>
           <h2 className="text-center text-3xl font-bold text-foreground sm:text-4xl">
@@ -257,23 +238,25 @@ export default function HomePage() {
           <BlurFade inView>
             <div className="flex h-full flex-col gap-4 rounded-3xl border border-border bg-card p-7">
               <h3 className="text-xl font-bold text-foreground">
-                A real answer about your strand
+                Options, not verdicts
               </h3>
               <p className="text-base text-muted-foreground">
-                Not a vibe, a verdict. We compare your measured interests
-                against your strand and tell you plainly how well they line up,
-                with the evidence to back it.
+                For each of your three strongest traits you get the full
+                official list of college majors and the career pathways they
+                lead to. Nothing is ranked or scored, because the point is to
+                widen what you are choosing from.
               </p>
               <div className="mt-auto flex flex-wrap items-center gap-2">
-                <span className="rounded-full bg-positive-soft px-4 py-1.5 text-sm font-bold text-positive">
-                  Aligned
-                </span>
-                <span className="rounded-full bg-stage-profile-soft px-4 py-1.5 text-sm font-bold text-stage-profile-strong">
-                  Partially Aligned
-                </span>
-                <span className="rounded-full bg-stage-results-soft px-4 py-1.5 text-sm font-bold text-stage-results-strong">
-                  Misaligned
-                </span>
+                {["Health Services", "Business", "Arts and Communication"].map(
+                  (pathway) => (
+                    <span
+                      key={pathway}
+                      className="rounded-full bg-muted px-4 py-1.5 text-sm font-semibold text-foreground"
+                    >
+                      {pathway}
+                    </span>
+                  ),
+                )}
               </div>
             </div>
           </BlurFade>
@@ -299,47 +282,70 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Testimonials: speech bubbles with cheerful avatars */}
+      {/* The six traits: a legend, deliberately not another card grid */}
       <section className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6">
         <BlurFade inView>
-          <h2 className="text-center text-3xl font-bold text-foreground sm:text-4xl">
-            Students like you, one decision later
+          <h2 className="text-3xl font-bold text-foreground sm:text-4xl">
+            Six traits, one code
           </h2>
+          <p className="mt-3 max-w-2xl text-base text-muted-foreground">
+            The assessment measures all six. Your three strongest become your
+            Holland Code, and that code is what the majors and pathways are
+            matched to.
+          </p>
         </BlurFade>
-        <div className="mt-10 grid gap-x-6 gap-y-8 sm:grid-cols-2">
-          {testimonials.map((t, index) => (
-            <BlurFade key={t.name} inView delay={index * 0.08}>
-              <figure className="flex flex-col gap-3">
-                <blockquote className="relative rounded-3xl rounded-bl-md border border-border bg-card p-6 text-base text-foreground/90">
-                  {t.quote}
-                </blockquote>
-                <figcaption className="flex items-center gap-3 pl-2">
-                  <StudentAvatar face={t.face} />
-                  <div>
-                    <p className="font-heading text-base font-bold text-foreground">
-                      {t.name}
-                    </p>
-                    <p className="text-sm text-muted-foreground">{t.detail}</p>
-                  </div>
-                </figcaption>
-              </figure>
-            </BlurFade>
-          ))}
-        </div>
-        <p className="mt-6 text-center text-xs text-muted-foreground">
-          Illustrative quotes from early testing sessions.
-        </p>
+
+        <BlurFade inView delay={0.08} className="mt-8">
+          <dl className="grid overflow-hidden rounded-3xl border border-border bg-card sm:grid-cols-2">
+            {traitPreview.map((trait, index) => (
+              <div
+                key={trait.letter}
+                className={cn(
+                  // Fixed name column, so every summary starts on the same
+                  // line however long the trait name is.
+                  "grid items-start gap-x-5 gap-y-2 border-border p-6 sm:grid-cols-[13.5rem_1fr]",
+                  index < traitPreview.length - 1 && "border-b",
+                  // Two columns: the left one keeps a divider, and the last
+                  // row of each column drops its bottom border.
+                  "sm:even:border-l",
+                  index >= traitPreview.length - 2 && "sm:border-b-0",
+                )}
+              >
+                <dt className="flex items-center gap-3">
+                  <span
+                    className={cn(
+                      "flex size-10 shrink-0 items-center justify-center rounded-xl font-heading text-lg font-extrabold",
+                      trait.chip,
+                    )}
+                    aria-hidden
+                  >
+                    {trait.letter}
+                  </span>
+                  <span className="font-heading text-lg font-bold text-foreground">
+                    {trait.name}
+                  </span>
+                </dt>
+                <dd className="text-base text-pretty text-muted-foreground sm:pt-1.5">
+                  {trait.summary}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </BlurFade>
       </section>
 
       {/* Final CTA */}
       <section className="mx-auto w-full max-w-6xl px-4 pb-20 sm:px-6">
         <BlurFade inView>
-          <div className="flex flex-col items-center gap-6 rounded-4xl bg-stage-profile-soft px-6 py-14 text-center">
+          <div className="relative flex flex-col items-center gap-6 overflow-hidden rounded-4xl bg-stage-profile-soft px-6 py-14 text-center">
+            {/* The one place on the landing page that gets a shine: the
+                closing invitation. */}
+            <ShineBorder borderWidth={2} duration={12} />
             <h2 className="max-w-xl text-3xl font-bold text-foreground sm:text-4xl">
               Ready to find your path?
             </h2>
             <div className="flex flex-wrap justify-center gap-2">
-              {["Free to use", "No sign-up needed", "About 8 minutes"].map(
+              {["Free to use", "No sign-up needed", "About 5 minutes"].map(
                 (badge) => (
                   <span
                     key={badge}
@@ -350,7 +356,7 @@ export default function HomePage() {
                 ),
               )}
             </div>
-            <HeroCta />
+            <HeroCta label="Find your path" />
           </div>
         </BlurFade>
       </section>

@@ -7,7 +7,7 @@ import { ProfileForm } from "@/components/journey/profile-form";
 export const metadata: Metadata = {
   title: "Profile Setup",
   description:
-    "Tell us your grade level and SHS strand so we can check how your strand matches your results.",
+    "Tell us your grade level so we can match you to careers and college programs.",
 };
 
 export default function ProfilePage() {

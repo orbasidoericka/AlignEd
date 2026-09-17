@@ -21,7 +21,7 @@ function RadioGroup({
 }
 
 // Card-style radio option sized for thumbs; the journey's enum inputs (grade,
-// strand, Likert) all render through this instead of small dots.
+// quiz yes/no) all render through this instead of small dots.
 function RadioCard({
   className,
   children,
@@ -33,7 +33,9 @@ function RadioCard({
       className={cn(
         "flex min-h-11 cursor-pointer items-center gap-3 rounded-2xl border-2 border-border bg-card px-4 py-3 text-left text-base font-medium text-foreground transition-colors duration-150 select-none",
         "hover:border-muted-foreground/40",
-        "focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none",
+        // Solid ring token (≥3:1 on card and page) with an offset so it
+        // stays distinct from the card's own border or gradient frame.
+        "focus-visible:ring-3 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none",
         "data-checked:border-current",
         "disabled:pointer-events-none disabled:opacity-50",
         className,

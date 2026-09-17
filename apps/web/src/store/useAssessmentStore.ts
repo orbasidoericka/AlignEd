@@ -4,7 +4,7 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
 import { QUESTIONS } from "@/lib/riasec/questions";
-import type { GradeLevel, Strand } from "@/lib/riasec/types";
+import type { GradeLevel } from "@/lib/riasec/types";
 
 export type RiasecTrait =
   | "realistic"
@@ -22,8 +22,8 @@ export interface AssessmentAnswer {
 }
 
 export interface ProfileState {
+  nickname: string;
   gradeLevel: GradeLevel | null;
-  strand: Strand | null;
   school: string;
 }
 
@@ -57,10 +57,27 @@ const emptyScores: RiasecScores = {
 };
 
 const emptyProfile: ProfileState = {
+  nickname: "",
   gradeLevel: null,
-  strand: null,
   school: "",
 };
+
+// On the server there is no localStorage, and handing persist an undefined
+// storage makes it skip attaching its api — leaving store.persist undefined
+// and crashing anything that reads it while rendering (the journey guard).
+// An inert storage keeps that api present; the client rehydrates for real.
+const noopStorage: Storage = {
+  length: 0,
+  clear: () => {},
+  getItem: () => null,
+  key: () => null,
+  removeItem: () => {},
+  setItem: () => {},
+};
+
+function ssrSafeStorage(): Storage {
+  return typeof window === "undefined" ? noopStorage : window.localStorage;
+}
 
 // Persist locally so quiz progress survives refresh before syncing.
 export const useAssessmentStore = create<AssessmentStore>()(
@@ -119,8 +136,18 @@ export const useAssessmentStore = create<AssessmentStore>()(
     }),
     {
       name: "aligned.assessment.v1",
-      version: 2,
-      storage: createJSONStorage(() => localStorage),
+      version: 4,
+      storage: createJSONStorage(() => ssrSafeStorage()),
+      // The default merge is shallow, so a stored profile would replace the
+      // current one wholesale and any field added later would read undefined.
+      merge: (persisted, current) => {
+        const saved = (persisted ?? {}) as Partial<AssessmentState>;
+        return {
+          ...current,
+          ...saved,
+          profile: { ...emptyProfile, ...saved.profile },
+        };
+      },
       partialize: (state) => ({
         currentStep: state.currentStep,
         totalQuestions: state.totalQuestions,
@@ -131,13 +158,35 @@ export const useAssessmentStore = create<AssessmentStore>()(
       }),
       migrate: (persisted, version) => {
         // v1 payloads predate the profile step; inject an empty profile.
-        if (version < 2) {
+        const withProfile =
+          version < 2
+            ? {
+                ...(persisted as Omit<AssessmentState, "profile">),
+                profile: { ...emptyProfile },
+              }
+            : (persisted as AssessmentState);
+
+        // Answers before v3 are Likert-scored against a retired question bank:
+        // the ids no longer exist and the totals are on the wrong scale. Keep
+        // the profile, drop the quiz.
+        const withQuiz =
+          version < 3
+            ? {
+                ...withProfile,
+                currentStep: 0,
+                answers: {},
+                scores: { ...emptyScores },
+              }
+            : withProfile;
+
+        // v4 introduced the nickname; older profiles have no such key.
+        if (version < 4) {
           return {
-            ...(persisted as Omit<AssessmentState, "profile">),
-            profile: { ...emptyProfile },
+            ...withQuiz,
+            profile: { ...emptyProfile, ...withQuiz.profile },
           };
         }
-        return persisted as AssessmentState;
+        return withQuiz;
       },
     },
   ),
@@ -146,7 +195,7 @@ export const useAssessmentStore = create<AssessmentStore>()(
 export const selectIsProfileComplete = (state: {
   profile: ProfileState;
 }): boolean =>
-  state.profile.gradeLevel !== null && state.profile.strand !== null;
+  state.profile.nickname.length > 0 && state.profile.gradeLevel !== null;
 
 export const selectIsAssessmentComplete = (state: {
   answers: Record<string, AssessmentAnswer>;

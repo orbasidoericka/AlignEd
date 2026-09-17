@@ -39,7 +39,7 @@ Three moves, ordered by impact:
 The nav reflects *where the student is in their journey*, powered by the
 assessment store (localStorage — works anonymously):
 - Before the quiz: "My Results" renders dimmed with a lock glyph and a
-  shadcn `Tooltip`: "Take the 8-minute assessment to unlock." Curiosity gap.
+  shadcn `Tooltip`: "Take the 5-minute assessment to unlock." Curiosity gap.
 - Quiz in progress: nav item shows a mini progress ring (MagicUI
   `AnimatedCircularProgressBar`, 16px) — the site remembers, everywhere.
 - Completed: "My Results" earns a one-time MagicUI `BorderBeam` glow and a
@@ -66,31 +66,29 @@ state ("Saved ✓"). One decision per screen. Exit attempts get a shadcn
 Keep: Hero Highlight, bento, testimonial marquee, CTA banner.
 Add: **Aceternity Sticky Scroll Reveal** "How it works" (4 chapters:
 Tell us where you are → Discover yourself → See your alignment → Walk out
-with a plan); journey-aware hero CTA (2.1); duration promise ("~8 minutes")
+with a plan); journey-aware hero CTA (2.1); duration promise ("~5 minutes")
 under the CTA.
 
 ### Profile Setup — the doorway (new step, before the quiz)
 Runs inside the Focus Mode shell so the transition into the assessment feels
 like one continuous corridor, not a form then a quiz.
-- **Grade level:** two large tappable cards (shadcn `RadioGroup` restyled) —
-  "Grade 11" / "Grade 12". Nothing else.
-- **SHS Strand:** the seven strands as generous option cards (shadcn
-  `ToggleGroup` single-select or `Select` on narrow screens), each with a
-  five-word descriptor. A `Tooltip` explains *why we ask*: "We'll check how
-  your strand matches your results."
+- **Grade level:** six tappable cards (shadcn `RadioGroup` restyled) —
+  "Grade 7" through "Grade 12". Nothing else.
 - **School (optional):** single shadcn `Input`, character counter at 120,
-  clearly labeled optional — visually quieter than the two required fields.
-- Continue button disabled until grade + strand are set; missing fields
-  indicated inline, never with an error modal.
+  clearly labeled optional — visually quieter than the required field.
+- Continue button disabled until grade is set; missing field indicated
+  inline, never with an error modal.
 
 ### Assessment — "Focus Mode"
 - Shell: minimal top bar (shadcn `Progress` + step count), trait
   constellation faintly glowing in the backdrop as answers accumulate
   (six fixed stars, one per RIASEC trait, brightening with each answer —
   pure CSS opacity, virtually free).
-- Questions: card per question, framer-motion `AnimatePresence` slide;
-  Likert scale as five large tappable cards (shadcn `RadioGroup` restyled,
-  thumb-sized, emoji-anchored endpoints).
+- Questions: one statement per card, framer-motion `AnimatePresence` slide;
+  the answer is a side-by-side Yes/No pair as two large tappable cards
+  (shadcn `RadioGroup` restyled, thumb-sized, emoji-anchored). Tapping either
+  one advances on its own — there is no Next button — and a quiet `Back`
+  returns to the previous statement with its answer still selected.
 - Milestones: every 25%, a beat — MagicUI `BlurFade` interstitial ("You're
   halfway. Most students never get this far.").
 - Completion: MagicUI `Confetti` (one burst, respects reduced motion) →
@@ -102,15 +100,7 @@ like one continuous corridor, not a form then a quiz.
    ("The Compassionate Investigator").
 2. **The evidence:** shadcn `Chart` radar (six traits) inside Aceternity
    `CardSpotlight`, with plain-language blurbs for the top three traits.
-3. **The verdict — Strand Validation (the headline feature):** a
-   `BorderBeam`-framed card answering the question the student actually
-   walked in with: *"Does my strand fit me?"* Verdict badge (Aligned /
-   Partially Aligned / Misaligned / Aligned—Flexible for GAS), the shared
-   Holland letters shown as glowing evidence chips, and insight copy that
-   is always constructive — a Misaligned verdict reads as a discovery, not
-   a failing grade, and tells Grade 11 students the shift window is still
-   open.
-4. **The matches:** #1 recommended program as Aceternity `3D Card`;
+3. **The matches:** #1 recommended program as Aceternity `3D Card`;
    programs 2–5 as `CardHoverEffect` grid with match-strength `Badge`s
    ("Exact match" / "Strong match"); career suggestions as a compact
    tag-labeled card grid below. No university names or links anywhere.
