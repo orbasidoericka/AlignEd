@@ -99,7 +99,7 @@ export function ProfileForm() {
             onValueChange={(value) =>
               setProfile({ gradeLevel: value as GradeLevel })
             }
-            className="grid grid-cols-2 gap-3 sm:grid-cols-3"
+            className="grid grid-cols-2 gap-3"
           >
             {GRADE_LEVELS.map((grade) => (
               <RadioCard

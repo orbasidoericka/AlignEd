@@ -6,7 +6,11 @@ export type { RiasecTrait };
 
 export type RiasecLetter = "R" | "I" | "A" | "S" | "E" | "C";
 
-export const GRADE_LEVELS = ["7", "8", "9", "10", "11", "12"] as const;
+// Senior High School only (PRD audience: Grade 11-12). Junior High options
+// (7-10) removed from the picker. Migration tests for old localStorage
+// payloads still assert grades 7-10 pass through unchanged, since `migrate`
+// takes `unknown` and never validates against this list.
+export const GRADE_LEVELS = ["11", "12"] as const;
 
 export type GradeLevel = (typeof GRADE_LEVELS)[number];
 
