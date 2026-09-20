@@ -77,7 +77,7 @@ export function RapidAnswerDialog({ open, onAcknowledge }: RapidAnswerDialogProp
             Please Answer Carefully
           </AlertDialogTitle>
           <AlertDialogDescription className="text-base text-notice-muted">
-            You've been submitting answers very quickly.
+            You&apos;ve been submitting answers very quickly.
             To ensure the accuracy of your results, please
             take your time with the remaining questions.
           </AlertDialogDescription>

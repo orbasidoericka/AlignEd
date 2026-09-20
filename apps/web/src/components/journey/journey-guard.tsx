@@ -1,7 +1,7 @@
 // Copyright (c) 2026 EdTech. All rights reserved.
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 
 import { Skeleton } from "@/components/ui/skeleton";
@@ -16,24 +16,34 @@ interface JourneyGuardProps {
   children: React.ReactNode;
 }
 
+// Subscribe/snapshot pair for zustand's persist hydration, so the guard reads
+// it through useSyncExternalStore instead of setState-in-effect (that pattern
+// also has a real race: hydration can finish in the gap between the initial
+// render and the effect subscribing, and the callback-only version would miss
+// it). useSyncExternalStore re-derives the snapshot on every render, so the
+// gap does not exist.
+function subscribeToHydration(onChange: () => void) {
+  return useAssessmentStore.persist.onFinishHydration(onChange);
+}
+function getHydrationSnapshot() {
+  return useAssessmentStore.persist.hasHydrated();
+}
+function getHydrationServerSnapshot() {
+  return false;
+}
+
 // Client-side route guard (PRD §5 navigation rules). Journey state lives in
 // localStorage, so redirects must wait for zustand persist hydration; until
 // then a skeleton holds the layout to avoid a content flash.
 export function JourneyGuard({ require, children }: JourneyGuardProps) {
   const router = useRouter();
-  const [hydrated, setHydrated] = useState(() =>
-    useAssessmentStore.persist.hasHydrated(),
+  const hydrated = useSyncExternalStore(
+    subscribeToHydration,
+    getHydrationSnapshot,
+    getHydrationServerSnapshot,
   );
   const profileComplete = useAssessmentStore(selectIsProfileComplete);
   const assessmentComplete = useAssessmentStore(selectIsAssessmentComplete);
-
-  useEffect(() => {
-    const unsub = useAssessmentStore.persist.onFinishHydration(() =>
-      setHydrated(true),
-    );
-    setHydrated(useAssessmentStore.persist.hasHydrated());
-    return unsub;
-  }, []);
 
   const allowed =
     require === "profile"
