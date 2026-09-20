@@ -3,6 +3,7 @@
 import type { Metadata } from "next";
 import { ClipboardPen, Compass, PartyPopper, ShieldCheck } from "lucide-react";
 
+import { AuroraText } from "@/components/magic/aurora-text";
 import { BlurFade } from "@/components/magic/blur-fade";
 import { Highlighter } from "@/components/magic/highlighter";
 import {
@@ -86,13 +87,17 @@ export default function HomePage() {
   return (
     <div className="flex flex-col">
       {/* Hero: static hexagon field (the RIASEC hexagon) whose lit cells
-          breathe in and out at random, masked to fade toward the edges */}
+          breathe in and out at random. The mask is vertical only: a radial
+          circle left the grid stopping short of the viewport edges on wide
+          screens, and cut it off flat where the section ends. Fading down
+          the last third instead means the field dissolves into the next
+          section rather than meeting it at a line. */}
       <section className="relative isolate overflow-hidden">
         <HexagonPattern
           radius={40}
           gap={4}
           hexagons={heroCells}
-          className="-z-10 stroke-primary/50 mask-[radial-gradient(720px_circle_at_center,white,transparent)] print:hidden dark:stroke-primary/25"
+          className="-z-10 stroke-primary/50 mask-[linear-gradient(to_bottom,white,white_55%,transparent_96%)] print:hidden dark:stroke-primary/25"
         />
 
         <div className="mx-auto flex w-full max-w-4xl flex-col items-center px-4 pt-16 pb-20 text-center sm:pt-24">
@@ -100,7 +105,7 @@ export default function HomePage() {
             {/* Two hand-drawn marks, drawn one after the other: the marker
                 sweeps "passion", then the line underscores "profession". */}
             <h1 className="text-5xl leading-[1.22] font-extrabold tracking-tight text-foreground sm:text-6xl md:text-7xl">
-              Align your{" "}
+              <AuroraText speed={0.8}>Align</AuroraText> your{" "}
               <Highlighter
                 color="#f5c749"
                 darkColor="#8a6a12"

@@ -3,6 +3,8 @@
 import { MotionConfig } from "framer-motion";
 import { ThemeProvider } from "next-themes";
 
+import { SoundProvider } from "@/components/sound-provider";
+
 // Global client providers. MotionConfig reducedMotion="user" makes every
 // framer-motion animation respect the OS "reduce motion" setting; pure-CSS
 // animations are covered by the media query in globals.css.
@@ -14,7 +16,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
       enableSystem
       disableTransitionOnChange
     >
-      <MotionConfig reducedMotion="user">{children}</MotionConfig>
+      <MotionConfig reducedMotion="user">
+        <SoundProvider>{children}</SoundProvider>
+      </MotionConfig>
     </ThemeProvider>
   );
 }

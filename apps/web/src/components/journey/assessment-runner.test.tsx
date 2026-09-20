@@ -14,6 +14,11 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn() }),
 }));
 
+// The manager itself is covered in lib/sound; here we only care which sound
+// each interaction asks for.
+const playSound = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/sound/sound-manager", () => ({ playSound }));
+
 function answerFirst(count: number, value = 1) {
   const { setAnswer } = useAssessmentStore.getState();
   for (const question of QUESTIONS.slice(0, count)) {
@@ -50,6 +55,7 @@ describe("AssessmentRunner hardening", () => {
       toFake: ["setTimeout", "clearTimeout", "performance", "queueMicrotask"],
     });
     useAssessmentStore.getState().reset();
+    playSound.mockClear();
   });
 
   afterEach(() => {
@@ -137,5 +143,52 @@ describe("AssessmentRunner hardening", () => {
     expect(screen.getByText(QUESTIONS[2]!.text)).toBeInTheDocument();
     expect(screen.queryByText(QUESTIONS[3]!.text)).toBeNull();
     expect(useAssessmentStore.getState().answers[QUESTIONS[2]!.id]?.value).toBe(1);
+  });
+
+  it("sounds the answer that was chosen, and stays silent when guarded", () => {
+    render(<AssessmentRunner />);
+
+    // Inside the input guard nothing is recorded, so nothing should sound.
+    fireEvent.click(radio(0, /Yes/));
+    expect(playSound).not.toHaveBeenCalled();
+
+    wait(INPUT_GUARD_MS + 10);
+    fireEvent.click(radio(0, /Yes/));
+    expect(playSound).toHaveBeenCalledExactlyOnceWith("yes");
+
+    playSound.mockClear();
+    wait(ADVANCE_DELAY_MS + 10);
+    wait(INPUT_GUARD_MS + 10);
+    fireEvent.keyDown(document, { key: "n" });
+    expect(playSound).toHaveBeenCalledExactlyOnceWith("no");
+  });
+
+  it("celebrates the answer that finishes the quiz, once", () => {
+    answerFirst(QUESTIONS.length - 1);
+    render(<AssessmentRunner />);
+
+    wait(INPUT_GUARD_MS + 10);
+    fireEvent.keyDown(document, { key: "y" });
+    expect(playSound).toHaveBeenCalledWith("yes");
+
+    wait(ADVANCE_DELAY_MS + 10);
+    expect(screen.getByText("All done!")).toBeInTheDocument();
+    expect(playSound.mock.calls.filter(([n]) => n === "celebration")).toHaveLength(1);
+
+    // Review my answers, then Finish: a re-entry, not an achievement.
+    playSound.mockClear();
+    fireEvent.click(screen.getByRole("button", { name: /Review my answers/ }));
+    wait(INPUT_GUARD_MS + 10);
+    fireEvent.click(screen.getByRole("button", { name: /Finish/ }));
+    expect(screen.getByText("All done!")).toBeInTheDocument();
+    expect(playSound).not.toHaveBeenCalledWith("celebration");
+  });
+
+  it("stays silent when a finished quiz is merely reopened", () => {
+    answerFirst(QUESTIONS.length);
+    render(<AssessmentRunner />);
+
+    expect(screen.getByText("All done!")).toBeInTheDocument();
+    expect(playSound).not.toHaveBeenCalled();
   });
 });

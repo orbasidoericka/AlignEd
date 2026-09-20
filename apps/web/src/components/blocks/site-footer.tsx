@@ -3,6 +3,7 @@
 import Link from "next/link";
 
 import { SectionLink } from "@/components/blocks/section-link";
+import { Wordmark } from "@/components/blocks/wordmark";
 
 // Server component. Footer links mirror the journey plus the legal pages.
 const footerLinks = [
@@ -18,9 +19,7 @@ export function SiteFooter() {
     <footer className="mt-auto w-full border-t border-chrome-border bg-chrome/85 backdrop-blur-md">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-6 py-10 md:flex-row md:items-start md:justify-between">
         <div className="max-w-sm space-y-2">
-          <p className="font-heading text-xl font-bold tracking-tight text-foreground">
-            Align<span className="text-stage-profile-strong">Ed</span>
-          </p>
+          <Wordmark className="h-8" />
           <p className="text-sm text-muted-foreground">
             A free, anonymous guide for Senior High School students: discover
             your Holland Code and see the careers and college programs that

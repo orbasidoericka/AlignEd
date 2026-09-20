@@ -40,6 +40,9 @@
   --color-notice-muted: #cbd5e1;
   --shadow-bento:
     0 1px 2px rgb(15 23 42 / 0.04), 0 8px 24px -12px rgb(63 95 130 / 0.18);
+  /* Deeper sibling, so the top trait card sits forward of its neighbours. */
+  --shadow-bento-lifted:
+    0 2px 4px rgb(15 23 42 / 0.06), 0 16px 40px -16px rgb(63 95 130 / 0.28);
   --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);
   --font-heading: var(--font-heading);
@@ -178,6 +181,28 @@
   --stage-profile-strong: #7a6415;
   --stage-profile-soft: #fdfaeb;
   --stage-profile-foreground: #5c4a12;
+  /* Aurora Background stops (Profile Setup). Light uses the pastels as-is;
+     dark needs light tones, because the dark accent and secondary are
+     themselves near-black and blur into a brown haze. */
+  --aurora-a: #8eaccd;
+  --aurora-b: #d2e0fb;
+  --aurora-c: #f9f3cc;
+  --aurora-d: #d7e5ca;
+  /* Cuts the colour layer into ribbons. Page-colored in light; in dark it
+     would only add more black, so it drops out there. */
+  --aurora-veil: #f8fafc;
+  /* AuroraText stops for the hero word "Align" (app/(site)/page.tsx). Lighter
+     than primary-strong/stage-profile-strong by design: those two are tuned
+     for small colored text, and at 72px bold the word only needs the
+     WCAG AA large-text floor (3:1), so there is room to read softer without
+     losing the tie to "profession" (blue) and "Step 1 of 3" (gold). Blended
+     toward each color's own pastel base rather than picked freehand, and
+     clamped so the palest stop (gold, which fades fastest) still clears the
+     stricter 4.5:1 the rest of the app's colored text holds to:
+     align-a #4f6e91 measures 5.05:1, align-b #846f24 measures 4.69:1,
+     both against --background. */
+  --align-a: #0055b6;
+  --align-b: #e9d165;
   --stage-assessment: #8eaccd;
   --stage-assessment-strong: #3f5f82;
   --stage-assessment-soft: #eef3fd;
@@ -245,6 +270,17 @@
   --stage-profile-strong: #f9f3cc;
   --stage-profile-soft: #221f12;
   --stage-profile-foreground: #3d3310;
+  --aurora-a: #8eaccd;
+  --aurora-b: #b4cae3;
+  --aurora-c: #f9f3cc;
+  --aurora-d: #c3b6e8;
+  --aurora-veil: transparent;
+  /* Unchanged from primary-strong/stage-profile-strong: dark mode's tones are
+     already pale pastels (11.14:1 and 16.69:1 against the dark background),
+     so lightening further would wash the two stops into each other and blur
+     the gradient's shape rather than reading as "lighter". */
+  --align-a: #b4cae3;
+  --align-b: #f9f3cc;
   --stage-assessment: #8eaccd;
   --stage-assessment-strong: #b4cae3;
   --stage-assessment-soft: #141d31;
@@ -284,6 +320,23 @@
       var(--stage-results-strong)
     );
   background-size: 400% 400%;
+  background-position: 0% 50%;
+}
+
+/* The glow behind the answer cards. Deliberately NOT bg-answer-gradient:
+   that one fades to `transparent` at three of its four anchors, which is
+   right for a 3px border but blurs into a lopsided bloom, bright at one
+   corner and cut off at the other. Fully opaque stops bloom evenly. */
+@utility bg-answer-glow {
+  background-image: linear-gradient(
+    115deg,
+    var(--stage-assessment-strong),
+    var(--stage-results),
+    var(--stage-profile),
+    var(--stage-assessment),
+    var(--stage-assessment-strong)
+  );
+  background-size: 200% 200%;
   background-position: 0% 50%;
 }
 
@@ -331,6 +384,79 @@
   100% {
     opacity: 0;
   }
+}
+
+/* Aurora Text (components/magic/aurora-text.tsx): the gradient drifts across
+   the word; the text itself never moves. Instances set --aurora-duration. */
+@keyframes aurora {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@utility animate-aurora {
+  animation-name: aurora;
+  animation-duration: var(--aurora-duration, 10s);
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+/* Aurora Background (components/aceternity/aurora-background.tsx): a soft
+   pastel field drifts behind the Profile Setup form. Named -drift because
+   `aurora` above already belongs to AuroraText, which pans a text gradient.
+   One blurred layer rather than upstream's two blended ones: half the paint
+   cost, and the second layer was invisible under this palette anyway. */
+@keyframes aurora-drift {
+  from {
+    background-position: 50% 50%, 50% 50%;
+  }
+  to {
+    background-position: 350% 50%, 350% 50%;
+  }
+}
+
+@utility aurora-field {
+  /* Pastels only. The -strong tones are near-black olive in light mode and
+     turn the field muddy once blurred. Primary leads, because the yellow
+     stage tones alone are too pale to register on their own soft wash.
+     Stops come from --aurora-a..d so each theme gets tones that read as
+     light against its own ground. */
+  background-image:
+    repeating-linear-gradient(
+      100deg,
+      var(--aurora-veil) 0%,
+      var(--aurora-veil) 5%,
+      transparent 9%,
+      transparent 14%,
+      var(--aurora-veil) 18%
+    ),
+    repeating-linear-gradient(
+      100deg,
+      var(--aurora-a) 8%,
+      var(--aurora-b) 14%,
+      var(--aurora-c) 20%,
+      var(--aurora-d) 26%,
+      var(--aurora-a) 32%
+    );
+  background-size:
+    260%,
+    170%;
+  background-position:
+    50% 50%,
+    50% 50%;
+  /* Wide blur: the bands must read as light, not as stripes. */
+  filter: blur(28px);
+}
+
+@utility animate-aurora-drift {
+  animation-name: aurora-drift;
+  animation-duration: 60s;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
 }
 
 /* Shine Border (components/magic/shine-border.tsx): a highlight sweeps the
@@ -422,3 +548,4 @@
     scroll-behavior: auto !important;
   }
 }
+

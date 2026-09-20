@@ -1,7 +1,6 @@
 // Copyright (c) 2026 EdTech. All rights reserved.
 "use client";
 
-import { useSyncExternalStore } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
@@ -10,6 +9,7 @@ import {
   selectIsAssessmentComplete,
   useAssessmentStore,
 } from "@/store/useAssessmentStore";
+import { useHydrated } from "@/hooks/use-hydrated";
 import { cn } from "@/lib/utils";
 
 interface HeroCtaProps {
@@ -20,10 +20,6 @@ interface HeroCtaProps {
   className?: string;
 }
 
-// False on the server and during hydration, so the persisted state never
-// causes a hydration mismatch.
-const noopSubscribe = () => () => {};
-
 // Journey-aware CTA (PRD FR-1.4): once a completed assessment exists in local
 // storage, the primary action becomes the results page. Each placement passes
 // its own label so the page never repeats one CTA three times.
@@ -33,11 +29,7 @@ export function HeroCta({
   className,
 }: HeroCtaProps) {
   const assessmentComplete = useAssessmentStore(selectIsAssessmentComplete);
-  const hydrated = useSyncExternalStore(
-    noopSubscribe,
-    () => true,
-    () => false,
-  );
+  const hydrated = useHydrated();
 
   const done = hydrated && assessmentComplete;
 

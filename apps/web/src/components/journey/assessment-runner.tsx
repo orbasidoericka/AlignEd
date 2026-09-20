@@ -22,6 +22,7 @@ import {
   RadioGroup,
 } from "@/components/ui/radio-group";
 import { useRapidAnswerGuard } from "@/hooks/use-rapid-answer-guard";
+import { playSound } from "@/lib/sound/sound-manager";
 import { ANSWER_OPTIONS, QUESTIONS } from "@/lib/riasec/questions";
 import { useAssessmentStore } from "@/store/useAssessmentStore";
 import { cn } from "@/lib/utils";
@@ -39,6 +40,21 @@ const FINISH_HEADING_ID = "assessment-finish-heading";
 const SHORTCUTS = new Map(
   ANSWER_OPTIONS.map((option) => [option.label[0]!.toLowerCase(), option.value]),
 );
+
+// Each answer has its own sound, keyed off the same options the cards render
+// from, so relabelling them can never leave the audio pointing at the wrong
+// choice.
+const ANSWER_SOUNDS = new Map<number, "yes" | "no">(
+  ANSWER_OPTIONS.map((option) => [
+    option.value,
+    option.label[0]!.toLowerCase() === "y" ? "yes" : "no",
+  ]),
+);
+
+function playAnswerSound(value: number) {
+  const name = ANSWER_SOUNDS.get(value);
+  if (name) playSound(name);
+}
 
 // Focus Mode texture: static, faint hexagon grid with two corner cells that
 // glow in and out slowly, faded out before the answer cards so nothing
@@ -86,6 +102,9 @@ export function AssessmentRunner() {
   const [resumed] = useState(
     () => Object.keys(answers).length > 0 && firstUnanswered > 0,
   );
+  // Armed when the student arrives already finished, so reopening a completed
+  // quiz is silent.
+  const celebrated = useRef(QUESTIONS.every((q) => q.id in answers));
   const [advancePending, setAdvancePending] = useState(false);
   const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const shownAt = useRef(0);
@@ -164,6 +183,13 @@ export function AssessmentRunner() {
     const latest = useAssessmentStore.getState().answers;
     const unanswered = QUESTIONS.findIndex((q) => !(q.id in latest));
     if (unanswered === -1) {
+      // The reward sounds for the answer that actually completed the quiz, and
+      // never for the re-entries: a refresh of a finished quiz, or the
+      // Review my answers loop back through Finish.
+      if (!celebrated.current) {
+        celebrated.current = true;
+        playSound("celebration");
+      }
       setFinishing(true);
     } else {
       setDirection(-1);
@@ -181,18 +207,25 @@ export function AssessmentRunner() {
     performance.now() - shownAt.current < INPUT_GUARD_MS;
 
   const handleChoice = (value: number) => {
+    // Guarded taps stay silent: nothing was recorded, so nothing is confirmed.
     if (!question || isBlocked || inputLocked()) return;
 
     // Re-choosing the answer already given confirms it and moves on. Base UI
     // fires no value change for an already-checked radio, so without this a
     // revisited statement had no way forward.
     if (currentAnswer === value) {
-      if (!arrowNavigating.current) scheduleAdvance();
+      // Arrow keys landing back on the current answer change nothing.
+      if (arrowNavigating.current) return;
+      playAnswerSound(value);
+      scheduleAdvance();
       return;
     }
 
     const isRevision = currentAnswered;
     setAnswer(question.id, { trait: question.trait, value });
+    // The answer is in the store by now, including on the arrow-key and
+    // rapid-answer-block paths below, so the sound is always truthful.
+    playAnswerSound(value);
 
     // Arrow keys move the selection; they should not commit and advance.
     if (arrowNavigating.current) return;
@@ -336,10 +369,13 @@ export function AssessmentRunner() {
         )}
 
         {/* Question card. The x-clip keeps the slide transition from causing
-            horizontal scroll; -mx-10/px-10 moves the clip edge out 40px so the
-            answer cards' blur-xl glow fades out fully instead of ending in a
-            hard edge (the runner root's overflow-hidden still contains it). */}
-        <div className="relative -mx-10 flex flex-1 flex-col justify-center overflow-x-clip px-10">
+            horizontal scroll; -mx-24/px-24 moves the clip edge out 96px so the
+            answer cards' glow fades out fully instead of ending in a hard
+            vertical edge (the runner root's overflow-hidden still contains
+            it). The slack must stay ahead of the glow's reach in
+            BackgroundGradient: -inset-1 plus blur-2xl carries roughly 64px.
+            Negative margin and padding cancel, so content width is unchanged. */}
+        <div className="relative -mx-24 flex flex-1 flex-col justify-center overflow-x-clip px-24">
           <AnimatePresence mode="popLayout" initial={false} custom={direction}>
             <motion.div
               key={question.id}

@@ -1,7 +1,6 @@
 // Copyright (c) 2026 EdTech. All rights reserved.
 "use client";
 
-import { useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { CheckIcon, XIcon } from "lucide-react";
 
@@ -15,10 +14,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Wordmark } from "@/components/blocks/wordmark";
+import { SoundToggle } from "@/components/sound-toggle";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
+import { useHydrated } from "@/hooks/use-hydrated";
 import { useAssessmentStore } from "@/store/useAssessmentStore";
-
-const noopSubscribe = () => () => {};
 
 // Minimal Focus Mode top bar: brand, autosave state, guarded exit. Exit
 // attempts get a reassurance dialog instead of silent data anxiety.
@@ -27,20 +28,14 @@ export function FocusBar() {
   const lastUpdated = useAssessmentStore((state) => state.lastUpdated);
   // False on the server and during hydration, so the persisted "Saved" chip
   // never causes a hydration mismatch.
-  const hydrated = useSyncExternalStore(
-    noopSubscribe,
-    () => true,
-    () => false,
-  );
+  const hydrated = useHydrated();
 
   const saved = hydrated && lastUpdated !== null;
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-sm">
       <div className="mx-auto flex h-14 w-full max-w-3xl items-center justify-between px-4">
-        <span className="font-heading text-xl font-bold tracking-tight text-foreground">
-          Align<span className="text-stage-profile-strong">Ed</span>
-        </span>
+        <Wordmark className="h-7" priority />
 
         <div className="flex items-center gap-2">
           {saved && (
@@ -52,6 +47,9 @@ export function FocusBar() {
               Saved
             </span>
           )}
+
+          <SoundToggle />
+          <ThemeToggle />
 
           <AlertDialog>
             <AlertDialogTrigger

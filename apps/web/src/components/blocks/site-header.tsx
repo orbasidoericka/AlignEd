@@ -1,7 +1,7 @@
 // Copyright (c) 2026 EdTech. All rights reserved.
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ArrowRight, LockIcon } from "lucide-react";
@@ -17,6 +17,8 @@ import {
   NavbarLogo,
   type NavItem,
 } from "@/components/aceternity/resizable-navbar";
+import { Wordmark } from "@/components/blocks/wordmark";
+import { SoundToggle } from "@/components/sound-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { buttonVariants } from "@/components/ui/button";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -24,6 +26,7 @@ import {
   selectIsAssessmentComplete,
   useAssessmentStore,
 } from "@/store/useAssessmentStore";
+import { useHydrated } from "@/hooks/use-hydrated";
 import { cn } from "@/lib/utils";
 
 const MOBILE_MENU_ID = "site-mobile-menu";
@@ -31,28 +34,11 @@ const MOBILE_MENU_ID = "site-mobile-menu";
 const ctaClasses =
   "rounded-full bg-stage-profile px-5 font-heading font-semibold text-stage-profile-foreground hover:bg-stage-profile/85";
 
-// False on the server and during hydration, true afterwards: gates
-// localStorage-backed state so server and first client render match.
-const noopSubscribe = () => () => {};
-function useHydrated() {
-  return useSyncExternalStore(
-    noopSubscribe,
-    () => true,
-    () => false,
-  );
-}
-
-function Wordmark() {
-  return (
-    <span className="font-heading text-2xl font-bold tracking-tight text-foreground">
-      Align<span className="text-stage-profile-strong">Ed</span>
-    </span>
-  );
-}
-
 // Journey-aware site header on Aceternity's Resizable Navbar: full-width at
-// the top, a floating pill once scrolled. Journey links carry their stage
-// color; My Results stays locked until the assessment is finished.
+// the top, a floating pill once scrolled. Assessment carries its stage
+// color; My Results was dropped from the link list (kept in the footer)
+// because the CTA already says "View My Results" once it unlocks, and a
+// second link to the same page read as two copies of the same button.
 export function SiteHeader() {
   const pathname = usePathname();
   const hydrated = useHydrated();
@@ -80,16 +66,6 @@ export function SiteHeader() {
       activeClassName: "text-stage-assessment-strong",
       indicatorClassName: "bg-stage-assessment",
     },
-    {
-      name: "My Results",
-      link: "/results",
-      active: isActive("/results"),
-      activeClassName: "text-stage-results-strong",
-      indicatorClassName: "bg-stage-results",
-      lockedHint: resultsUnlocked
-        ? undefined
-        : "Finish the 5-minute assessment to unlock your results.",
-    },
     { name: "How it works", link: "/#how-it-works" },
   ];
 
@@ -98,10 +74,11 @@ export function SiteHeader() {
       <Navbar>
         <NavBody>
           <NavbarLogo>
-            <Wordmark />
+            <Wordmark className="h-9" priority />
           </NavbarLogo>
           <NavItems items={items} />
           <div className="relative z-20 flex items-center gap-2">
+            <SoundToggle />
             <ThemeToggle />
             <Link
               href={ctaHref}
@@ -116,9 +93,10 @@ export function SiteHeader() {
         <MobileNav>
           <MobileNavHeader>
             <NavbarLogo>
-              <Wordmark />
+              <Wordmark className="h-8" priority />
             </NavbarLogo>
             <div className="flex items-center gap-1">
+              <SoundToggle />
               <ThemeToggle />
               <MobileNavToggle
                 isOpen={menuOpen}

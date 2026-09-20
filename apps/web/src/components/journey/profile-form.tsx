@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 
-import { HexagonPattern } from "@/components/magic/hexagon-pattern";
+import { AuroraBackground } from "@/components/aceternity/aurora-background";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -26,10 +26,6 @@ import {
 } from "@/store/useAssessmentStore";
 import { cn } from "@/lib/utils";
 
-// Pale yellow cannot show on its own yellow wash, so light mode tints with
-// the strong tone; dark mode uses the base.
-const profileCell = "fill-stage-profile-strong/25 dark:fill-stage-profile/40";
-
 // Profile Setup (PRD FR-2): grade level as tappable cards, optional school.
 // Stage accent: soft yellow. Everything stays client-side in the store.
 export function ProfileForm() {
@@ -48,18 +44,7 @@ export function ProfileForm() {
   };
 
   return (
-    <div className="relative isolate flex flex-1 flex-col overflow-hidden bg-stage-profile-soft">
-      {/* Strong tone at low opacity: the pale base does not show on its own wash. */}
-      <HexagonPattern
-        radius={48}
-        gap={6}
-        hexagons={[
-          [1, 0, profileCell],
-          [4, 1, profileCell],
-          [6, 0, profileCell],
-        ]}
-        className="-z-10 stroke-stage-profile-strong/25 mask-[radial-gradient(ellipse_at_top,white,transparent_85%)] print:hidden dark:stroke-stage-profile-strong/10"
-      />
+    <AuroraBackground>
       <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-4 py-10">
         <header className="flex flex-col gap-2">
           <p className="font-heading text-sm font-bold text-stage-profile-strong">
@@ -88,7 +73,7 @@ export function ProfileForm() {
             onChange={(event) =>
               setProfile({ nickname: sanitizeNickname(event.target.value) })
             }
-            placeholder="MARI-EL"
+            placeholder="Your nickname"
             autoCapitalize="characters"
             autoComplete="off"
             spellCheck={false}
@@ -96,11 +81,6 @@ export function ProfileForm() {
             aria-describedby="nickname-hint"
             className="h-12 rounded-xl bg-card text-base font-bold tracking-widest uppercase"
           />
-          <p id="nickname-hint" className="text-xs text-muted-foreground">
-            Letters and hyphens only, up to {NICKNAME_MAX_LENGTH} characters (
-            {profile.nickname.length}/{NICKNAME_MAX_LENGTH}). Not your real
-            name — it stays on this device.
-          </p>
           {showHints && profile.nickname.length === 0 && (
             <p className="text-sm font-semibold text-destructive" role="alert">
               Enter a nickname to continue.
@@ -163,7 +143,7 @@ export function ProfileForm() {
                 school: event.target.value.slice(0, SCHOOL_MAX_LENGTH),
               })
             }
-            placeholder="e.g. San Fernando National High School"
+            placeholder="Your School"
             className="h-11 rounded-xl bg-card text-base"
           />
           <p
@@ -174,8 +154,6 @@ export function ProfileForm() {
             )}
             aria-live="polite"
           >
-            {profile.school.length}/{SCHOOL_MAX_LENGTH} characters. Never used
-            to identify you.
           </p>
         </div>
 
@@ -197,6 +175,6 @@ export function ProfileForm() {
           </p>
         </div>
       </div>
-    </div>
+    </AuroraBackground>
   );
 }

@@ -64,3 +64,10 @@ supabase/.branches
 
 # local tooling
 .playwright-mcp/
+
+# Unused source art: the app serves the optimized exports in public/
+# (aligned-wordmark*.png, mascots/*.webp), not these originals. Keep them on
+# disk for future re-exports, but never in git history — 73MB combined.
+/apps/web/public/AlignEd Logo.png
+/apps/web/public/AlignEd Title.png
+/assets/mascots-source/

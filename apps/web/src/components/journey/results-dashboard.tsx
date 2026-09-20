@@ -23,6 +23,7 @@ import {
   TRAIT_ORDER,
   traitForLetter,
 } from "@/lib/riasec/scoring";
+import { useHydrated } from "@/hooks/use-hydrated";
 import { useAssessmentStore } from "@/store/useAssessmentStore";
 import { cn } from "@/lib/utils";
 
@@ -33,6 +34,13 @@ const printSingle = "print:col-span-1 print:row-span-1";
 // Everything is computed client-side from the store.
 export function ResultsDashboard() {
   const scores = useAssessmentStore((state) => state.scores);
+  const nickname = useAssessmentStore((state) => state.profile.nickname);
+  // JourneyGuard already withholds this whole subtree until the persisted
+  // store has rehydrated, which is why `scores` above is safe. The greeting
+  // keeps its own gate anyway: it is the one string a student would notice
+  // being wrong, and this way the component is still correct if it is ever
+  // rendered outside the guard.
+  const hydrated = useHydrated();
 
   const code = useMemo(() => computeHollandCode(scores), [scores]);
   const max = useMemo(() => maxScorePerTrait(QUESTIONS), []);
@@ -42,12 +50,22 @@ export function ResultsDashboard() {
   return (
     <div className="flex flex-1 flex-col bg-background print:bg-white">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-10 sm:px-6">
-        <p
-          className="font-heading text-sm font-bold text-primary-strong print:hidden"
-          data-print-hidden
-        >
-          Step 3 of 3 · Your results
-        </p>
+        <div className="flex flex-col gap-2">
+          <p
+            className="font-heading text-sm font-bold text-primary-strong print:hidden"
+            data-print-hidden
+          >
+            Step 3 of 3 · Your results
+          </p>
+          {/* The page's only h1: the cards below are all h2. Before hydration
+              (and for a profile with no nickname) it drops the name rather
+              than the greeting, so the line never reads half-finished. */}
+          <h1 className="font-heading text-3xl font-bold tracking-tight text-balance text-foreground sm:text-4xl">
+            {hydrated && nickname
+              ? `Here are your results, ${nickname}!`
+              : "Here are your results"}
+          </h1>
+        </div>
 
         <BentoGrid className="print:grid-cols-1">
           {/* Holland Code */}
@@ -84,7 +102,9 @@ export function ResultsDashboard() {
               <p className="text-sm font-semibold text-muted-foreground">
                 Your Holland Code
               </p>
-              <h1
+              {/* h2, like every other bento cell: the page's h1 is the
+                  greeting above the grid. */}
+              <h2
                 id="code-heading"
                 className="-mt-2 text-3xl font-bold text-foreground sm:text-4xl"
               >
@@ -92,7 +112,7 @@ export function ResultsDashboard() {
                 <span className="whitespace-nowrap">
                   {formatHollandCode(code)}
                 </span>
-              </h1>
+              </h2>
               <div className="flex gap-3" aria-hidden>
                 {code.map((letter) => (
                   <span

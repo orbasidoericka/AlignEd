@@ -32,13 +32,15 @@ export function BackgroundGradient({
 
   return (
     <div className={cn("group relative p-[3px]", containerClassName)}>
-      {/* Glow: hidden at rest in interactive mode, blooms on interaction. */}
+      {/* Glow: hidden at rest in interactive mode, blooms on interaction.
+          Sits slightly outside the card and blurs wide, so the falloff is a
+          glow rather than a soft-edged slab tracing the card's rectangle. */}
       <div
         aria-hidden
         className={cn(
-          "absolute inset-0 z-[1] rounded-3xl bg-answer-gradient blur-xl transition-opacity duration-500",
+          "absolute -inset-1 z-[1] rounded-[1.75rem] bg-answer-glow blur-2xl transition-opacity duration-500",
           animate === "always" ? "opacity-60" : "opacity-0",
-          "group-hover:opacity-80 group-has-[:focus-visible]:opacity-100 group-has-[[data-checked]]:opacity-100",
+          "group-hover:opacity-85 group-has-[:focus-visible]:opacity-100 group-has-[[data-checked]]:opacity-100",
           motion,
           playState[animate],
         )}
