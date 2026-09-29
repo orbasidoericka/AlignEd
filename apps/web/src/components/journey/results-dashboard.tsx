@@ -5,6 +5,7 @@ import { useMemo } from "react";
 import { Lightbulb, Radar as RadarIcon } from "lucide-react";
 
 import { BentoGrid, BentoGridItem } from "@/components/aceternity/bento-grid";
+import { CareerLookDialog } from "@/components/career-look/career-look-dialog";
 import { ResultsActions } from "@/components/journey/results-actions";
 import { BlurFade } from "@/components/magic/blur-fade";
 import { HexagonPattern } from "@/components/magic/hexagon-pattern";
@@ -131,6 +132,7 @@ export function ResultsDashboard() {
                   .map((letter) => TRAIT_META[traitForLetter(letter)].label)
                   .join(" · ")}
               </p>
+              <CareerLookDialog code={code} />
             </BentoGridItem>
           </BlurFade>
 

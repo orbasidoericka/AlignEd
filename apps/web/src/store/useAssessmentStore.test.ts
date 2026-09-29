@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { QUESTIONS } from "@/lib/riasec/questions";
 import {
@@ -84,6 +84,45 @@ describe("useAssessmentStore", () => {
     expect(state.answers).toEqual({});
     expect(state.scores.social).toBe(0);
     expect(state.lastUpdated).toBeNull();
+  });
+
+  it("stamps completedAt once, when the last question is answered", () => {
+    vi.useFakeTimers();
+    try {
+      const { setAnswer } = useAssessmentStore.getState();
+      vi.setSystemTime(new Date("2026-09-30T08:00:00Z"));
+      for (const question of QUESTIONS.slice(0, -1)) {
+        setAnswer(question.id, { trait: question.trait, value: 1 });
+      }
+      expect(useAssessmentStore.getState().completedAt).toBeNull();
+
+      const last = QUESTIONS[QUESTIONS.length - 1]!;
+      setAnswer(last.id, { trait: last.trait, value: 1 });
+      expect(useAssessmentStore.getState().completedAt).toBe(
+        "2026-09-30T08:00:00.000Z",
+      );
+
+      // Changing an answer later moves lastUpdated but not completedAt, so
+      // the PDF password stays the same.
+      vi.setSystemTime(new Date("2026-10-05T08:00:00Z"));
+      setAnswer(last.id, { trait: last.trait, value: 0 });
+      const state = useAssessmentStore.getState();
+      expect(state.completedAt).toBe("2026-09-30T08:00:00.000Z");
+      expect(state.lastUpdated).toBe("2026-10-05T08:00:00.000Z");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("clears completedAt on a retake", () => {
+    const { setAnswer } = useAssessmentStore.getState();
+    for (const question of QUESTIONS) {
+      setAnswer(question.id, { trait: question.trait, value: 1 });
+    }
+    expect(useAssessmentStore.getState().completedAt).not.toBeNull();
+
+    useAssessmentStore.getState().resetAnswers();
+    expect(useAssessmentStore.getState().completedAt).toBeNull();
   });
 
   it("setProfile patches fields without clobbering the rest", () => {

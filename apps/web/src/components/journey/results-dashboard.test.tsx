@@ -44,6 +44,15 @@ describe("ResultsDashboard greeting", () => {
     ).toBeInTheDocument();
   });
 
+  it("offers the career look from the Holland Code card", () => {
+    completeAssessment("FERF");
+    render(<ResultsDashboard />);
+
+    expect(
+      screen.getByRole("button", { name: /Try your career look/ }),
+    ).toBeInTheDocument();
+  });
+
   it("drops the name, not the greeting, when there is no nickname", () => {
     // A v1-v3 payload that predates the nickname field rehydrates with "".
     const { reset, setAnswer } = useAssessmentStore.getState();

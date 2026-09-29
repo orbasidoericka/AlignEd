@@ -34,6 +34,9 @@ interface AssessmentState {
   scores: RiasecScores;
   profile: ProfileState;
   lastUpdated: string | null;
+  // When the last question was first answered (ISO). Unlike lastUpdated it
+  // does not move on later edits; the results PDF password uses its date.
+  completedAt: string | null;
 }
 
 interface AssessmentActions {
@@ -89,6 +92,7 @@ export const useAssessmentStore = create<AssessmentStore>()(
       scores: { ...emptyScores },
       profile: { ...emptyProfile },
       lastUpdated: null,
+      completedAt: null,
       setTotalQuestions: (total) => set({ totalQuestions: total }),
       setCurrentStep: (step) => set({ currentStep: step }),
       setAnswer: (questionId, answer) =>
@@ -105,10 +109,15 @@ export const useAssessmentStore = create<AssessmentStore>()(
 
           scores[answer.trait] = scores[answer.trait] + answer.value;
 
+          const answers = { ...state.answers, [questionId]: answer };
+          const now = new Date().toISOString();
+          const finished =
+            Object.keys(answers).length >= QUESTIONS.length;
           return {
-            answers: { ...state.answers, [questionId]: answer },
+            answers,
             scores,
-            lastUpdated: new Date().toISOString(),
+            lastUpdated: now,
+            completedAt: state.completedAt ?? (finished ? now : null),
           };
         }),
       setProfile: (patch) =>
@@ -123,6 +132,7 @@ export const useAssessmentStore = create<AssessmentStore>()(
           answers: {},
           scores: { ...emptyScores },
           lastUpdated: new Date().toISOString(),
+          completedAt: null,
         }),
       reset: () =>
         set({
@@ -132,6 +142,7 @@ export const useAssessmentStore = create<AssessmentStore>()(
           scores: { ...emptyScores },
           profile: { ...emptyProfile },
           lastUpdated: null,
+          completedAt: null,
         }),
     }),
     {
@@ -155,6 +166,7 @@ export const useAssessmentStore = create<AssessmentStore>()(
         scores: state.scores,
         profile: state.profile,
         lastUpdated: state.lastUpdated,
+        completedAt: state.completedAt,
       }),
       migrate: (persisted, version) => {
         // v1 payloads predate the profile step; inject an empty profile.
