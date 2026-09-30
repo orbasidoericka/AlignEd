@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildResultsEmail,
   normalizeEmail,
+  parseTakenOn,
   validateRequest,
 } from "./email-content";
 
@@ -19,7 +20,14 @@ const valid = {
   email: "  Mari@Example.com ",
   consent: true,
   website: "",
-  results: { nickname: "MARI", code: ["I", "R", "A"], scores, maxScore: 7 },
+  results: {
+    nickname: "MARI",
+    gradeLevel: "11",
+    code: ["I", "R", "A"],
+    scores,
+    maxScore: 7,
+    takenOn: "2026-09-30",
+  },
 };
 
 describe("validateRequest", () => {
@@ -57,28 +65,64 @@ describe("normalizeEmail", () => {
   });
 });
 
+describe("assessment date", () => {
+  const withTakenOn = (takenOn: unknown) =>
+    validateRequest({ ...valid, results: { ...valid.results, takenOn } });
+
+  it("accepts a real calendar date and rejects anything else", () => {
+    expect(withTakenOn("2026-09-30").ok).toBe(true);
+    expect(withTakenOn("2026-02-30").ok).toBe(false); // no 30 February
+    expect(withTakenOn("09/30/2026").ok).toBe(false);
+    expect(withTakenOn(undefined).ok).toBe(false);
+  });
+
+  it("parses to local midnight, so the password date is the student's day", () => {
+    const date = parseTakenOn("2026-09-30")!;
+    expect([date.getFullYear(), date.getMonth(), date.getDate()]).toEqual([
+      2026, 8, 30,
+    ]);
+  });
+
+  it("only allows the grades the app offers", () => {
+    const withGrade = (gradeLevel: unknown) =>
+      validateRequest({ ...valid, results: { ...valid.results, gradeLevel } });
+    expect(withGrade("12").ok).toBe(true);
+    expect(withGrade(null).ok).toBe(true);
+    expect(withGrade("Grade <b>11</b>").ok).toBe(false);
+  });
+});
+
 describe("buildResultsEmail", () => {
   const email = buildResultsEmail({
     nickname: "MARI",
+    gradeLevel: "11",
     code: ["I", "R", "A"],
     scores,
     maxScore: 7,
+    takenOn: "2026-09-30",
   });
 
-  it("puts the Holland Code in the subject and greets the student", () => {
-    expect(email.subject).toBe("Your AlignEd results: I-R-A");
+  it("greets the student and names the PDF attachment", () => {
+    expect(email.subject).toBe("Your AlignEd results (PDF)");
     expect(email.html).toContain("Hi MARI,");
     expect(email.text).toContain("Hi MARI,");
+    expect(email.attachmentName).toBe("AlignEd-results-MARI.pdf");
   });
 
-  it("lists every score and the majors for the code's letters only", () => {
+  it("explains the password rule without giving away the password", () => {
     for (const body of [email.html, email.text]) {
-      expect(body).toContain("7 / 7");
-      expect(body).toContain("0 / 7");
-      expect(body).toContain("Marine Biology");
-      expect(body).toContain("Construction");
-      expect(body).toContain("Photography");
-      expect(body).not.toContain("Accounting");
+      expect(body).toContain("MMDDYYYY");
+      // This student's real password must never be in the email.
+      expect(body).not.toContain("MARI09302026");
+      expect(body).not.toContain("09302026");
+    }
+  });
+
+  it("keeps the results themselves inside the locked PDF", () => {
+    for (const body of [email.html, email.text]) {
+      expect(body).not.toContain("I-R-A");
+      expect(body).not.toContain("7 / 7");
+      expect(body).not.toContain("Marine Biology");
     }
   });
 

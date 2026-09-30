@@ -7,6 +7,7 @@ const input = {
   consent: true,
   website: "",
   nickname: "MARI",
+  gradeLevel: "11" as const,
   code: ["I", "R", "A"] as const,
   scores: {
     realistic: 6,
@@ -17,6 +18,8 @@ const input = {
     conventional: 0,
   },
   maxScore: 7,
+  // Late evening local time: the date sent must still be the 30th.
+  takenOn: new Date(2026, 8, 30, 23, 30),
 };
 
 function reply(status: number, body: object = {}) {
@@ -43,9 +46,11 @@ describe("sendResultsEmail", () => {
       website: "",
       results: {
         nickname: "MARI",
+        gradeLevel: "11",
         code: ["I", "R", "A"],
         scores: input.scores,
         maxScore: 7,
+        takenOn: "2026-09-30",
       },
     });
   });

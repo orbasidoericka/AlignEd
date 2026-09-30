@@ -17,6 +17,9 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  // The emailed results PDF is built server-side; PDFKit (under pdfmake)
+  // reads its own data files at runtime, so it must not be bundled.
+  serverExternalPackages: ["pdfmake"],
   experimental: {
     optimizePackageImports: ["lucide-react"],
   },

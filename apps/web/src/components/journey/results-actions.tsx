@@ -222,11 +222,16 @@ const EMAIL_ERRORS: Record<Exclude<SendOutcome, "sent">, string> = {
     "Email isn't set up on this site yet. Use Download PDF to keep a copy.",
 };
 
-// Email export (PRD FR-8): validation and consent here, delivery by the
-// app's /api/send-results route, which never stores the address.
+// Email export (PRD FR-8): validation and consent here; the app's
+// /api/send-results route emails the same password-protected PDF as
+// Download PDF, and never stores the address.
 function EmailResultsDialog() {
-  const nickname = useAssessmentStore((state) => state.profile.nickname);
+  const profile = useAssessmentStore((state) => state.profile);
   const scores = useAssessmentStore((state) => state.scores);
+  const completedAt = useAssessmentStore((state) => state.completedAt);
+  const lastUpdated = useAssessmentStore((state) => state.lastUpdated);
+  const takenOn = resultsTakenOn(completedAt, lastUpdated);
+  const password = resultsPdfPassword(profile.nickname, takenOn);
   const [email, setEmail] = useState("");
   const [consent, setConsent] = useState(false);
   // Honeypot: hidden from people and screen readers, so only bots fill it.
@@ -244,10 +249,12 @@ function EmailResultsDialog() {
       email: email.trim(),
       consent,
       website,
-      nickname,
+      nickname: profile.nickname,
+      gradeLevel: profile.gradeLevel,
       code: computeHollandCode(scores),
       scores,
       maxScore: maxScorePerTrait(QUESTIONS),
+      takenOn,
     });
     setSending(false);
     setOutcome(result);
@@ -274,10 +281,24 @@ function EmailResultsDialog() {
         <DialogHeader>
           <DialogTitle>Email my results</DialogTitle>
           <DialogDescription>
-            We send one copy and don&apos;t keep your address. To stop spam,
-            we only keep a scrambled code of it for a day.
+            We email your results as a password-protected PDF. We send one copy
+            and don&apos;t keep your address; to stop spam, we only keep a
+            scrambled code of it for a day.
           </DialogDescription>
         </DialogHeader>
+
+        <div className="flex flex-col gap-1 rounded-2xl bg-muted p-4">
+          <p className="text-sm font-medium text-muted-foreground">
+            Your PDF password
+          </p>
+          <p className="font-mono text-xl font-bold tracking-wider break-all text-foreground">
+            {password}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Your nickname, then the date you took the assessment (MMDDYYYY).
+            It isn&apos;t written in the email, so keep it somewhere safe.
+          </p>
+        </div>
 
         {outcome === "sent" ? (
           <div
@@ -287,8 +308,8 @@ function EmailResultsDialog() {
             <CheckCircle2Icon className="mt-0.5 size-5 shrink-0 text-primary-strong" />
             <p className="text-sm text-foreground">
               Sent! Check <strong className="break-all">{email.trim()}</strong>{" "}
-              for your results. It may take a minute, and it might land in your
-              spam folder.
+              for your results PDF. It may take a minute, and it might land in
+              your spam folder.
             </p>
           </div>
         ) : (

@@ -1,11 +1,12 @@
 // Copyright (c) 2026 EdTech. All rights reserved.
 
 import type { HollandCode } from "@/lib/riasec/scoring";
+import type { GradeLevel } from "@/lib/riasec/types";
 import type { RiasecScores } from "@/store/useAssessmentStore";
 
-// Calls the app's own /api/send-results route. Only letters, numbers and
-// the nickname are sent: the server builds the email itself and never
-// stores the address.
+// Calls the app's own /api/send-results route. Only letters, numbers, the
+// nickname, grade and a date are sent: the server builds the email and its
+// locked PDF itself, and never stores the address.
 
 export type SendOutcome =
   | "sent"
@@ -20,9 +21,20 @@ export interface SendResultsInput {
   // Honeypot field value; always "" for real students.
   website: string;
   nickname: string;
+  gradeLevel: GradeLevel | null;
   code: HollandCode;
   scores: RiasecScores;
   maxScore: number;
+  // When the assessment was finished; sets the PDF password.
+  takenOn: Date;
+}
+
+// The student's own calendar date, so the emailed PDF's password matches
+// the one Download PDF shows, whatever the server's time zone.
+function localDate(date: Date): string {
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${mm}-${dd}`;
 }
 
 export async function sendResultsEmail(
@@ -39,9 +51,11 @@ export async function sendResultsEmail(
         website: input.website,
         results: {
           nickname: input.nickname,
+          gradeLevel: input.gradeLevel,
           code: input.code,
           scores: input.scores,
           maxScore: input.maxScore,
+          takenOn: localDate(input.takenOn),
         },
       }),
     });

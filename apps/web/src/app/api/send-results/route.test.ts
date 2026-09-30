@@ -13,6 +13,8 @@ const body = {
   website: "",
   results: {
     nickname: "MARI",
+    gradeLevel: "11",
+    takenOn: "2026-09-30",
     code: ["I", "R", "A"],
     scores: {
       realistic: 6,
@@ -58,8 +60,23 @@ describe("POST /api/send-results", () => {
     const mail = sendMail.mock.calls[0]![0];
     expect(mail.to).toBe("mari@example.com");
     expect(mail.from).toEqual({ name: "AlignEd", address: "aligned.test@gmail.com" });
-    expect(mail.subject).toBe("Your AlignEd results: I-R-A");
+    expect(mail.subject).toBe("Your AlignEd results (PDF)");
   });
+
+  it("attaches the results as an AES-256 encrypted PDF", async () => {
+    const { POST } = await loadRoute();
+    await POST(post(body));
+
+    const [attachment] = sendMail.mock.calls[0]![0].attachments;
+    expect(attachment.filename).toBe("AlignEd-results-MARI.pdf");
+    expect(attachment.contentType).toBe("application/pdf");
+    const pdf = (attachment.content as Buffer).toString("latin1");
+    expect(pdf.startsWith("%PDF-")).toBe(true);
+    expect(pdf).toContain("/Encrypt");
+    expect(pdf).toContain("/AESV3");
+    // Encrypted: the results text is not readable in the raw file.
+    expect(pdf).not.toContain("Marine Biology");
+  }, 30_000);
 
   it("says it is not set up when the Gmail settings are missing", async () => {
     vi.stubEnv("GMAIL_APP_PASSWORD", "");

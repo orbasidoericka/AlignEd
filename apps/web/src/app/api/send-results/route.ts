@@ -6,13 +6,18 @@ import nodemailer from "nodemailer";
 import {
   buildResultsEmail,
   normalizeEmail,
+  parseTakenOn,
   validateRequest,
 } from "@/lib/results-email/email-content";
 import { createRateLimiter } from "@/lib/results-email/rate-limiter";
+import { resultsPdfPassword } from "@/lib/results-pdf/password";
+import { renderResultsPdf } from "@/lib/results-pdf/render-results-pdf";
 
-// POST /api/send-results (PRD FR-8): emails a student their results from
-// the school's Gmail account, then forgets the address. Only salted hashes
-// of the address and IP are kept, in memory, for rate limiting.
+// POST /api/send-results (PRD FR-8): emails a student their results as a
+// password-protected PDF (NICKNAME + MMDDYYYY, the same file and password
+// as Download PDF) from the school's Gmail account, then forgets the
+// address. Only salted hashes of the address and IP are kept, in memory,
+// for rate limiting.
 //
 // Server-only settings in apps/web/.env.local (never NEXT_PUBLIC_):
 //   GMAIL_USER          the Gmail address that sends, e.g. aligned@gmail.com
@@ -66,6 +71,27 @@ export async function POST(request: Request) {
     return Response.json({ error: "rate_limited" }, { status: 429 });
   }
 
+  // The same locked PDF as Download PDF: same content, same password.
+  const takenOn = parseTakenOn(results.takenOn)!; // checked by validateRequest
+  let pdf: Buffer;
+  try {
+    pdf = await renderResultsPdf({
+      nickname: results.nickname,
+      gradeLevel: results.gradeLevel,
+      // Not sent by the browser: free text has no place in a server-built
+      // attachment, and it is optional on the download too.
+      school: "",
+      scores: results.scores,
+      code: results.code,
+      maxScore: results.maxScore,
+      takenOn,
+      password: resultsPdfPassword(results.nickname, takenOn),
+    });
+  } catch (error) {
+    console.error("send-results: could not build the PDF:", error);
+    return Response.json({ error: "failed" }, { status: 500 });
+  }
+
   const message = buildResultsEmail(results);
   try {
     const transport = nodemailer.createTransport({
@@ -78,6 +104,13 @@ export async function POST(request: Request) {
       subject: message.subject,
       html: message.html,
       text: message.text,
+      attachments: [
+        {
+          filename: message.attachmentName,
+          content: pdf,
+          contentType: "application/pdf",
+        },
+      ],
     });
   } catch (error) {
     // Gmail's error text can echo the recipient, so log only its code.
