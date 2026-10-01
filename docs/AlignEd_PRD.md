@@ -97,7 +97,7 @@ Captured before the assessment begins; stored client-side only (localStorage via
   - A **Back** control returns to the previous question. It is unavailable (not merely inert) on the first question.
   - Persistent progress indicator (percent + question count), and the whole bank is completable by keyboard alone.
 - FR-3.4. **Backward navigation:** on returning to an earlier question, the student's previous answer is shown as selected and may be changed. Changing it re-scores that item in place (FR-3.2) and advances forward again; the student is never required to re-answer questions they have already completed.
-- FR-3.5. **Session handling:** answers persist to localStorage on every change. On refresh or return, the student resumes at their first unanswered question ("Welcome back — continue where you left off?"). Sessions have no server component and no expiry.
+- FR-3.5. **Session handling:** answers persist to localStorage on every change. On refresh or return, the student resumes at their first unanswered question ("Welcome back — continue where you left off?"). Sessions have no server component and expire 24 hours after the last change: on the next visit an older session is wiped from localStorage and the student starts fresh, so an abandoned quiz is never left on a shared or school device for the next student to resume.
 - FR-3.6. **Completion:** requires all 42 questions answered (Yes or No). On completion, exactly one anonymous record is inserted into the `assessments` table (scores + profile fields, no identifiers), and the student is redirected to Results.
 - FR-3.7. **Retake:** an explicit "Retake assessment" action on Results resets answers and scores (profile is retained and re-confirmable).
 

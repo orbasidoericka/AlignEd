@@ -82,6 +82,28 @@ function ssrSafeStorage(): Storage {
   return typeof window === "undefined" ? noopStorage : window.localStorage;
 }
 
+const STORAGE_KEY = "aligned.assessment.v1";
+
+// A saved session is temporary: these are shared and school devices, so an
+// abandoned quiz must not be sitting there for the next student to resume.
+export const SESSION_TTL_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Whether a saved session is too old to restore. `null` is the fresh-store
+ * value, so it is never expired. An unparseable stamp is: the TTL promises
+ * nothing outlives a day, and a clock that cannot be read is one that promise
+ * cannot be kept with.
+ */
+export function isSessionExpired(
+  lastUpdated: string | null,
+  now: number = Date.now(),
+): boolean {
+  if (lastUpdated === null) return false;
+  const savedAt = new Date(lastUpdated).getTime();
+  if (Number.isNaN(savedAt)) return true;
+  return now - savedAt > SESSION_TTL_MS;
+}
+
 // Persist locally so quiz progress survives refresh before syncing.
 export const useAssessmentStore = create<AssessmentStore>()(
   persist(
@@ -93,8 +115,10 @@ export const useAssessmentStore = create<AssessmentStore>()(
       profile: { ...emptyProfile },
       lastUpdated: null,
       completedAt: null,
-      setTotalQuestions: (total) => set({ totalQuestions: total }),
-      setCurrentStep: (step) => set({ currentStep: step }),
+      setTotalQuestions: (total) =>
+        set({ totalQuestions: total, lastUpdated: new Date().toISOString() }),
+      setCurrentStep: (step) =>
+        set({ currentStep: step, lastUpdated: new Date().toISOString() }),
       setAnswer: (questionId, answer) =>
         set((state) => {
           const previous = state.answers[questionId];
@@ -146,9 +170,25 @@ export const useAssessmentStore = create<AssessmentStore>()(
         }),
     }),
     {
-      name: "aligned.assessment.v1",
+      name: STORAGE_KEY,
       version: 4,
       storage: createJSONStorage(() => ssrSafeStorage()),
+      // 24h TTL. zustand calls this after `merge` has set the rehydrated state
+      // but *before* it flips `hasHydrated`, so JourneyGuard — which gates on
+      // onFinishHydration — never observes an expired session and no stale
+      // results can paint.
+      onRehydrateStorage: () => (state) => {
+        if (!state || !isSessionExpired(state.lastUpdated)) return;
+        // `state.reset()` rather than reaching for the exported store: with
+        // localStorage every step of rehydration is synchronous, so this runs
+        // inside the create() call below, while that const is still in its
+        // TDZ. Same reason the key goes through ssrSafeStorage() instead of
+        // useAssessmentStore.persist.clearStorage().
+        state.reset();
+        // reset() persists a fresh default blob on its way through; drop the
+        // key outright so an abandoned session leaves nothing behind at all.
+        ssrSafeStorage().removeItem(STORAGE_KEY);
+      },
       // The default merge is shallow, so a stored profile would replace the
       // current one wholesale and any field added later would read undefined.
       merge: (persisted, current) => {

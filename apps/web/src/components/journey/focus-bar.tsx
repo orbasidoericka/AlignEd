@@ -26,11 +26,17 @@ import { useAssessmentStore } from "@/store/useAssessmentStore";
 export function FocusBar() {
   const router = useRouter();
   const lastUpdated = useAssessmentStore((state) => state.lastUpdated);
+  // Arriving on the quiz stamps lastUpdated on its own (it restarts the
+  // session TTL), so the chip waits for an answer rather than claiming a save
+  // the student has not made yet.
+  const answeredCount = useAssessmentStore(
+    (state) => Object.keys(state.answers).length,
+  );
   // False on the server and during hydration, so the persisted "Saved" chip
   // never causes a hydration mismatch.
   const hydrated = useHydrated();
 
-  const saved = hydrated && lastUpdated !== null;
+  const saved = hydrated && lastUpdated !== null && answeredCount > 0;
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-sm">

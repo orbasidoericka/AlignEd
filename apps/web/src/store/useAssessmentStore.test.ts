@@ -2,8 +2,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { QUESTIONS } from "@/lib/riasec/questions";
 import {
+  isSessionExpired,
   selectIsAssessmentComplete,
   selectIsProfileComplete,
+  SESSION_TTL_MS,
   useAssessmentStore,
 } from "./useAssessmentStore";
 
@@ -301,5 +303,126 @@ describe("useAssessmentStore", () => {
       gradeLevel: "10",
       school: "San Fernando NHS",
     });
+  });
+
+  it("stamps lastUpdated when the student moves through the quiz", () => {
+    const { setCurrentStep, setTotalQuestions } = useAssessmentStore.getState();
+    expect(useAssessmentStore.getState().lastUpdated).toBeNull();
+
+    setCurrentStep(3);
+    expect(useAssessmentStore.getState().lastUpdated).not.toBeNull();
+
+    useAssessmentStore.getState().reset();
+    setTotalQuestions(42);
+    expect(useAssessmentStore.getState().lastUpdated).not.toBeNull();
+  });
+});
+
+describe("isSessionExpired", () => {
+  const now = new Date("2026-10-01T12:00:00Z").getTime();
+  const ago = (ms: number) => new Date(now - ms).toISOString();
+
+  it("treats a fresh store as live, not expired", () => {
+    expect(isSessionExpired(null, now)).toBe(false);
+  });
+
+  it("expires a stamp it cannot read, because the age cannot be proven", () => {
+    expect(isSessionExpired("not-a-date", now)).toBe(true);
+  });
+
+  it("keeps a session younger than the TTL", () => {
+    expect(isSessionExpired(ago(23 * 60 * 60 * 1000), now)).toBe(false);
+  });
+
+  it("keeps a session exactly at the TTL", () => {
+    expect(isSessionExpired(ago(SESSION_TTL_MS), now)).toBe(false);
+  });
+
+  it("expires a session past the TTL", () => {
+    expect(isSessionExpired(ago(25 * 60 * 60 * 1000), now)).toBe(true);
+  });
+});
+
+// The TTL runs on rehydration, so these drive persist directly rather than
+// calling actions: a stale blob is what a returning student actually arrives
+// with.
+describe("session expiry on rehydration", () => {
+  const STORAGE_KEY = "aligned.assessment.v1";
+  const NOW = new Date("2026-10-01T12:00:00Z");
+
+  const writeSession = (lastUpdated: string) => {
+    window.localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        version: 4,
+        state: {
+          currentStep: 7,
+          totalQuestions: 42,
+          answers: { q1: { trait: "social", value: 1 } },
+          scores: {
+            realistic: 0,
+            investigative: 0,
+            artistic: 0,
+            social: 1,
+            enterprising: 0,
+            conventional: 0,
+          },
+          profile: {
+            nickname: "MARI-EL",
+            gradeLevel: "12",
+            school: "San Fernando NHS",
+          },
+          lastUpdated,
+          completedAt: null,
+        },
+      }),
+    );
+  };
+
+  beforeEach(() => {
+    useAssessmentStore.getState().reset();
+    window.localStorage.removeItem(STORAGE_KEY);
+  });
+
+  it("wipes a session older than 24 hours and clears its storage key", () => {
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(NOW);
+      writeSession(new Date(NOW.getTime() - 25 * 60 * 60 * 1000).toISOString());
+
+      useAssessmentStore.persist.rehydrate();
+
+      const state = useAssessmentStore.getState();
+      expect(state.answers).toEqual({});
+      expect(state.scores.social).toBe(0);
+      expect(state.currentStep).toBe(0);
+      expect(state.profile.nickname).toBe("");
+      expect(state.lastUpdated).toBeNull();
+      expect(window.localStorage.getItem(STORAGE_KEY)).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("restores a session from an hour ago untouched", () => {
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(NOW);
+      const lastUpdated = new Date(NOW.getTime() - 60 * 60 * 1000).toISOString();
+      writeSession(lastUpdated);
+
+      useAssessmentStore.persist.rehydrate();
+
+      const state = useAssessmentStore.getState();
+      // Proves the blob shape is right, so "wiped" in the test above cannot be
+      // a false pass from a payload persist never understood.
+      expect(state.answers.q1).toEqual({ trait: "social", value: 1 });
+      expect(state.profile.nickname).toBe("MARI-EL");
+      expect(state.currentStep).toBe(7);
+      expect(state.lastUpdated).toBe(lastUpdated);
+      expect(window.localStorage.getItem(STORAGE_KEY)).not.toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
