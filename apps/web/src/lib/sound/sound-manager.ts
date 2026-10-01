@@ -12,7 +12,8 @@ export type SoundName = "default" | "yes" | "no" | "celebration";
 
 type SoundConfig = {
   src: string;
-  /** Peak gain, 0-1. The raw files are not level-matched. */
+  /** Playback multiplier, not a ceiling. The raw files are not level-matched,
+   *  so a quiet source needs more than 1 to sit alongside a loud one. */
   gain: number;
   /** Skip this much of the head, e.g. leading silence before a transient. */
   startMs?: number;
@@ -23,11 +24,14 @@ type SoundConfig = {
 };
 
 export const SOUNDS: Record<SoundName, SoundConfig> = {
-  // The file is a string of four separate transients (98, 264, 630 and 790ms)
-  // behind 94ms of dead air, and each one reads as its own click. A UI click
-  // wants exactly one: skip the silence, play the first transient and its
-  // short decay, and stop in the silence well before the next one at 264ms.
-  default: { src: "/sounds/default.mp3", gain: 0.45, startMs: 94, maxMs: 86, fadeMs: 24 },
+  // The file is a string of four separate transients behind a low-level noise
+  // floor, and each one reads as its own click. A UI click wants exactly one:
+  // start on the first attack at 88ms, play it and its decay, and stop at 148ms
+  // — into the noise floor, well before the next transient at 260ms.
+  // The gain is above 1 on purpose: this file peaks at 0.22 where no.mp3 peaks
+  // at 0.67, so matching them by ear takes a multiplier, not an attenuator.
+  // Measured at the values below, the click lands ~6dB under the Yes/No sounds.
+  default: { src: "/sounds/default.mp3", gain: 1.3, startMs: 88, maxMs: 60, fadeMs: 25 },
   yes: { src: "/sounds/yes.mp3", gain: 0.85 },
   no: { src: "/sounds/no.mp3", gain: 0.85 },
   // The track runs 2.61s; the brief caps the reward at 1.5s, and cutting a
