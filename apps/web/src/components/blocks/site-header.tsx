@@ -53,6 +53,10 @@ export function SiteHeader() {
   const isActive = (href: string) =>
     pathname === href || pathname.startsWith(`${href}/`);
 
+  // On the results page the CTA would be a button to where you already are.
+  // Nav links still mark position there; a call to action has nothing to call.
+  const showCta = !(resultsUnlocked && isActive("/results"));
+
   const ctaHref = resultsUnlocked ? "/results" : "/assessment/profile";
   // Each surface gets its own CTA wording: nav is the plain utility label,
   // the hero invites, the closing section promises the payoff.
@@ -80,13 +84,15 @@ export function SiteHeader() {
           <div className="relative z-20 flex items-center gap-2">
             <SoundToggle />
             <ThemeToggle />
-            <Link
-              href={ctaHref}
-              className={cn(buttonVariants({ size: "lg" }), ctaClasses)}
-            >
-              {ctaLabel}
-              <ArrowRight className="size-4" />
-            </Link>
+            {showCta && (
+              <Link
+                href={ctaHref}
+                className={cn(buttonVariants({ size: "lg" }), ctaClasses)}
+              >
+                {ctaLabel}
+                <ArrowRight className="size-4" />
+              </Link>
+            )}
           </div>
         </NavBody>
 
@@ -140,18 +146,20 @@ export function SiteHeader() {
                 </Link>
               ),
             )}
-            <Link
-              href={ctaHref}
-              onClick={closeMenu}
-              className={cn(
-                buttonVariants({ size: "lg" }),
-                ctaClasses,
-                "mt-2 w-full",
-              )}
-            >
-              {ctaLabel}
-              <ArrowRight className="size-4" />
-            </Link>
+            {showCta && (
+              <Link
+                href={ctaHref}
+                onClick={closeMenu}
+                className={cn(
+                  buttonVariants({ size: "lg" }),
+                  ctaClasses,
+                  "mt-2 w-full",
+                )}
+              >
+                {ctaLabel}
+                <ArrowRight className="size-4" />
+              </Link>
+            )}
           </MobileNavMenu>
         </MobileNav>
       </Navbar>

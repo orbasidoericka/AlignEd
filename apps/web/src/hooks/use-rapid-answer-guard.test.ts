@@ -59,7 +59,7 @@ describe("useRapidAnswerGuard", () => {
     expect(answerAfter("q1", 800)).toBe("warn");
     expect(hook.result.current.rapidAnswerCount).toBe(1);
     expect(answerAfter("q2", 3000)).toBe("none");
-    expect(answerAfter("q3", 1200)).toBe("warn");
+    expect(answerAfter("q3", 900)).toBe("warn");
     expect(answerAfter("q4", 400)).toBe("block");
     expect(hook.result.current.rapidAnswerCount).toBe(3);
     expect(hook.result.current.isBlocked).toBe(true);

@@ -126,7 +126,7 @@ describe("AssessmentRunner hardening", () => {
 
   it("stays on the statement when the rapid-answer pause opens", () => {
     render(<AssessmentRunner />);
-    // Three answers, each past the input guard but well under 2 seconds.
+    // Three answers, each past the input guard but well under 1 second.
     for (let i = 0; i < 2; i++) {
       wait(INPUT_GUARD_MS + 10);
       fireEvent.keyDown(document, { key: "y" });

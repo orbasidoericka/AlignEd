@@ -478,6 +478,53 @@
   animation-iteration-count: infinite;
 }
 
+/* Shimmer Button (components/magic/shimmer-button.tsx): a spark circles the
+   pill's perimeter. Two animations on two nested layers, because one transform
+   cannot do both: -slide walks the spark square from the left edge of the
+   button to the right (100cqw resolves against the `@container-[size]` track,
+   so it is width-independent), and -spin-around turns the conic wedge inside
+   that square, holding at 90deg and 270deg so the light lingers on the short
+   edges instead of racing the corners. Longhands, like the shine above:
+   instances set --shimmer-speed, and the `animation` shorthand would reset it
+   along with animation-play-state. */
+@keyframes shimmer-slide {
+  to {
+    transform: translate(calc(100cqw - 100%), 0);
+  }
+}
+
+@keyframes spin-around {
+  0% {
+    transform: translateZ(0) rotate(0);
+  }
+  15%,
+  35% {
+    transform: translateZ(0) rotate(90deg);
+  }
+  65%,
+  85% {
+    transform: translateZ(0) rotate(270deg);
+  }
+  100% {
+    transform: translateZ(0) rotate(360deg);
+  }
+}
+
+@utility animate-shimmer-slide {
+  animation-name: shimmer-slide;
+  animation-duration: var(--shimmer-speed, 3s);
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+}
+
+@utility animate-spin-around {
+  animation-name: spin-around;
+  animation-duration: calc(var(--shimmer-speed, 3s) * 2);
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
 @utility animate-line-streak {
   animation-name: line-streak-travel, line-streak-fade;
   animation-timing-function: linear;

@@ -8,7 +8,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 // and 2 warn without blocking; strike 3 blocks until the student acknowledges,
 // which clears the count so the cycle can start over.
 
-export const RAPID_ANSWER_THRESHOLD_MS = 2000;
+export const RAPID_ANSWER_THRESHOLD_MS = 1000;
 export const RAPID_ANSWER_BLOCK_AT = 3;
 
 export type RapidAnswerEvent = "none" | "warn" | "block";

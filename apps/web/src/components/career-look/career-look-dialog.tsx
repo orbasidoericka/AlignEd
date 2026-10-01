@@ -15,6 +15,7 @@ import {
   Share2Icon,
 } from "lucide-react";
 
+import { ShimmerButton } from "@/components/magic/shimmer-button";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -73,15 +74,13 @@ export function CareerLookDialog({
     <Dialog>
       <DialogTrigger
         render={
-          <Button
-            variant="outline"
-            size="lg"
-            className="self-start rounded-full bg-card print:hidden"
+          <ShimmerButton
+            className="mb-1 self-start print:hidden"
             data-print-hidden
           />
         }
       >
-        <CameraIcon className="size-4" />
+        <CameraIcon aria-hidden />
         Try your career look
       </DialogTrigger>
       <DialogContent className="max-w-2xl">
