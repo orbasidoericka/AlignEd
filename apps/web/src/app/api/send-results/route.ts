@@ -80,6 +80,7 @@ export async function POST(request: Request) {
       gradeLevel: results.gradeLevel,
       // Not sent by the browser: free text has no place in a server-built
       // attachment, and it is optional on the download too.
+      age: "",
       school: "",
       scores: results.scores,
       code: results.code,

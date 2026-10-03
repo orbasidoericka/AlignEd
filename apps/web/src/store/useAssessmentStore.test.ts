@@ -71,6 +71,43 @@ describe("useAssessmentStore", () => {
     expect(scores.investigative).toBe(1);
   });
 
+  it("clearAnswer discards a single answer and unwinds its score", () => {
+    const { setAnswer, clearAnswer } = useAssessmentStore.getState();
+    setAnswer("q1", { trait: "artistic", value: 1 });
+    setAnswer("q2", { trait: "realistic", value: 1 });
+
+    clearAnswer("q1");
+
+    const { answers, scores } = useAssessmentStore.getState();
+    expect(answers.q1).toBeUndefined();
+    expect(answers.q2).toEqual({ trait: "realistic", value: 1 });
+    expect(scores.artistic).toBe(0);
+    expect(scores.realistic).toBe(1);
+  });
+
+  it("clearAnswer on an unanswered question is a no-op", () => {
+    const { setAnswer, clearAnswer } = useAssessmentStore.getState();
+    setAnswer("q1", { trait: "artistic", value: 1 });
+
+    clearAnswer("does-not-exist");
+
+    const { answers, scores } = useAssessmentStore.getState();
+    expect(Object.keys(answers)).toHaveLength(1);
+    expect(scores.artistic).toBe(1);
+  });
+
+  it("clearAnswer drops completedAt when it un-finishes the quiz", () => {
+    const { setAnswer, clearAnswer } = useAssessmentStore.getState();
+    for (const question of QUESTIONS) {
+      setAnswer(question.id, { trait: question.trait, value: 1 });
+    }
+    expect(useAssessmentStore.getState().completedAt).not.toBeNull();
+
+    clearAnswer(QUESTIONS[0]!.id);
+
+    expect(useAssessmentStore.getState().completedAt).toBeNull();
+  });
+
   it("reset returns the store to its initial state", () => {
     const { setAnswer, setCurrentStep, setTotalQuestions } =
       useAssessmentStore.getState();
@@ -116,6 +153,46 @@ describe("useAssessmentStore", () => {
     }
   });
 
+  it("ensureQuestionOrder seeds a full permutation and then leaves it", () => {
+    const { ensureQuestionOrder } = useAssessmentStore.getState();
+    expect(useAssessmentStore.getState().questionOrder).toEqual([]);
+
+    ensureQuestionOrder();
+    const order = useAssessmentStore.getState().questionOrder;
+    const ids = QUESTIONS.map((q) => q.id);
+    // A permutation: every id once, nothing invented.
+    expect([...order].sort()).toEqual([...ids].sort());
+
+    // A valid order is left untouched (a resumed session keeps its sequence).
+    ensureQuestionOrder();
+    expect(useAssessmentStore.getState().questionOrder).toBe(order);
+  });
+
+  it("ensureQuestionOrder rebuilds an order that no longer fits the bank", () => {
+    useAssessmentStore.setState({ questionOrder: ["q1", "q1", "ghost"] });
+    useAssessmentStore.getState().ensureQuestionOrder();
+    const order = useAssessmentStore.getState().questionOrder;
+    expect(order).toHaveLength(QUESTIONS.length);
+    expect(new Set(order).size).toBe(QUESTIONS.length);
+  });
+
+  it("resetAnswers reshuffles so a retake comes back in a new order", () => {
+    const ids = QUESTIONS.map((q) => q.id);
+    useAssessmentStore.setState({ questionOrder: ids });
+
+    useAssessmentStore.getState().resetAnswers();
+    const order = useAssessmentStore.getState().questionOrder;
+    // Still a full permutation, just reseeded.
+    expect([...order].sort()).toEqual([...ids].sort());
+    expect(order).toHaveLength(QUESTIONS.length);
+  });
+
+  it("reset clears the question order back to empty", () => {
+    useAssessmentStore.setState({ questionOrder: QUESTIONS.map((q) => q.id) });
+    useAssessmentStore.getState().reset();
+    expect(useAssessmentStore.getState().questionOrder).toEqual([]);
+  });
+
   it("clears completedAt on a retake", () => {
     const { setAnswer } = useAssessmentStore.getState();
     for (const question of QUESTIONS) {
@@ -137,6 +214,8 @@ describe("useAssessmentStore", () => {
     expect(profile).toEqual({
       nickname: "MARI-EL",
       gradeLevel: "11",
+      age: "",
+      privacyAccepted: false,
       school: "San Fernando NHS",
     });
   });
@@ -165,16 +244,35 @@ describe("useAssessmentStore", () => {
     expect(useAssessmentStore.getState().profile).toEqual({
       nickname: "",
       gradeLevel: null,
+      age: "",
+      privacyAccepted: false,
       school: "",
     });
   });
 
-  it("selectIsProfileComplete requires a nickname and a grade level", () => {
+  it("selectIsProfileComplete requires nickname, grade, age, and consent", () => {
     expect(selectIsProfileComplete(useAssessmentStore.getState())).toBe(false);
     useAssessmentStore.getState().setProfile({ gradeLevel: "11" });
     expect(selectIsProfileComplete(useAssessmentStore.getState())).toBe(false);
     useAssessmentStore.getState().setProfile({ nickname: "MARI-EL" });
+    expect(selectIsProfileComplete(useAssessmentStore.getState())).toBe(false);
+    useAssessmentStore.getState().setProfile({ age: "17" });
+    // Everything filled in, but the privacy notice has not been agreed to.
+    expect(selectIsProfileComplete(useAssessmentStore.getState())).toBe(false);
+    useAssessmentStore.getState().setProfile({ privacyAccepted: true });
     expect(selectIsProfileComplete(useAssessmentStore.getState())).toBe(true);
+  });
+
+  it("withdrawing privacy consent blocks the assessment again", () => {
+    useAssessmentStore.getState().setProfile({
+      nickname: "MARI-EL",
+      gradeLevel: "11",
+      age: "17",
+      privacyAccepted: true,
+    });
+    expect(selectIsProfileComplete(useAssessmentStore.getState())).toBe(true);
+    useAssessmentStore.getState().setProfile({ privacyAccepted: false });
+    expect(selectIsProfileComplete(useAssessmentStore.getState())).toBe(false);
   });
 
   it("selectIsAssessmentComplete requires every question answered", () => {
@@ -215,6 +313,8 @@ describe("useAssessmentStore", () => {
     expect(migrated.profile).toEqual({
       nickname: "",
       gradeLevel: null,
+      age: "",
+      privacyAccepted: false,
       school: "",
     });
     expect(migrated.currentStep).toBe(0);
@@ -256,6 +356,8 @@ describe("useAssessmentStore", () => {
     expect(migrated.profile).toEqual({
       nickname: "",
       gradeLevel: "12",
+      age: "",
+      privacyAccepted: false,
       school: "San Fernando NHS",
     });
   });
@@ -301,6 +403,8 @@ describe("useAssessmentStore", () => {
     expect(migrated.profile).toEqual({
       nickname: "",
       gradeLevel: "10",
+      age: "",
+      privacyAccepted: false,
       school: "San Fernando NHS",
     });
   });
@@ -331,7 +435,7 @@ describe("isSessionExpired", () => {
   });
 
   it("keeps a session younger than the TTL", () => {
-    expect(isSessionExpired(ago(23 * 60 * 60 * 1000), now)).toBe(false);
+    expect(isSessionExpired(ago(29 * 60 * 1000), now)).toBe(false);
   });
 
   it("keeps a session exactly at the TTL", () => {
@@ -339,7 +443,7 @@ describe("isSessionExpired", () => {
   });
 
   it("expires a session past the TTL", () => {
-    expect(isSessionExpired(ago(25 * 60 * 60 * 1000), now)).toBe(true);
+    expect(isSessionExpired(ago(31 * 60 * 1000), now)).toBe(true);
   });
 });
 
@@ -384,11 +488,11 @@ describe("session expiry on rehydration", () => {
     window.localStorage.removeItem(STORAGE_KEY);
   });
 
-  it("wipes a session older than 24 hours and clears its storage key", () => {
+  it("wipes a session older than 30 minutes and clears its storage key", () => {
     vi.useFakeTimers();
     try {
       vi.setSystemTime(NOW);
-      writeSession(new Date(NOW.getTime() - 25 * 60 * 60 * 1000).toISOString());
+      writeSession(new Date(NOW.getTime() - 31 * 60 * 1000).toISOString());
 
       useAssessmentStore.persist.rehydrate();
 
@@ -404,11 +508,11 @@ describe("session expiry on rehydration", () => {
     }
   });
 
-  it("restores a session from an hour ago untouched", () => {
+  it("restores a session from ten minutes ago untouched", () => {
     vi.useFakeTimers();
     try {
       vi.setSystemTime(NOW);
-      const lastUpdated = new Date(NOW.getTime() - 60 * 60 * 1000).toISOString();
+      const lastUpdated = new Date(NOW.getTime() - 10 * 60 * 1000).toISOString();
       writeSession(lastUpdated);
 
       useAssessmentStore.persist.rehydrate();

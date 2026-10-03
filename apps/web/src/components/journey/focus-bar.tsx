@@ -1,8 +1,8 @@
 // Copyright (c) 2026 EdTech. All rights reserved.
 "use client";
 
-import { useRouter } from "next/navigation";
-import { CheckIcon, XIcon } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { CheckIcon, RotateCcw, XIcon } from "lucide-react";
 
 import {
   AlertDialog,
@@ -35,8 +35,20 @@ export function FocusBar() {
   // False on the server and during hydration, so the persisted "Saved" chip
   // never causes a hydration mismatch.
   const hydrated = useHydrated();
+  const reset = useAssessmentStore((state) => state.reset);
+  // Start over belongs to the quiz only; on Profile Setup there is nothing
+  // answered to discard yet, and the form already starts from scratch.
+  const onAssessment = usePathname() === "/assessment";
 
   const saved = hydrated && lastUpdated !== null && answeredCount > 0;
+
+  // Wipes the whole session — profile and every answer — and drops the
+  // student back at the start of the journey. Irreversible, so it is gated
+  // behind a confirm.
+  const startOver = () => {
+    reset();
+    router.push("/assessment/profile");
+  };
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-sm">
@@ -56,6 +68,50 @@ export function FocusBar() {
 
           <SoundToggle />
           <ThemeToggle />
+
+          {onAssessment && (
+            <AlertDialog>
+              <AlertDialogTrigger
+                render={
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="gap-1.5 text-muted-foreground hover:text-foreground"
+                  />
+                }
+              >
+                <RotateCcw className="size-4" aria-hidden />
+                <span className="sr-only sm:not-sr-only">Start over</span>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Start over?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This erases your profile and every answer on this device
+                    and takes you back to the beginning. It cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogClose
+                    render={<Button variant="outline" size="lg" />}
+                  >
+                    Keep my progress
+                  </AlertDialogClose>
+                  <AlertDialogClose
+                    render={
+                      <Button
+                        variant="destructive"
+                        size="lg"
+                        onClick={startOver}
+                      />
+                    }
+                  >
+                    Start over
+                  </AlertDialogClose>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
 
           <AlertDialog>
             <AlertDialogTrigger

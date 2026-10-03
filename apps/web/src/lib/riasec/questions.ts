@@ -126,6 +126,45 @@ export const QUESTIONS: readonly RiasecQuestion[] = [
   { id: "q42", trait: "enterprising", text: "I like to give speeches" },
 ];
 
+// id -> question, so a persisted session order (a list of ids) can be mapped
+// back to statements without scanning the bank each time.
+const QUESTION_BY_ID = new Map(QUESTIONS.map((q) => [q.id, q]));
+
+// True only when `order` is a full permutation of the bank: every id present,
+// none repeated, none unknown. A persisted order that fails this (a bank that
+// changed under it, a truncated blob) is rebuilt rather than trusted.
+export function isValidQuestionOrder(order: readonly string[]): boolean {
+  if (order.length !== QUESTIONS.length) return false;
+  const seen = new Set<string>();
+  for (const id of order) {
+    if (!QUESTION_BY_ID.has(id) || seen.has(id)) return false;
+    seen.add(id);
+  }
+  return true;
+}
+
+// Statements in the given session order, or the printed order if that order
+// isn't a valid permutation of the current bank. Scoring is keyed by id and
+// order-independent (see scoring.ts), so this only affects presentation.
+export function orderQuestions(
+  order: readonly string[],
+): readonly RiasecQuestion[] {
+  if (!isValidQuestionOrder(order)) return QUESTIONS;
+  return order.map((id) => QUESTION_BY_ID.get(id)!);
+}
+
+// A fresh random presentation order (Fisher-Yates over the bank's ids). Uses
+// Math.random, so it must be called from an event handler or effect, never
+// during render, where it would differ between server and client.
+export function shuffleQuestionIds(): string[] {
+  const ids = QUESTIONS.map((q) => q.id);
+  for (let i = ids.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [ids[i], ids[j]] = [ids[j]!, ids[i]!];
+  }
+  return ids;
+}
+
 export interface AnswerOption {
   value: 0 | 1;
   label: string;

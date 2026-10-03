@@ -1,7 +1,7 @@
 // Copyright (c) 2026 EdTech. All rights reserved.
 
 import type { Metadata } from "next";
-import { ClipboardPen, Compass, PartyPopper, ShieldCheck } from "lucide-react";
+import { ClipboardPen, Compass, PartyPopper } from "lucide-react";
 
 import { AuroraText } from "@/components/magic/aurora-text";
 import { BlurFade } from "@/components/magic/blur-fade";
@@ -24,9 +24,19 @@ export const metadata: Metadata = {
     "Free, anonymous career guidance for Senior High School students. Discover your Holland Code and matching careers in about 5 minutes.",
 };
 
-// The six letters, with the first sentence of each official description
-// (single source of truth: lib/riasec/career-pathways.ts). Chip colors come
-// from the shared per-letter map, so they match the results page.
+const listFormat = new Intl.ListFormat("en", {
+  style: "long",
+  type: "conjunction",
+});
+
+// The six letters, with the first sentence of each official description and
+// the majors and pathways that letter leads to (single source of truth:
+// lib/riasec/career-pathways.ts). Chip colors come from the shared per-letter
+// map, so they match the results page.
+//
+// Prose rather than tags or pills: six letters times seven majors would be
+// far too many chips for a landing page, and the results page is where the
+// full tagged lists belong.
 const traitPreview = (["R", "I", "A", "S", "E", "C"] as const).map((letter) => {
   const profile = RIASEC_PATHWAYS[letter];
   return {
@@ -34,6 +44,8 @@ const traitPreview = (["R", "I", "A", "S", "E", "C"] as const).map((letter) => {
     name: profile.name,
     // "These people are often good at mechanical or athletic jobs."
     summary: `${profile.description.split(". ")[0]}.`,
+    majors: `Good college majors for ${profile.name} people are ${listFormat.format(profile.majors)}.`,
+    pathways: `These majors lead into the ${listFormat.format(profile.relatedPathways)} career pathways.`,
     chip: letterChip(letter),
   };
 });
@@ -237,56 +249,6 @@ export default function HomePage() {
         </ol>
       </section>
 
-      {/* What you get: verdict preview + privacy promise */}
-      <section className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
-        <div className="grid gap-6 md:grid-cols-2">
-          <BlurFade inView>
-            <div className="flex h-full flex-col gap-4 rounded-3xl border border-border bg-card p-7">
-              <h3 className="text-xl font-bold text-foreground">
-                Options, not verdicts
-              </h3>
-              <p className="text-base text-muted-foreground">
-                For each of your three strongest traits you get the full
-                official list of college majors and the career pathways they
-                lead to. Nothing is ranked or scored, because the point is to
-                widen what you are choosing from.
-              </p>
-              <div className="mt-auto flex flex-wrap items-center gap-2">
-                {["Health Services", "Business", "Arts and Communication"].map(
-                  (pathway) => (
-                    <span
-                      key={pathway}
-                      className="rounded-full bg-muted px-4 py-1.5 text-sm font-semibold text-foreground"
-                    >
-                      {pathway}
-                    </span>
-                  ),
-                )}
-              </div>
-            </div>
-          </BlurFade>
-          <BlurFade inView delay={0.1}>
-            <div className="flex h-full flex-col gap-4 rounded-3xl border border-border bg-card p-7">
-              <h3 className="flex items-center gap-2 text-xl font-bold text-foreground">
-                <ShieldCheck
-                  className="size-6 text-stage-assessment"
-                  aria-hidden
-                />
-                Anonymous by design
-              </h3>
-              <p className="text-base text-muted-foreground">
-                No account, no login, no name. Your answers stay on your device,
-                and your results belong to you alone. Export them as a PDF or
-                send them to your email once, and nothing about you is stored.
-              </p>
-              <p className="mt-auto text-sm font-semibold text-muted-foreground">
-                Built to respect the Data Privacy Act of 2012.
-              </p>
-            </div>
-          </BlurFade>
-        </div>
-      </section>
-
       {/* The six traits: a legend, deliberately not another card grid */}
       <section className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6">
         <BlurFade inView>
@@ -295,8 +257,9 @@ export default function HomePage() {
           </h2>
           <p className="mt-3 max-w-2xl text-base text-muted-foreground">
             The assessment measures all six. Your three strongest become your
-            Holland Code, and that code is what the majors and pathways are
-            matched to.
+            Holland Code, and for each one you get the full official list of
+            college majors and the career pathways they lead to. Nothing is
+            ranked, because the point is to widen what you are choosing from.
           </p>
         </BlurFade>
 
@@ -306,9 +269,10 @@ export default function HomePage() {
               <div
                 key={trait.letter}
                 className={cn(
-                  // Fixed name column, so every summary starts on the same
-                  // line however long the trait name is.
-                  "grid items-start gap-x-5 gap-y-2 border-border p-6 sm:grid-cols-[13.5rem_1fr]",
+                  // Name above its details rather than beside them: the
+                  // majors run long enough that a fixed name column would
+                  // both crowd them and leave a tall void under the name.
+                  "flex flex-col gap-3 border-border p-6",
                   index < traitPreview.length - 1 && "border-b",
                   // Two columns: the left one keeps a divider, and the last
                   // row of each column drops its bottom border.
@@ -330,8 +294,13 @@ export default function HomePage() {
                     {trait.name}
                   </span>
                 </dt>
-                <dd className="text-base text-pretty text-muted-foreground sm:pt-1.5">
-                  {trait.summary}
+                <dd className="flex flex-col gap-2">
+                  <p className="text-base text-pretty text-muted-foreground">
+                    {trait.summary}
+                  </p>
+                  <p className="text-base text-pretty text-muted-foreground">
+                    {trait.majors} {trait.pathways}
+                  </p>
                 </dd>
               </div>
             ))}

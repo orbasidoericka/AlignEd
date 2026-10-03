@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 
 import { AuroraBackground } from "@/components/aceternity/aurora-background";
+import { PrivacyConsent } from "@/components/journey/privacy-consent";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -14,6 +15,8 @@ import {
   RadioGroup,
 } from "@/components/ui/radio-group";
 import {
+  AGE_MAX,
+  AGE_MIN,
   GRADE_LEVELS,
   NICKNAME_MAX_LENGTH,
   SCHOOL_MAX_LENGTH,
@@ -123,6 +126,36 @@ export function ProfileForm() {
           )}
         </fieldset>
 
+        {/* Age */}
+        <div className="flex flex-col gap-2">
+          <label
+            htmlFor="age"
+            className="text-lg font-semibold text-foreground"
+          >
+            How old are you?
+          </label>
+          <Input
+            id="age"
+            type="number"
+            inputMode="numeric"
+            min={AGE_MIN}
+            max={AGE_MAX}
+            value={profile.age}
+            onChange={(event) => {
+              const raw = event.target.value.replace(/\D/g, "").slice(0, 2);
+              setProfile({ age: raw });
+            }}
+            placeholder="Your age"
+            aria-invalid={showHints && profile.age === ""}
+            className="h-12 rounded-xl bg-card text-base font-bold"
+          />
+          {showHints && profile.age === "" && (
+            <p className="text-sm font-semibold text-destructive" role="alert">
+              Enter your age to continue.
+            </p>
+          )}
+        </div>
+
         {/* School (optional, visually quieter) */}
         <div className="flex flex-col gap-2">
           <label
@@ -156,6 +189,14 @@ export function ProfileForm() {
           >
           </p>
         </div>
+
+        <PrivacyConsent
+          accepted={profile.privacyAccepted}
+          onAcceptedChange={(accepted) =>
+            setProfile({ privacyAccepted: accepted })
+          }
+          showHint={showHints}
+        />
 
         <div className="mt-auto flex flex-col gap-2 pb-4">
           <Button

@@ -51,11 +51,11 @@ import { useAssessmentStore } from "@/store/useAssessmentStore";
 // PDF, email stub, and retake. Hidden from the printed page.
 export function ResultsActions() {
   const router = useRouter();
-  const resetAnswers = useAssessmentStore((state) => state.resetAnswers);
+  const reset = useAssessmentStore((state) => state.reset);
 
   const handleRetake = () => {
-    resetAnswers();
-    router.push("/assessment");
+    reset();
+    router.push("/assessment/profile");
   };
 
   return (
@@ -91,8 +91,8 @@ export function ResultsActions() {
             <AlertDialogHeader>
               <AlertDialogTitle>Retake the assessment?</AlertDialogTitle>
               <AlertDialogDescription>
-                This clears your answers and current results. Your grade level
-                is kept, and you can retake the quiz right away.
+                This clears your profile, answers, and current results. You will
+                start fresh from the profile setup.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -139,6 +139,7 @@ function DownloadPdfDialog() {
       await downloadResultsPdf({
         nickname: profile.nickname,
         gradeLevel: profile.gradeLevel,
+        age: profile.age,
         school: profile.school,
         scores,
         code: computeHollandCode(scores),

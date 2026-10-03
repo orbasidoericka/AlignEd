@@ -3,6 +3,7 @@
 import { MotionConfig } from "framer-motion";
 import { ThemeProvider } from "next-themes";
 
+import { SessionExpiryGuard } from "@/components/session-expiry-guard";
 import { SoundProvider } from "@/components/sound-provider";
 
 // Global client providers. MotionConfig reducedMotion="user" makes every
@@ -17,6 +18,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       disableTransitionOnChange
     >
       <MotionConfig reducedMotion="user">
+        <SessionExpiryGuard />
         <SoundProvider>{children}</SoundProvider>
       </MotionConfig>
     </ThemeProvider>

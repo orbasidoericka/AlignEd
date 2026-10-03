@@ -3,7 +3,11 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
-import { QUESTIONS } from "@/lib/riasec/questions";
+import {
+  isValidQuestionOrder,
+  QUESTIONS,
+  shuffleQuestionIds,
+} from "@/lib/riasec/questions";
 import type { GradeLevel } from "@/lib/riasec/types";
 
 export type RiasecTrait =
@@ -24,7 +28,11 @@ export interface AssessmentAnswer {
 export interface ProfileState {
   nickname: string;
   gradeLevel: GradeLevel | null;
+  age: string;
   school: string;
+  // Data Privacy Act consent, given on the profile step. Part of the profile
+  // so reset() clears it and a new student on a shared device is asked again.
+  privacyAccepted: boolean;
 }
 
 interface AssessmentState {
@@ -32,6 +40,12 @@ interface AssessmentState {
   totalQuestions: number;
   answers: Record<string, AssessmentAnswer>;
   scores: RiasecScores;
+  // The statements' presentation order for this session, as question ids.
+  // Persisted so a refresh or resume keeps the same order (and so the
+  // navigator's numbering stays stable); answers stay keyed by id, so a
+  // reshuffle never loses or misattributes one. Empty until the first visit
+  // seeds it via ensureQuestionOrder.
+  questionOrder: string[];
   profile: ProfileState;
   lastUpdated: string | null;
   // When the last question was first answered (ISO). Unlike lastUpdated it
@@ -43,6 +57,10 @@ interface AssessmentActions {
   setTotalQuestions: (total: number) => void;
   setCurrentStep: (step: number) => void;
   setAnswer: (questionId: string, answer: AssessmentAnswer) => void;
+  clearAnswer: (questionId: string) => void;
+  // Seeds a random order on first use (or when the persisted one is stale),
+  // and leaves a valid one untouched so a resumed session keeps its order.
+  ensureQuestionOrder: () => void;
   setProfile: (patch: Partial<ProfileState>) => void;
   resetAnswers: () => void;
   reset: () => void;
@@ -62,7 +80,9 @@ const emptyScores: RiasecScores = {
 const emptyProfile: ProfileState = {
   nickname: "",
   gradeLevel: null,
+  age: "",
   school: "",
+  privacyAccepted: false,
 };
 
 // On the server there is no localStorage, and handing persist an undefined
@@ -86,13 +106,15 @@ const STORAGE_KEY = "aligned.assessment.v1";
 
 // A saved session is temporary: these are shared and school devices, so an
 // abandoned quiz must not be sitting there for the next student to resume.
-export const SESSION_TTL_MS = 24 * 60 * 60 * 1000;
+// Kept short (30 minutes) so a walk-away never leaves a previous student's
+// profile, answers, or results on the device for whoever sits down next.
+export const SESSION_TTL_MS = 30 * 60 * 1000;
 
 /**
  * Whether a saved session is too old to restore. `null` is the fresh-store
  * value, so it is never expired. An unparseable stamp is: the TTL promises
- * nothing outlives a day, and a clock that cannot be read is one that promise
- * cannot be kept with.
+ * nothing outlives 30 minutes, and a clock that cannot be read is one that
+ * promise cannot be kept with.
  */
 export function isSessionExpired(
   lastUpdated: string | null,
@@ -112,6 +134,7 @@ export const useAssessmentStore = create<AssessmentStore>()(
       totalQuestions: 0,
       answers: {},
       scores: { ...emptyScores },
+      questionOrder: [],
       profile: { ...emptyProfile },
       lastUpdated: null,
       completedAt: null,
@@ -144,17 +167,53 @@ export const useAssessmentStore = create<AssessmentStore>()(
             completedAt: state.completedAt ?? (finished ? now : null),
           };
         }),
+      // Discards a single answer (e.g. after a rapid-answer block) so the
+      // student must think it through again. Scores unwind the same way
+      // setAnswer's revision path does, just without a new value going in.
+      clearAnswer: (questionId) =>
+        set((state) => {
+          const existing = state.answers[questionId];
+          if (!existing) return state;
+
+          const scores = { ...state.scores };
+          scores[existing.trait] = Math.max(
+            0,
+            scores[existing.trait] - existing.value,
+          );
+
+          const answers = { ...state.answers };
+          delete answers[questionId];
+          const finished = Object.keys(answers).length >= QUESTIONS.length;
+          return {
+            answers,
+            scores,
+            lastUpdated: new Date().toISOString(),
+            completedAt: finished ? state.completedAt : null,
+          };
+        }),
+      // Only seeds when the stored order can't be trusted, so a resumed
+      // session keeps the order (and numbering) the student already saw.
+      ensureQuestionOrder: () =>
+        set((state) => {
+          if (isValidQuestionOrder(state.questionOrder)) return state;
+          return {
+            questionOrder: shuffleQuestionIds(),
+            lastUpdated: new Date().toISOString(),
+          };
+        }),
       setProfile: (patch) =>
         set((state) => ({
           profile: { ...state.profile, ...patch },
           lastUpdated: new Date().toISOString(),
         })),
       // Retake keeps the profile (PRD FR-3.6): only answers and scores clear.
+      // A fresh order too, so the statements come back in a new sequence.
       resetAnswers: () =>
         set({
           currentStep: 0,
           answers: {},
           scores: { ...emptyScores },
+          questionOrder: shuffleQuestionIds(),
           lastUpdated: new Date().toISOString(),
           completedAt: null,
         }),
@@ -164,6 +223,7 @@ export const useAssessmentStore = create<AssessmentStore>()(
           totalQuestions: 0,
           answers: {},
           scores: { ...emptyScores },
+          questionOrder: [],
           profile: { ...emptyProfile },
           lastUpdated: null,
           completedAt: null,
@@ -171,9 +231,9 @@ export const useAssessmentStore = create<AssessmentStore>()(
     }),
     {
       name: STORAGE_KEY,
-      version: 4,
+      version: 7,
       storage: createJSONStorage(() => ssrSafeStorage()),
-      // 24h TTL. zustand calls this after `merge` has set the rehydrated state
+      // 30-minute TTL. zustand calls this after `merge` has set the rehydrated state
       // but *before* it flips `hasHydrated`, so JourneyGuard — which gates on
       // onFinishHydration — never observes an expired session and no stale
       // results can paint.
@@ -204,6 +264,7 @@ export const useAssessmentStore = create<AssessmentStore>()(
         totalQuestions: state.totalQuestions,
         answers: state.answers,
         scores: state.scores,
+        questionOrder: state.questionOrder,
         profile: state.profile,
         lastUpdated: state.lastUpdated,
         completedAt: state.completedAt,
@@ -232,22 +293,36 @@ export const useAssessmentStore = create<AssessmentStore>()(
             : withProfile;
 
         // v4 introduced the nickname; older profiles have no such key.
-        if (version < 4) {
-          return {
-            ...withQuiz,
-            profile: { ...emptyProfile, ...withQuiz.profile },
-          };
-        }
-        return withQuiz;
+        const withNickname =
+          version < 4
+            ? {
+                ...withQuiz,
+                profile: { ...emptyProfile, ...withQuiz.profile },
+              }
+            : withQuiz;
+
+        // v5 introduced the per-session question order. Older blobs have none;
+        // merge leaves questionOrder empty and ensureQuestionOrder seeds it on
+        // the next visit, so no explicit field is injected here.
+
+        // v6 added age and v7 the privacy consent. merge's spread over
+        // emptyProfile fills both for older blobs, so nothing is injected
+        // here: an unconsented session simply has to agree before starting.
+        return withNickname;
       },
     },
   ),
 );
 
+// Also gates the /assessment route through JourneyGuard, so a student cannot
+// reach the quiz by URL without having agreed to the privacy notice.
 export const selectIsProfileComplete = (state: {
   profile: ProfileState;
 }): boolean =>
-  state.profile.nickname.length > 0 && state.profile.gradeLevel !== null;
+  state.profile.nickname.length > 0 &&
+  state.profile.gradeLevel !== null &&
+  state.profile.age !== "" &&
+  state.profile.privacyAccepted;
 
 export const selectIsAssessmentComplete = (state: {
   answers: Record<string, AssessmentAnswer>;

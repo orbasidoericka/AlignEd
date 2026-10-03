@@ -17,10 +17,14 @@ export type GradeLevel = (typeof GRADE_LEVELS)[number];
 export interface StudentProfile {
   nickname: string;
   gradeLevel: GradeLevel;
+  age: string;
   school: string;
 }
 
 export const NICKNAME_MAX_LENGTH = 8;
+
+export const AGE_MIN = 10;
+export const AGE_MAX = 30;
 
 export const SCHOOL_MAX_LENGTH = 120;
 

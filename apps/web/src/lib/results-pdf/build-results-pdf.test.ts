@@ -5,6 +5,7 @@ import { buildResultsPdf } from "./build-results-pdf";
 const input = {
   nickname: "MARI",
   gradeLevel: "11",
+  age: "17",
   school: "San Fernando NHS",
   scores: {
     realistic: 6,
@@ -43,7 +44,7 @@ describe("buildResultsPdf", () => {
   it("includes the Holland Code, every score, and the code's majors", () => {
     const text = JSON.stringify(buildResultsPdf(input).content);
     expect(text).toContain("I-R-A");
-    expect(text).toContain("MARI · Grade 11 · San Fernando NHS");
+    expect(text).toContain("MARI · 17 years old · Grade 11 · San Fernando NHS");
     expect(text).toContain("7 / 7");
     expect(text).toContain("0 / 7");
     // One major from each code letter's pathway sheet entry.

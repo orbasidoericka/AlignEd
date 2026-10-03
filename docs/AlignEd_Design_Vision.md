@@ -1,15 +1,10 @@
-# AlignEd Design Vision — "Liwanag"
+# AlignEd Design Vision 
 
 > Creative blueprint for the four-step journey defined in `docs/AlignEd_PRD.md`
 > (Landing → Profile → Assessment → Results). Feeds Phases 2–4 of the
 > Implementation Plan. If this document and the PRD conflict, the PRD wins.
 
 ## 1. The Vision
-
-**Concept name: Liwanag** (Filipino: *light, clarity*). The product's entire
-emotional arc is a student walking out of fog into light — from "everyone is
-deciding for me" to "I can see my path." Every design decision serves that
-arc.
 
 **The vibe:** calm confidence with moments of celebration. Not a government
 form, not a children's app — a premium tool that takes a 17-year-old's future
