@@ -39,8 +39,8 @@ export function BackgroundGradient({
         aria-hidden
         className={cn(
           "absolute -inset-1 z-[1] rounded-[1.75rem] bg-answer-glow blur-2xl transition-opacity duration-500",
-          animate === "always" ? "opacity-60" : "opacity-0",
-          "group-hover:opacity-85 group-has-[:focus-visible]:opacity-100 group-has-[[data-checked]]:opacity-100",
+          animate === "always" ? "opacity-70" : "opacity-0",
+          "group-hover:opacity-100 group-has-[:focus-visible]:opacity-100 group-has-[[data-checked]]:opacity-100",
           motion,
           playState[animate],
         )}

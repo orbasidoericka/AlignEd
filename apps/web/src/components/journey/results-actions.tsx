@@ -185,7 +185,7 @@ function DownloadPdfDialog() {
           </p>
           <p className="text-sm text-muted-foreground">
             Your nickname, then the date you took the assessment
-            (month, day, year: MMDDYYYY).
+            (month, day, year: MMDDYYYY). Password is CASE-SENSITIVE.
           </p>
         </div>
         {failed && (
@@ -297,7 +297,8 @@ function EmailResultsDialog() {
           </p>
           <p className="text-sm text-muted-foreground">
             Your nickname, then the date you took the assessment (MMDDYYYY).
-            It isn&apos;t written in the email, so keep it somewhere safe.
+            Password is CASE-SENSITIVE. It isn&apos;t written in the email, so
+            keep it somewhere safe.
           </p>
         </div>
 

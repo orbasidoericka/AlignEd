@@ -335,12 +335,12 @@
     ),
     radial-gradient(
       circle farthest-side at 100% 0,
-      var(--stage-results),
+      var(--stage-results-strong),
       transparent
     ),
     radial-gradient(
       circle farthest-side at 100% 100%,
-      var(--stage-profile),
+      var(--stage-profile-strong),
       transparent
     ),
     radial-gradient(
