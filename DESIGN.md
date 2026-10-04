@@ -9,7 +9,7 @@ Light-first, friendly, student-focused visual system. Supersedes the dark-leanin
 ## Theme
 
 - **Light is the default theme** (`next-themes defaultTheme="light"`). Dark mode is preserved via the toggle and must hold WCAG AA contrast; the PRD requires both themes.
-- Body background is light slate (`#F8FAFC`), cards pure white. Never cream/beige, never dark dotted patterns.
+- Body background is a brand-tinted near-white (`#EFF6FF`), cards pure white. Never cream/beige, never dark dotted patterns.
 
 ## Palette
 
@@ -17,13 +17,20 @@ Tokens live in `apps/web/src/app/globals.css` (Tailwind v4 `@theme inline`; ther
 
 | Role | Hex | Tokens | Use |
 | :--- | :--- | :--- | :--- |
-| Main | `#8EACCD` | `primary`, `primary-foreground`, `primary-strong` | Brand, active states, primary CTA fills |
-| Secondary | `#D7E5CA` | `secondary`, `secondary-foreground`, `success-strong` | Success, exact matches, soft washes, secondary actions |
-| Accent 1 | `#F9F3CC` | `highlight`, `highlight-foreground` | Highlights, insight/warning cards |
-| Accent 2 | `#D2E0FB` | `accent`, `accent-foreground`, `border` | Hover states, borders, secondary accents |
-| Neutral | `#FFFFFF` / slate | `card`, `background`, `muted`, `foreground` | Surfaces and reading text |
+| Main | `#78AAE2` | `primary`, `primary-foreground`, `primary-strong` | Brand, active states, primary CTA fills |
+| Secondary | `#CBE7B6` | `secondary`, `secondary-foreground`, `success-strong` | Success, exact matches, soft washes, secondary actions |
+| Accent 1 | `#FBEFA8` | `highlight`, `highlight-foreground` | Highlights, insight/warning cards |
+| Accent 2 | `#BFDDFF` | `accent`, `accent-foreground` | Hover/selected fills, secondary accents |
+| Line | `#B5CDED` / `#638FC5` | `border`, `input` | Hairline edges; `input` bounds real controls |
+| Neutral | `#FFFFFF` / tinted blue | `card`, `background`, `muted`, `foreground` | Surfaces and reading text |
 
-Contrast rules: the pastels fail AA as text on white and under white text. Pastel fills always carry dark `-foreground` text. Colored text uses `primary-strong` (`#3F5F82`) or `success-strong` (`#4A6B35`), never `text-primary`. Focus ring is `primary-strong`. Dark theme reuses the pastels as fills and as text-safe tones on dim washes.
+**Saturation is the identity, not the hue.** Every value above is the original pastel re-cut in OKLCH at the same hue and lightness with roughly 1.7x the chroma. The first palette sat at C 0.04–0.06 with zero-chroma slate neutrals, which is below the point where a tint reads as a colour rather than as tinted grey, and it was why the product looked washed out. Neutrals carry 0.014–0.018 chroma toward the brand hue. Dark mode keeps every surface's original lightness (background 18.3%, card 22.7%, chrome 25.4%) and gains chroma only; never make the dark theme darker to make it feel richer.
+
+Contrast rules: the pastels fail AA as text on white and under white text. Pastel fills always carry dark `-foreground` text. Colored text uses `primary-strong` (`#275A96`) or `success-strong` (`#3E6C1D`), never `text-primary`. Focus ring is `primary-strong`. Dark theme reuses the pastels as fills and as text-safe tones on dim washes.
+
+`border` and `input` are separate values and must stay that way. They were one token, and a single pale value cannot be both a fill that carries dark text and a visible edge: at `#D2E0FB` a border measured 1.33:1 on white, so card edges, dividers and kbd outlines were invisible and every surface floated. `border` is a hairline (1.63:1 on card); `input` bounds a real control, so it owes WCAG 1.4.11 and clears 3:1 on both the card and the page.
+
+Changing any of these means re-measuring, not eyeballing. Every pair in both themes (body text ≥4.5:1, UI boundaries and the hero word ≥3:1) was verified numerically; the AuroraText gold had silently regressed to 1.70:1 behind a comment describing a value that was no longer in the file.
 
 ## Typography
 
@@ -39,11 +46,13 @@ Each journey stage owns one accent, reinforced in nav underlines, icon chips, pr
 
 | Stage | Accent | Tokens |
 | :--- | :--- | :--- |
-| Profile Setup | Soft yellow (`#F9F3CC`) | `stage-profile`, `-strong`, `-soft`, `-foreground` |
-| Assessment | Calm blue (`#8EACCD`) | `stage-assessment`, `-strong`, `-soft`, `-foreground` |
-| Results | Sage green (`#D7E5CA`) | `stage-results`, `-strong`, `-soft`, `-foreground` |
+| Profile Setup | Soft yellow (`#FBEFA8`) | `stage-profile`, `-strong`, `-soft`, `-foreground` |
+| Assessment | Calm blue (`#78AAE2`) | `stage-assessment`, `-strong`, `-soft`, `-foreground` |
+| Results | Sage green (`#CBE7B6`) | `stage-results`, `-strong`, `-soft`, `-foreground` |
 
 Rules: `-strong` is the text-safe variant (≥4.5:1 on the stage's soft wash); `-soft` is a background wash only, never a text color; base is for fills, chips, and large graphics. Both themes define all four. The landing page may use all three accents (brand register); each app screen commits to exactly one (product register).
+
+A screen sets its stage accent as `currentColor` on its controls (`text-stage-assessment-strong` on the quiz answers, `text-stage-profile-strong` on the grade picker), and the shared control states are written in `currentColor` rather than a hard-coded hue. That is what lets one rule in `ui/radio-group.tsx` stay stage-correct instead of painting a blue hover onto a yellow screen; keep it that way when adding states.
 
 ## Register split
 
@@ -153,7 +162,9 @@ Current uses: landing hero (16 scattered cells in stage colors), Profile Setup (
   - **Focus:** moves to each new statement heading, which also names the answer group; on the finish view it moves to its heading.
   - **Resume:** reopening a fully answered quiz lands on the finish view, which has "Review my answers".
   - **Rapid-answer pause:** stays on the current statement instead of advancing behind the modal.
-  - **Focus ring:** radio cards use a solid `ring` token with an offset.
+  - **Answer card states:** rest is a white card inside the gradient frame. Hover and focus-visible are the same treatment — a 15% `currentColor` wash plus a 2px full-strength `currentColor` outline (the shared `border-current` for a bordered RadioCard; an `inset-ring` on the answer cards, which drop their border for the frame) — and focus-visible adds the offset `ring` on top, so tabbing is never the quieter path. Selected is the opaque `bg-accent` fill with a check mark and no outline, so hover reads as *outlined* and selected as *filled*: the two can never be confused, and the distinction is shape, not just colour. Hover also lifts the whole `BackgroundGradient` container by 2px under `motion-safe:`; the lift rides the container so the frame, glow and card travel as one. Press (`active:`) deepens the wash to 25%, because touch has no hover.
+  - All of the above is scoped with `data-unchecked:` (Base UI sets it whenever a radio is not checked), so the hover styles can never fight the checked styles for specificity and the chosen card stops offering itself.
+  - **Never tint a control with `bg-current/<n>`.** `background-color` is a single slot, so a translucent colour there replaces the card's opaque background instead of layering on it, and the blurred palette glow behind the answer cards then shows straight through a hovered card and turns it green. Use the `control-wash` / `control-wash-strong` utilities, which paint a `currentColor` gradient *image* over the background colour.
 - framer-motion `AnimatePresence` for the question slide.
 
 **Results (`/results`)** (implemented)

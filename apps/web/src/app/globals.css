@@ -39,10 +39,10 @@
   --color-notice-foreground: #f8fafc;
   --color-notice-muted: #cbd5e1;
   --shadow-bento:
-    0 1px 2px rgb(15 23 42 / 0.04), 0 8px 24px -12px rgb(63 95 130 / 0.18);
+    0 1px 2px rgb(13 25 47 / 0.05), 0 8px 24px -12px rgb(39 90 150 / 0.22);
   /* Deeper sibling, so the top trait card sits forward of its neighbours. */
   --shadow-bento-lifted:
-    0 2px 4px rgb(15 23 42 / 0.06), 0 16px 40px -16px rgb(63 95 130 / 0.28);
+    0 2px 4px rgb(13 25 47 / 0.07), 0 16px 40px -16px rgb(39 90 150 / 0.32);
   --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);
   --font-heading: var(--font-heading);
@@ -130,89 +130,108 @@
   }
 }
 
-/* Palette: Main #8EACCD, Secondary #D7E5CA, Accent 1 #F9F3CC (highlight),
-   Accent 2 #D2E0FB (hover/borders). Pastel fills always carry dark text;
-   the -strong tokens are the text-safe (AA) variants. */
+/* Palette: Main #78AAE2, Secondary #CBE7B6, Accent 1 #FBEFA8 (highlight),
+   Accent 2 #BFDDFF (selected fills). Pastel fills always carry dark text;
+   the -strong tokens are the text-safe (AA) variants.
+
+   Hue and role are unchanged from the original pastels (#8EACCD / #D7E5CA /
+   #F9F3CC / #D2E0FB); every value was re-cut in OKLCH at the same lightness
+   with roughly 1.7x the chroma, because the old set sat at C 0.04-0.06, below
+   the point where a tint reads as a colour rather than as tinted grey. The
+   `-strong` tones gained chroma and a little depth, so colored text reads as
+   deliberate rather than faded. Neutrals carry 0.014-0.018 chroma toward the
+   brand hue instead of slate's 0.003, which is what keeps the near-whites from
+   looking washed out. Measured, not eyeballed: see DESIGN.md for the ratios. */
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
-  --chrome: #e4ecf8;
-  --chrome-border: #c2d4ec;
+  --background: #eff6ff;
+  --foreground: #0d192f;
+  --chrome: #d8e8fd;
+  --chrome-border: #abc6eb;
   /* Six distinct hues at one pastel weight, so no two letters read alike:
      blue, violet, amber, green, coral, teal. Brand blue stays on R. */
-  --trait-r: #8eaccd;
-  --trait-i: #c3b6e8;
-  --trait-a: #f3d98b;
-  --trait-s: #a9d49a;
-  --trait-e: #f2b49a;
-  --trait-c: #8fd2cd;
-  --trait-foreground: #0f172a;
+  --trait-r: #7cafe8;
+  --trait-i: #b59be6;
+  --trait-a: #eec96c;
+  --trait-s: #9ed691;
+  --trait-e: #f7a284;
+  --trait-c: #7ad7d1;
+  --trait-foreground: #0d192f;
   --card: #ffffff;
-  --card-foreground: #0f172a;
+  --card-foreground: #0d192f;
   --popover: #ffffff;
-  --popover-foreground: #0f172a;
-  --primary: #8eaccd;
-  --primary-foreground: #0f172a;
-  --primary-strong: #3f5f82;
-  --secondary: #d7e5ca;
-  --secondary-foreground: #2f4220;
-  --success-strong: #4a6b35;
-  --highlight: #f9f3cc;
-  --highlight-foreground: #5c4a12;
-  --muted: #f1f5f9;
-  --muted-foreground: #475569;
-  --accent: #d2e0fb;
-  --accent-foreground: #1e3a5f;
+  --popover-foreground: #0d192f;
+  --primary: #78aae2;
+  --primary-foreground: #0d192f;
+  --primary-strong: #275a96;
+  --secondary: #cbe7b6;
+  --secondary-foreground: #244309;
+  --success-strong: #3e6c1d;
+  --highlight: #fbefa8;
+  --highlight-foreground: #5f4400;
+  --muted: #e7effb;
+  --muted-foreground: #435672;
+  --accent: #bfddff;
+  --accent-foreground: #0f3568;
   --destructive: oklch(0.58 0.22 27);
-  --border: #d2e0fb;
-  --input: #b8c9e0;
-  --ring: #3f5f82;
-  --chart-1: #8eaccd;
-  --chart-2: #d7e5ca;
-  --chart-3: #f9f3cc;
-  --chart-4: #d2e0fb;
-  --chart-5: #3f5f82;
-  --brand: #3f5f82;
-  --accent-strong: #f9f3cc;
+  /* Split from --accent, which it used to alias. One value cannot be both a
+     pale fill that carries dark text and a visible edge: at #D2E0FB the border
+     measured 1.33:1 on white, so card edges, dividers and kbd outlines were
+     effectively invisible and every surface floated. --border is now its own
+     hairline (1.63:1), and --input, which bounds a real form control and so
+     owes WCAG 1.4.11, clears 3:1 on both the card and the page. */
+  --border: #b5cded;
+  --input: #638fc5;
+  --ring: #275a96;
+  --chart-1: #78aae2;
+  --chart-2: #cbe7b6;
+  --chart-3: #fbefa8;
+  --chart-4: #bfddff;
+  --chart-5: #275a96;
+  --brand: #275a96;
+  --accent-strong: #fbefa8;
   --radius: 0.75rem;
   /* Stage remap: profile = highlight yellow, assessment = primary blue,
      results = secondary green. */
-  --stage-profile: #f9f3cc;
-  --stage-profile-strong: #7a6415;
-  --stage-profile-soft: #fdfaeb;
+  --stage-profile: #fbefa8;
+  --stage-profile-strong: #7d5f00;
+  --stage-profile-soft: #fcf7de;
   --stage-profile-foreground: #5c4a12;
   /* Aurora Background stops (Profile Setup). Light uses the pastels as-is;
      dark needs light tones, because the dark accent and secondary are
      themselves near-black and blur into a brown haze. */
-  --aurora-a: #8eaccd;
-  --aurora-b: #d2e0fb;
-  --aurora-c: #f9f3cc;
-  --aurora-d: #d7e5ca;
+  --aurora-a: #78aae2;
+  --aurora-b: #bfddff;
+  --aurora-c: #fbefa8;
+  --aurora-d: #cbe7b6;
   /* Cuts the colour layer into ribbons. Page-colored in light; in dark it
      would only add more black, so it drops out there. */
-  --aurora-veil: #f8fafc;
-  /* AuroraText stops for the hero word "Align" (app/(site)/page.tsx). Lighter
-     than primary-strong/stage-profile-strong by design: those two are tuned
-     for small colored text, and at 72px bold the word only needs the
-     WCAG AA large-text floor (3:1), so there is room to read softer without
-     losing the tie to "profession" (blue) and "Step 1 of 3" (gold). Blended
-     toward each color's own pastel base rather than picked freehand, and
-     clamped so the palest stop (gold, which fades fastest) still clears the
-     stricter 4.5:1 the rest of the app's colored text holds to:
-     align-a #4f6e91 measures 5.05:1, align-b #846f24 measures 4.69:1,
-     both against --background. */
-  --align-a: #006ce7;
-  --align-b: #d6be54;
-  --stage-assessment: #8eaccd;
-  --stage-assessment-strong: #3f5f82;
-  --stage-assessment-soft: #eef3fd;
-  --stage-assessment-foreground: #0f172a;
-  --stage-results: #d7e5ca;
-  --stage-results-strong: #4a6b35;
-  --stage-results-soft: #f3f8ee;
-  --stage-results-foreground: #2f4220;
-  --positive: #4a6b35;
-  --positive-soft: #d7e5ca;
+  --aurora-veil: #eff6ff;
+  /* AuroraText stops for the hero word "Align" (app/(site)/page.tsx). Tied to
+     "profession" (blue) and "Step 1 of 3" (gold), so each stop is a saturated
+     cut of primary-strong / stage-profile-strong rather than a freehand pick.
+     Held to the WCAG AA large-text floor (3:1), which is the bar that actually
+     applies to a 72px bold word: align-a measures 4.71:1 and align-b 3.66:1
+     against --background. Clamping the gold to 4.5:1 instead pushes it to
+     roughly #8a6900, and because blue and gold are near-complementary the
+     sweep between them crosses through grey, so a darker gold turns the word
+     olive. Keeping the two stops within ~6 points of lightness shortens that
+     crossing and is what keeps the gradient reading as warm metal.
+     The previous --align-b (#d6be54) measured 1.70:1, failing even this 3:1
+     floor; the comment here still described #846f24, a value that had been
+     replaced, which is how the regression went unnoticed. Re-measure both
+     whenever --background moves. */
+  --align-a: #106dce;
+  --align-b: #a47800;
+  --stage-assessment: #78aae2;
+  --stage-assessment-strong: #275a96;
+  --stage-assessment-soft: #e5f0ff;
+  --stage-assessment-foreground: #0d192f;
+  --stage-results: #cbe7b6;
+  --stage-results-strong: #3e6c1d;
+  --stage-results-soft: #ecf7e3;
+  --stage-results-foreground: #244309;
+  --positive: #3e6c1d;
+  --positive-soft: #cbe7b6;
   --sidebar: var(--card);
   --sidebar-foreground: var(--foreground);
   --sidebar-primary: var(--primary);
@@ -224,73 +243,83 @@
 }
 
 /* Dark derives from the same hues: pastels stay as fills (dark text), dim
-   washes replace the soft backgrounds, pastels become the text-safe tones. */
+   washes replace the soft backgrounds, pastels become the text-safe tones.
+
+   Every dark surface keeps the lightness it already had (background 18.3%,
+   card 22.7%, chrome 25.4%) and gains chroma only. Dark mode was the paler of
+   the two themes in relative terms, because its "colored" surfaces sat at
+   C 0.03-0.05 and read as flat charcoal; going darker instead would have cost
+   comfort for no colour, so the depth steps are untouched and only the hue
+   strengthens. */
 .dark {
-  --background: #0b1220;
-  --foreground: #f1f5f9;
-  --chrome: #16223a;
-  --chrome-border: rgb(210 224 251 / 0.18);
+  --background: #0a1221;
+  --foreground: #eff5fd;
+  --chrome: #14223d;
+  --chrome-border: rgb(197 224 255 / 0.22);
   /* The pastel letter fills stay as they are on dark; they are fills with
      dark text, the same way the stage chips work. */
-  --trait-r: #8eaccd;
-  --trait-i: #c3b6e8;
-  --trait-a: #f3d98b;
-  --trait-s: #a9d49a;
-  --trait-e: #f2b49a;
-  --trait-c: #8fd2cd;
-  --trait-foreground: #0f172a;
-  --card: #131c2e;
-  --card-foreground: #f1f5f9;
-  --popover: #131c2e;
-  --popover-foreground: #f1f5f9;
-  --primary: #8eaccd;
-  --primary-foreground: #0f172a;
-  --primary-strong: #b4cae3;
-  --secondary: #2c3a24;
-  --secondary-foreground: #d7e5ca;
-  --success-strong: #b5d19c;
-  --highlight: #332e1a;
-  --highlight-foreground: #f9f3cc;
-  --muted: #1e293b;
-  --muted-foreground: #94a3b8;
-  --accent: #1e2b45;
-  --accent-foreground: #d2e0fb;
+  --trait-r: #7cafe8;
+  --trait-i: #b59be6;
+  --trait-a: #eec96c;
+  --trait-s: #9ed691;
+  --trait-e: #f7a284;
+  --trait-c: #7ad7d1;
+  --trait-foreground: #0d192f;
+  --card: #121c30;
+  --card-foreground: #eff5fd;
+  --popover: #121c30;
+  --popover-foreground: #eff5fd;
+  --primary: #7cafe8;
+  --primary-foreground: #0d192f;
+  --primary-strong: #a3cbf9;
+  --secondary: #283c1d;
+  --secondary-foreground: #cde8b7;
+  --success-strong: #abd58e;
+  --highlight: #362d0a;
+  --highlight-foreground: #fcf1aa;
+  --muted: #1c293c;
+  --muted-foreground: #93a5be;
+  --accent: #1b2b48;
+  --accent-foreground: #c5e0ff;
   --destructive: oklch(0.66 0.2 28);
-  --border: rgb(210 224 251 / 0.14);
-  --input: rgb(210 224 251 / 0.22);
-  --ring: #b4cae3;
-  --chart-1: #8eaccd;
-  --chart-2: #b5d19c;
-  --chart-3: #f9f3cc;
-  --chart-4: #d2e0fb;
-  --chart-5: #b4cae3;
-  --brand: #3f5f82;
-  --accent-strong: #f9f3cc;
-  --stage-profile: #f9f3cc;
-  --stage-profile-strong: #f9f3cc;
-  --stage-profile-soft: #221f12;
+  /* Alpha rather than a flat hex, so one value works over background, card and
+     chrome alike. Raised from 0.14/0.22: at the old weights a card edge was
+     barely separable from the page. */
+  --border: rgb(197 224 255 / 0.2);
+  --input: rgb(197 224 255 / 0.32);
+  --ring: #a3cbf9;
+  --chart-1: #7cafe8;
+  --chart-2: #abd58e;
+  --chart-3: #fcf1aa;
+  --chart-4: #bfddff;
+  --chart-5: #a3cbf9;
+  --brand: #275a96;
+  --accent-strong: #fbefa8;
+  --stage-profile: #fbefa8;
+  --stage-profile-strong: #fcf1aa;
+  --stage-profile-soft: #251f06;
   --stage-profile-foreground: #3d3310;
-  --aurora-a: #8eaccd;
-  --aurora-b: #b4cae3;
-  --aurora-c: #f9f3cc;
-  --aurora-d: #c3b6e8;
+  --aurora-a: #7cafe8;
+  --aurora-b: #a3cbf9;
+  --aurora-c: #fcf1aa;
+  --aurora-d: #b59be6;
   --aurora-veil: transparent;
   /* Unchanged from primary-strong/stage-profile-strong: dark mode's tones are
-     already pale pastels (11.14:1 and 16.69:1 against the dark background),
+     already pale pastels (10.10:1 and 16.32:1 against the dark background),
      so lightening further would wash the two stops into each other and blur
      the gradient's shape rather than reading as "lighter". */
-  --align-a: #b4cae3;
-  --align-b: #f9f3cc;
-  --stage-assessment: #8eaccd;
-  --stage-assessment-strong: #b4cae3;
-  --stage-assessment-soft: #141d31;
-  --stage-assessment-foreground: #0f172a;
-  --stage-results: #d7e5ca;
-  --stage-results-strong: #d7e5ca;
-  --stage-results-soft: #182014;
-  --stage-results-foreground: #2f4220;
-  --positive: #b5d19c;
-  --positive-soft: #25331d;
+  --align-a: #a3cbf9;
+  --align-b: #fcf1aa;
+  --stage-assessment: #7cafe8;
+  --stage-assessment-strong: #a3cbf9;
+  --stage-assessment-soft: #121d33;
+  --stage-assessment-foreground: #0d192f;
+  --stage-results: #cbe7b6;
+  --stage-results-strong: #cde8b7;
+  --stage-results-soft: #15210d;
+  --stage-results-foreground: #244309;
+  --positive: #abd58e;
+  --positive-soft: #283c1d;
 }
 
 /* Aceternity BackgroundGradient in palette colors. Stage tokens are pastel
@@ -338,6 +367,30 @@
   );
   background-size: 200% 200%;
   background-position: 0% 50%;
+}
+
+/* Hover/press wash for the card-style radio controls (components/ui/
+   radio-group.tsx), in the control's own currentColor so it follows each
+   screen's stage accent. Deliberately a gradient image rather than
+   `bg-current/15`: background-color is a single slot, so a translucent colour
+   there REPLACES the card's opaque background instead of layering onto it, and
+   on the quiz that let the blurred palette glow behind the answer cards show
+   straight through a hovered card and turn it green. An image paints over the
+   background-colour, so the card stays opaque and the wash reads as the stage
+   colour it actually is. */
+@utility control-wash {
+  background-image: linear-gradient(
+    color-mix(in oklab, currentColor 15%, transparent),
+    color-mix(in oklab, currentColor 15%, transparent)
+  );
+}
+
+/* The press state, deeper than hover so touch gets its own answer. */
+@utility control-wash-strong {
+  background-image: linear-gradient(
+    color-mix(in oklab, currentColor 25%, transparent),
+    color-mix(in oklab, currentColor 25%, transparent)
+  );
 }
 
 /* Pan for bg-answer-gradient, written as longhands on purpose: the

@@ -504,7 +504,12 @@ export function AssessmentRunner() {
                       // hides the gradient except for the 3px ring.
                       <BackgroundGradient
                         key={option.value}
-                        containerClassName="rounded-3xl"
+                        // The lift rides on the container so the 3px frame,
+                        // the glow and the card travel as one piece; lifting
+                        // the card alone would slide it inside its own frame.
+                        // Transform only, and motion-safe, so a phone that
+                        // never hovers loses nothing.
+                        containerClassName="rounded-3xl transition-transform duration-150 motion-safe:hover:-translate-y-0.5"
                         className="h-full"
                       >
                         <RadioCard
@@ -515,7 +520,11 @@ export function AssessmentRunner() {
                               handleChoice(option.value);
                             }
                           }}
-                          className="relative h-full min-h-28 w-full flex-col justify-center gap-2 rounded-[21px] border-0 bg-card text-stage-assessment-strong data-checked:bg-accent"
+                          // border-0 because the 3px gradient frame is this
+                          // card's edge, so the shared hover border has
+                          // nothing to paint; the inset ring puts that outline
+                          // back, inside the frame rather than fighting it.
+                          className="relative h-full min-h-28 w-full flex-col justify-center gap-2 rounded-[21px] border-0 bg-card text-stage-assessment-strong data-checked:bg-accent data-unchecked:hover:inset-ring-2 data-unchecked:hover:inset-ring-current data-unchecked:focus-visible:inset-ring-2 data-unchecked:focus-visible:inset-ring-current"
                         >
                           <RadioCardIndicator className="sr-only" />
                           {/* Non-color cue for the selected card. */}
@@ -529,9 +538,12 @@ export function AssessmentRunner() {
                           <span className="font-sans text-4xl leading-none font-extrabold tracking-tight text-foreground sm:text-5xl">
                             {option.label}
                           </span>
-                          <span className="hidden items-center gap-1.5 text-sm text-muted-foreground sm:flex">
+                          {/* The hint darkens with the card, so the hover
+                              carries a text-contrast change too and is not
+                              only a tint and an outline. */}
+                          <span className="hidden items-center gap-1.5 text-sm text-muted-foreground transition-colors duration-150 group-hover:text-foreground sm:flex">
                             press
-                            <kbd className="rounded-md border border-border bg-muted px-1.5 py-0.5 font-sans text-xs font-bold text-foreground">
+                            <kbd className="rounded-md border border-border bg-muted px-1.5 py-0.5 font-sans text-xs font-bold text-foreground transition-colors duration-150 group-hover:border-current">
                               {option.label[0]!.toUpperCase()}
                             </kbd>
                           </span>
