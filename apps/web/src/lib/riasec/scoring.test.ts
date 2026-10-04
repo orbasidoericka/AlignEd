@@ -55,6 +55,88 @@ describe("computeHollandCode", () => {
     const input = scores({ realistic: 8, investigative: 8, conventional: 8 });
     expect(computeHollandCode(input)).toEqual(computeHollandCode(input));
   });
+
+  it("breaks an R/E tie in canonical order, yielding RES", () => {
+    const code = computeHollandCode(
+      scores({
+        realistic: 7,
+        investigative: 4,
+        artistic: 3,
+        social: 6,
+        enterprising: 7,
+        conventional: 2,
+      }),
+    );
+    expect(code).toEqual(["R", "E", "S"]);
+  });
+
+  it("breaks an adjacent tie, yielding IAS", () => {
+    const code = computeHollandCode(
+      scores({
+        realistic: 5,
+        investigative: 8,
+        artistic: 8,
+        social: 6,
+        enterprising: 4,
+        conventional: 3,
+      }),
+    );
+    expect(code).toEqual(["I", "A", "S"]);
+  });
+
+  it("breaks two separate ties spanning the top three, yielding RIA", () => {
+    const code = computeHollandCode(
+      scores({
+        realistic: 9,
+        investigative: 9,
+        artistic: 7,
+        social: 7,
+        enterprising: 6,
+        conventional: 6,
+      }),
+    );
+    expect(code).toEqual(["R", "I", "A"]);
+  });
+
+  it("breaks a tie across the third-place boundary by canonical order", () => {
+    // A, S, E, C all tie at 4 for the third slot; A wins on R→I→A→S→E→C.
+    const code = computeHollandCode(
+      scores({
+        realistic: 9,
+        investigative: 8,
+        artistic: 4,
+        social: 4,
+        enterprising: 4,
+        conventional: 4,
+      }),
+    );
+    expect(code).toEqual(["R", "I", "A"]);
+  });
+
+  it("ignores object insertion order", () => {
+    const base: RiasecScores = {
+      realistic: 7,
+      investigative: 4,
+      artistic: 3,
+      social: 6,
+      enterprising: 7,
+      conventional: 2,
+    };
+    const reordered: RiasecScores = {
+      conventional: 2,
+      enterprising: 7,
+      social: 6,
+      artistic: 3,
+      investigative: 4,
+      realistic: 7,
+    };
+    expect(computeHollandCode(reordered)).toEqual(computeHollandCode(base));
+    expect(computeHollandCode(reordered)).toEqual(["R", "E", "S"]);
+  });
+
+  it("returns exactly three letters", () => {
+    expect(computeHollandCode(scores({}))).toHaveLength(3);
+  });
 });
 
 describe("formatHollandCode", () => {
