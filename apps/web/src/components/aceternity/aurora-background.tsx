@@ -41,7 +41,7 @@ export function AuroraBackground({
         <div
           className={cn(
             // Inset past the edges so the blur never reveals a hard border.
-            "absolute -inset-16 aurora-field opacity-85 dark:opacity-30",
+            "absolute -inset-16 aurora-field opacity-60 dark:opacity-30",
             "motion-safe:animate-aurora-drift",
             showRadialGradient &&
               "mask-[radial-gradient(ellipse_at_top,white,transparent_75%)]",

@@ -16,7 +16,7 @@ import { SectionLink } from "@/components/blocks/section-link";
 import { HeroCta } from "@/components/journey/hero-cta";
 import { buttonVariants } from "@/components/ui/button";
 import { RIASEC_PATHWAYS } from "@/lib/riasec/career-pathways";
-import { letterChip } from "@/lib/riasec/letter-chip-styles";
+import { TraitEmblem } from "@/components/riasec/trait-emblem";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -46,7 +46,6 @@ const traitPreview = (["R", "I", "A", "S", "E", "C"] as const).map((letter) => {
     summary: `${profile.description.split(". ")[0]}.`,
     majors: `Good college majors for ${profile.name} people are ${listFormat.format(profile.majors)}.`,
     pathways: `These majors lead into the ${listFormat.format(profile.relatedPathways)} career pathways.`,
-    chip: letterChip(letter),
   };
 });
 
@@ -80,10 +79,12 @@ const journeySteps = [
   },
 ] as const;
 
-// Pale yellow and sage vanish on the near-white hero, so light mode tints
-// those cells with their strong tones; dark mode uses the pastel bases.
-const heroYellowCell = "fill-stage-profile-strong/30 dark:fill-stage-profile/60";
-const heroGreenCell = "fill-stage-results-strong/35 dark:fill-stage-results";
+// Lit cells in the full-strength palette. Yellow takes half the slots: it is
+// the palette's loudest note and the CTA colour, so the field leans warm and
+// the blue grid lines do not swallow it. Dark keeps the yellow a touch dimmer
+// so it glows rather than glares.
+const heroYellowCell = "fill-stage-profile dark:fill-stage-profile/60";
+const heroGreenCell = "fill-stage-results";
 
 // Lit cells scattered across the hero grid (about 20 x 10 cells at desktop
 // width); computed once at module load, identical on server and client.
@@ -91,7 +92,12 @@ const heroCells = scatterHexagons({
   count: 16,
   cols: 20,
   rows: 10,
-  classNames: ["fill-stage-assessment", heroGreenCell, heroYellowCell],
+  classNames: [
+    heroYellowCell,
+    "fill-stage-assessment",
+    heroYellowCell,
+    heroGreenCell,
+  ],
   seed: 7,
 });
 
@@ -119,7 +125,7 @@ export default function HomePage() {
             <h1 className="text-5xl leading-[1.22] font-extrabold tracking-tight text-foreground sm:text-6xl md:text-7xl">
               <AuroraText speed={0.8}>Align</AuroraText> your{" "}
               <Highlighter
-                color="#f5c749"
+                color="#fdff00"
                 darkColor="#8a6a12"
                 padding={10}
                 strokeWidth={3}
@@ -132,7 +138,7 @@ export default function HomePage() {
               with your{" "}
               <Highlighter
                 action="underline"
-                color="#3f5f82"
+                color="#2192ff"
                 darkColor="#b4cae3"
                 padding={8}
                 strokeWidth={6}
@@ -147,8 +153,8 @@ export default function HomePage() {
 
           <BlurFade delay={0.16}>
             <p className="mx-auto mt-6 max-w-xl text-lg text-muted-foreground">
-              Take a short personality assessment and get your Holland Code,
-              plus the careers and college programs that match who you are.
+              Take the interest assessment to discover your Holland Code, 
+              along with the careers and college programs that best match to you.
             </p>
           </BlurFade>
 
@@ -206,10 +212,6 @@ export default function HomePage() {
           <h2 className="text-center text-3xl font-bold text-foreground sm:text-4xl">
             Three steps to a clearer path
           </h2>
-          <p className="mx-auto mt-3 max-w-lg text-center text-base text-muted-foreground">
-            The whole journey happens in one sitting, and your progress is
-            saved on your device the entire time.
-          </p>
         </BlurFade>
 
         <ol className="relative mt-12 flex flex-col gap-6 md:flex-row md:items-stretch">
@@ -252,15 +254,9 @@ export default function HomePage() {
       {/* The six traits: a legend, deliberately not another card grid */}
       <section className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6">
         <BlurFade inView>
-          <h2 className="text-3xl font-bold text-foreground sm:text-4xl">
+          <h2 className="text-center text-3xl font-bold text-foreground sm:text-4xl">
             Six traits, one code
           </h2>
-          <p className="mt-3 max-w-2xl text-base text-muted-foreground">
-            The assessment measures all six. Your three strongest become your
-            Holland Code, and for each one you get the full official list of
-            college majors and the career pathways they lead to. Nothing is
-            ranked, because the point is to widen what you are choosing from.
-          </p>
         </BlurFade>
 
         <BlurFade inView delay={0.08} className="mt-8">
@@ -281,15 +277,7 @@ export default function HomePage() {
                 )}
               >
                 <dt className="flex items-center gap-3">
-                  <span
-                    className={cn(
-                      "flex size-10 shrink-0 items-center justify-center rounded-xl font-heading text-lg font-extrabold",
-                      trait.chip,
-                    )}
-                    aria-hidden
-                  >
-                    {trait.letter}
-                  </span>
+                  <TraitEmblem letter={trait.letter} className="size-10" />
                   <span className="font-heading text-lg font-bold text-foreground">
                     {trait.name}
                   </span>

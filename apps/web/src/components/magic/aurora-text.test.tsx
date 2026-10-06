@@ -18,7 +18,7 @@ describe("AuroraText", () => {
     expect(container).toHaveTextContent("AlignAlign");
   });
 
-  it("builds the gradient from the lighter blue/gold pair, not the small-text strong tokens", () => {
+  it("builds the gradient from the dedicated blue/yellow pair, not the small-text strong tokens", () => {
     const { container } = render(<AuroraText>Align</AuroraText>);
     const style = painted(container).getAttribute("style") ?? "";
     // --align-a/--align-b are dedicated, lighter stops (blended toward each

@@ -2,9 +2,10 @@
 "use client";
 
 import { BentoGrid, BentoGridItem } from "@/components/aceternity/bento-grid";
+import { TraitEmblem } from "@/components/riasec/trait-emblem";
 import { TraitMascot } from "@/components/riasec/trait-mascot";
 import { pathwaysForCode } from "@/lib/riasec/career-pathways";
-import { letterBorder, letterChip } from "@/lib/riasec/letter-chip-styles";
+import { letterBorder } from "@/lib/riasec/letter-chip-styles";
 import type { RiasecLetter } from "@/lib/riasec/types";
 import { cn } from "@/lib/utils";
 
@@ -37,17 +38,7 @@ export function PathwayResults({
             }
             header={<TraitMascot letter={profile.letter} primary={primary} />}
             title={profile.name}
-            icon={
-              <span
-                aria-hidden
-                className={cn(
-                  "flex size-8 shrink-0 items-center justify-center rounded-lg font-heading text-base font-extrabold",
-                  letterChip(profile.letter),
-                )}
-              >
-                {profile.letter}
-              </span>
-            }
+            icon={<TraitEmblem letter={profile.letter} className="size-8" />}
             className={cn(
               "h-full",
               primary && "shadow-[var(--shadow-bento-lifted)]",
@@ -56,15 +47,10 @@ export function PathwayResults({
             <p className="text-sm text-muted-foreground">
               {profile.description}
             </p>
-            <TagList
-              heading="College majors"
-              items={profile.majors}
-              tone="muted"
-            />
+            <TagList heading="College majors" items={profile.majors} />
             <TagList
               heading="Related pathways"
               items={profile.relatedPathways}
-              tone="accent"
             />
           </BentoGridItem>
         );
@@ -73,14 +59,16 @@ export function PathwayResults({
   );
 }
 
+// One pale yellow for both lists. The heading above each is what names it, so
+// the chips carry no meaning of their own and two hues only implied a
+// distinction that is not there: these are equal-weight tags either way, in
+// the sheet's order, with no ranking between or within them.
 function TagList({
   heading,
   items,
-  tone,
 }: {
   heading: string;
   items: readonly string[];
-  tone: "muted" | "accent";
 }) {
   return (
     <div className="flex flex-col gap-2">
@@ -91,12 +79,7 @@ function TagList({
         {items.map((item) => (
           <li
             key={item}
-            className={cn(
-              "rounded-full px-3 py-1 text-sm font-medium",
-              tone === "muted"
-                ? "bg-muted text-foreground"
-                : "bg-accent text-accent-foreground",
-            )}
+            className="rounded-full bg-highlight-soft px-3 py-1 text-sm font-medium text-highlight-soft-foreground"
           >
             {item}
           </li>

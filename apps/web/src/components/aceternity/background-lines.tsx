@@ -15,8 +15,8 @@ import { cn } from "@/lib/utils";
 //   1s. Here the first set launches together on mount and eases out fast,
 //   the second set trickles in over the next 0.8-9.8s so streaks keep
 //   appearing until the first set's next cycle, on every screen size.
-// - Theme-flipping palette tokens (dark shades on light, pastels on dark)
-//   instead of 21 fixed hues.
+// - Theme-flipping palette tokens (the bright fills on light, pastels on
+//   dark) instead of 21 fixed hues.
 // - No forced height/background on the wrapper; the SVG slices to cover
 //   portrait screens and is masked clear only right behind the content.
 // - Reduced motion: no animation, paths render as a faint (15%) static burst.
@@ -46,17 +46,20 @@ export function BackgroundLines({
 // Streak share of each cycle; the rest of the cycle is the invisible pause.
 const ACTIVE_FRACTION = 0.62;
 
-// Each token is a dark shade in light theme and a pastel in dark theme.
+// The celebration palette: the bright fills, not the text-safe darks. These
+// streaks are decoration around a heading that carries the message, so they
+// owe no contrast, and the dark shades read as mud on the pale page. Each
+// token is the vivid fill on light and its pastel on dark. Yellow and lime
+// are the faintest on the light page, so they sit between stronger hues.
 const COLORS = [
-  "var(--stage-assessment-strong)",
   "var(--primary)",
-  "var(--stage-results-strong)",
-  "var(--stage-profile-strong)",
-  "var(--accent-foreground)",
-  "var(--highlight-foreground)",
-  "var(--secondary-foreground)",
-  "var(--primary-strong)",
-  "var(--success-strong)",
+  "var(--trait-a)",
+  "var(--secondary)",
+  "var(--trait-e)",
+  "var(--highlight)",
+  "var(--trait-i)",
+  "var(--trait-c)",
+  "var(--accent)",
 ] as const;
 
 const PATHS = [

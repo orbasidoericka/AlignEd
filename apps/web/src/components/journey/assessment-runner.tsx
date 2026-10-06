@@ -4,7 +4,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, CheckIcon, PartyPopper } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckIcon } from "lucide-react";
 
 import { BackgroundGradient } from "@/components/aceternity/background-gradient";
 import { BackgroundLines } from "@/components/aceternity/background-lines";
@@ -376,9 +376,23 @@ export function AssessmentRunner() {
     return (
       // Celebration: palette streaks burst from behind the message.
       <BackgroundLines className="flex flex-1 flex-col items-center justify-center gap-6 overflow-hidden bg-stage-assessment-soft px-4 py-16 text-center">
-        <span className="flex size-20 items-center justify-center rounded-full bg-stage-assessment text-stage-assessment-foreground shadow-bento">
-          <PartyPopper className="size-10" aria-hidden />
-        </span>
+        {/* Hexi, celebrating. A plain <img>: the file carries its own CSS
+            animation and its own prefers-reduced-motion rule, and an <img>
+            runs both while keeping the markup out of the accessibility tree.
+            Decorative — the h1 below says "All done!" in words. */}
+        {/* eslint-disable-next-line @next/next/no-img-element -- next/image
+            would have to serve this through the optimizer, which refuses SVG
+            unless dangerouslyAllowSVG is on; that flag is a real XSS surface
+            and buys nothing for a static asset that is already 15 KB. Width
+            and height are set, so there is no layout shift to optimize away. */}
+        <img
+          src="/hexi-celebrate.svg"
+          alt=""
+          aria-hidden
+          width={800}
+          height={600}
+          className="h-auto w-56 shrink-0 sm:w-72"
+        />
         <h1
           id={FINISH_HEADING_ID}
           tabIndex={-1}
@@ -420,6 +434,22 @@ export function AssessmentRunner() {
   return (
     <div className="relative isolate flex flex-1 flex-col overflow-hidden bg-stage-assessment-soft">
       <FocusBackground />
+      {/* Hexi keeps the student company through the 42 statements, parked in
+          the dead space under the question column. Same <img> reasoning as the
+          finish screen: the file animates itself and respects reduced motion.
+          Below lg the column runs the full width and there is no dead space
+          left, so it is not rendered rather than squeezed. */}
+      {/* eslint-disable-next-line @next/next/no-img-element -- see the finish
+          screen above: the optimizer cannot serve SVG without
+          dangerouslyAllowSVG, and this one has to keep its animation. */}
+      <img
+        src="/hexi.svg"
+        alt=""
+        aria-hidden
+        width={800}
+        height={600}
+        className="pointer-events-none absolute bottom-0 left-0 -z-10 hidden h-auto w-56 select-none lg:block xl:w-72 print:hidden"
+      />
       <RapidAnswerDialog open={isBlocked} onAcknowledge={acknowledge} />
       {/* One column below lg, navigator on top; from lg the navigator sits
           beside the question. It is z-10 so the question area's widened clip
@@ -520,11 +550,12 @@ export function AssessmentRunner() {
                               handleChoice(option.value);
                             }
                           }}
-                          // border-0 because the 3px gradient frame is this
-                          // card's edge, so the shared hover border has
-                          // nothing to paint; the inset ring puts that outline
-                          // back, inside the frame rather than fighting it.
-                          className="relative h-full min-h-28 w-full flex-col justify-center gap-2 rounded-[21px] border-0 bg-card text-stage-assessment-strong data-checked:bg-accent data-unchecked:hover:inset-ring-2 data-unchecked:hover:inset-ring-current data-unchecked:focus-visible:inset-ring-2 data-unchecked:focus-visible:inset-ring-current"
+          // Keeps the shared RadioCard border rather than the inset ring it
+          // used to need: with the gradient frame gone there is nothing for an
+          // outline to fight, so rest/hover/checked borders come from one
+          // place. --highlight-soft is a pale fill in BOTH themes, so the
+          // checked card sets its own ink and everything inside follows it.
+                          className="relative h-full min-h-28 w-full flex-col justify-center gap-2 rounded-3xl bg-card text-stage-assessment-strong data-checked:bg-highlight-soft data-checked:text-highlight-soft-foreground"
                         >
                           <RadioCardIndicator className="sr-only" />
                           {/* Non-color cue for the selected card. */}
@@ -535,15 +566,20 @@ export function AssessmentRunner() {
                           {/* The word carries the card: body face at display
                               size, tight tracking, with the shortcut shown
                               quietly beneath it on pointer-sized screens. */}
-                          <span className="font-sans text-4xl leading-none font-extrabold tracking-tight text-foreground sm:text-5xl">
+                          <span className="font-sans text-4xl leading-none font-extrabold tracking-tight text-foreground in-data-checked:text-highlight-soft-foreground sm:text-5xl">
                             {option.label}
                           </span>
                           {/* The hint darkens with the card, so the hover
                               carries a text-contrast change too and is not
                               only a tint and an outline. */}
-                          <span className="hidden items-center gap-1.5 text-sm text-muted-foreground transition-colors duration-150 group-hover:text-foreground sm:flex">
+                          {/* On the checked card the ink drops to 75% rather
+                              than switching to a muted token: the muted greys
+                              are mixed for the page, not for a yellow fill,
+                              and a transparency of the ink stays on the fill's
+                              own hue (7.03:1). */}
+                          <span className="hidden items-center gap-1.5 text-sm text-muted-foreground transition-colors duration-150 group-hover:text-foreground in-data-checked:text-highlight-soft-foreground/75 sm:flex">
                             press
-                            <kbd className="rounded-md border border-border bg-muted px-1.5 py-0.5 font-sans text-xs font-bold text-foreground transition-colors duration-150 group-hover:border-current">
+                            <kbd className="rounded-md border border-border bg-muted px-1.5 py-0.5 font-sans text-xs font-bold text-foreground transition-colors duration-150 group-hover:border-current in-data-checked:border-highlight-soft-foreground/30 in-data-checked:bg-highlight-soft-foreground/10 in-data-checked:text-highlight-soft-foreground">
                               {option.label[0]!.toUpperCase()}
                             </kbd>
                           </span>

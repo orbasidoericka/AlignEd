@@ -1,5 +1,7 @@
 // Copyright (c) 2026 EdTech. All rights reserved.
 
+import type { CSSProperties } from "react";
+
 import type { RiasecLetter } from "./types";
 
 // One fill per RIASEC letter (tokens in globals.css), so a letter keeps the
@@ -19,7 +21,7 @@ export function letterChip(letter: RiasecLetter): string {
 }
 
 // The same six colors as a soft ground rather than a fill, for surfaces that
-// sit behind artwork (the mascot band on the pathway cards). Tailwind cannot
+// sit behind artwork (the emblem band on the pathway cards). Tailwind cannot
 // compile a class built at runtime, so these are literal like the fills above.
 export const letterWashStyles: Readonly<Record<RiasecLetter, string>> = {
   R: "bg-trait-r/25 dark:bg-trait-r/35",
@@ -32,6 +34,34 @@ export const letterWashStyles: Readonly<Record<RiasecLetter, string>> = {
 
 export function letterWash(letter: RiasecLetter): string {
   return letterWashStyles[letter];
+}
+
+// The same six colors as a bare custom-property reference, for the places
+// that cannot use a class: the inline SVG trait art, which paints from
+// `currentColor`. A token, never a hex, so the art follows the palette.
+export const letterVarStyles: Readonly<Record<RiasecLetter, string>> = {
+  R: "var(--trait-r)",
+  I: "var(--trait-i)",
+  A: "var(--trait-a)",
+  S: "var(--trait-s)",
+  E: "var(--trait-e)",
+  C: "var(--trait-c)",
+};
+
+export function letterVar(letter: RiasecLetter): string {
+  return letterVarStyles[letter];
+}
+
+// What the generated trait art (trait-emblem.tsx, trait-mascot.tsx) paints
+// from: `currentColor` is the trait, --trait-shade its darker sibling for rims
+// and garments. Mixed toward the trait ink rather than black, so the shade
+// stays in the same family in both themes.
+export function letterArtStyle(letter: RiasecLetter): CSSProperties {
+  return {
+    color: letterVar(letter),
+    "--trait-shade":
+      "color-mix(in oklab, currentColor 65%, var(--trait-foreground))",
+  } as CSSProperties;
 }
 
 // The same six colors as a border, to mark the top card of the pathway row.

@@ -12,9 +12,17 @@
   --color-accent-strong-foreground: var(--highlight-foreground);
 
   /* Palette extensions. primary-strong is the text-safe primary: never set
-     pastel primary as text on white. highlight = Accent 1 (#F9F3CC). */
+     the neon primary as text on white. highlight = palette yellow (#FDFF00). */
   --color-primary-strong: var(--primary-strong);
   --color-highlight: var(--highlight);
+  /* The same yellow as a large fill. #FDFF00 across a whole answer card or a
+     row of chips is a glare, not an accent, so anything bigger than a mark
+     takes this pastel cut and the neon stays on small marks. */
+  --color-highlight-soft: var(--highlight-soft);
+  /* Ink for anything sitting on that pastel. It is the page ink in both
+     themes: --highlight-soft is a light fill on light AND on dark, so unlike
+     most surfaces its text does not flip with the theme. */
+  --color-highlight-soft-foreground: var(--highlight-soft-foreground);
   --color-highlight-foreground: var(--highlight-foreground);
   --color-success-strong: var(--success-strong);
   /* Chrome surface for the site header and footer: tinted toward the brand
@@ -38,6 +46,12 @@
   --color-notice-border: rgb(255 255 255 / 0.08);
   --color-notice-foreground: #f8fafc;
   --color-notice-muted: #cbd5e1;
+  /* See --wordmark-glow-* for why the lockup carries a halo at all. Two
+     passes, not one: a 1.5px edge alone reads as a hard outline, and a 4px
+     lift alone blurs away before it defines anything. Both stops drop to
+     `transparent` on dark, where the mark needs no help. */
+  --drop-shadow-wordmark:
+    0 0 1.5px var(--wordmark-glow-edge), 0 1px 4px var(--wordmark-glow-lift);
   --shadow-bento:
     0 1px 2px rgb(13 25 47 / 0.05), 0 8px 24px -12px rgb(39 90 150 / 0.22);
   /* Deeper sibling, so the top trait card sits forward of its neighbours. */
@@ -130,108 +144,132 @@
   }
 }
 
-/* Palette: Main #78AAE2, Secondary #CBE7B6, Accent 1 #FBEFA8 (highlight),
-   Accent 2 #BFDDFF (selected fills). Pastel fills always carry dark text;
-   the -strong tokens are the text-safe (AA) variants.
+/* Palette ("Vivid"): the popping palette Blue #2192FF, Green #38E54D, Lime
+   #9CFF2E, Yellow #FDFF00, at full strength. This is the light-ground theme;
+   it replaced the earlier pastel set (#78AAE2 / #CBE7B6 / #FBEFA8 / #BFDDFF).
 
-   Hue and role are unchanged from the original pastels (#8EACCD / #D7E5CA /
-   #F9F3CC / #D2E0FB); every value was re-cut in OKLCH at the same lightness
-   with roughly 1.7x the chroma, because the old set sat at C 0.04-0.06, below
-   the point where a tint reads as a colour rather than as tinted grey. The
-   `-strong` tones gained chroma and a little depth, so colored text reads as
-   deliberate rather than faded. Neutrals carry 0.014-0.018 chroma toward the
-   brand hue instead of slate's 0.003, which is what keeps the near-whites from
-   looking washed out. Measured, not eyeballed: see DESIGN.md for the ratios. */
+   Same roles the pastels had, louder fills: blue = primary + assessment, green =
+   secondary + results, yellow = highlight + profile, lime = accent (hover and
+   selected fills, so a chosen quiz answer turns lime). Reading surfaces stay
+   calm (white cards on a blue-tinted near-white) because a student reads 42
+   statements on them; the neons live on chrome, CTAs, chips, progress,
+   charts, hexagon cells and the answer-card glow.
+
+   None of the four neons is text-safe on white (3.17 / 1.68 / 1.25 / 1.08:1)
+   and none carries white text, but all clear AA under the ink (5.48 / 10.33 /
+   13.87 / 16.12:1). So every neon fill takes dark ink, and colored text uses
+   the -strong darks only: blue #005BC4 5.98:1, green #127A26 5.13:1, olive
+   #5C5C00 6.59:1 on the page, and each ≥4.94:1 on its own -soft wash.
+   --input clears 3:1 on card (3.78) and page (3.54); --border is a 1.67:1
+   hairline. Re-measure whenever any of these moves. */
 :root {
-  --background: #eff6ff;
-  --foreground: #0d192f;
-  --chrome: #d8e8fd;
-  --chrome-border: #abc6eb;
-  /* Six distinct hues at one pastel weight, so no two letters read alike:
-     blue, violet, amber, green, coral, teal. Brand blue stays on R. */
-  --trait-r: #7cafe8;
-  --trait-i: #b59be6;
-  --trait-a: #eec96c;
-  --trait-s: #9ed691;
-  --trait-e: #f7a284;
-  --trait-c: #7ad7d1;
-  --trait-foreground: #0d192f;
+  --background: #f3f8ff;
+  --foreground: #0a1a33;
+  --chrome: #d6e9ff;
+  --chrome-border: #2192ff;
+  /* Category scale punched up to match: blue and green are the palette's
+     own; violet, gold, coral and teal are pitched at the same loudness. All
+     carry the ink at ≥5.48:1. */
+  --trait-r: #2192ff;
+  --trait-i: #a37cff;
+  --trait-a: #ffd21f;
+  --trait-s: #38e54d;
+  --trait-e: #ff7f4d;
+  --trait-c: #1fd8c8;
+  --trait-foreground: #0a1a33;
   --card: #ffffff;
-  --card-foreground: #0d192f;
+  --card-foreground: #0a1a33;
   --popover: #ffffff;
-  --popover-foreground: #0d192f;
-  --primary: #78aae2;
-  --primary-foreground: #0d192f;
-  --primary-strong: #275a96;
-  --secondary: #cbe7b6;
-  --secondary-foreground: #244309;
-  --success-strong: #3e6c1d;
-  --highlight: #fbefa8;
-  --highlight-foreground: #5f4400;
-  --muted: #e7effb;
-  --muted-foreground: #435672;
-  --accent: #bfddff;
-  --accent-foreground: #0f3568;
+  --popover-foreground: #0a1a33;
+  --primary: #2192ff;
+  --primary-foreground: #0a1a33;
+  --primary-strong: #005bc4;
+  --secondary: #38e54d;
+  --secondary-foreground: #06310f;
+  --success-strong: #127a26;
+  --highlight: #fdff00;
+  /* Pastel cut of the neon, for fills too big to carry it: the selected answer
+     card and the "College majors" chips. Pitched at 1.14:1 against a white
+     card, the same separation --muted (1.16:1) already ships as a chip, so it
+     reads as a filled surface without glaring; the ink clears 15.26:1 on it
+     and muted text 7.61:1. */
+  --highlight-soft: #f2f78a;
+  --highlight-soft-foreground: #0a1a33;
+  --highlight-foreground: #4a4a00;
+  --muted: #e4efff;
+  --muted-foreground: #384c6d;
+  /* Lighter cut of --primary for the one filled CTA (the career-look button),
+     where full #2192FF next to a pale bento card reads as a slab. Ink on it
+     measures 7.89:1, up from the neon's 5.48:1. */
+  --primary-soft: #66b4ff;
+  /* The spark and inset bloom on that button. Blue, not the default palette
+     yellow: yellow light over a blue fill composites to green, which is the
+     one thing this card is not allowed to be. A step lighter than
+     --primary-soft, so the bloom reads as light on the pill. */
+  --primary-spark: #cfe4ff;
+  --accent: #9cff2e;
+  --accent-foreground: #123300;
   --destructive: oklch(0.58 0.22 27);
-  /* Split from --accent, which it used to alias. One value cannot be both a
-     pale fill that carries dark text and a visible edge: at #D2E0FB the border
-     measured 1.33:1 on white, so card edges, dividers and kbd outlines were
-     effectively invisible and every surface floated. --border is now its own
-     hairline (1.63:1), and --input, which bounds a real form control and so
-     owes WCAG 1.4.11, clears 3:1 on both the card and the page. */
-  --border: #b5cded;
-  --input: #638fc5;
-  --ring: #275a96;
-  --chart-1: #78aae2;
-  --chart-2: #cbe7b6;
-  --chart-3: #fbefa8;
-  --chart-4: #bfddff;
-  --chart-5: #275a96;
-  --brand: #275a96;
-  --accent-strong: #fbefa8;
+  --border: #a6cbff;
+  --input: #3a86d6;
+  --ring: #005bc4;
+  --chart-1: #2192ff;
+  --chart-2: #38e54d;
+  --chart-3: #9cff2e;
+  --chart-4: #fdff00;
+  --chart-5: #005bc4;
+  --brand: #005bc4;
+  --accent-strong: #fdff00;
+  --stage-profile: #fdff00;
+  --stage-profile-strong: #5c5c00;
+  --stage-profile-soft: #fdffd2;
+  --stage-profile-foreground: #3d3d00;
+  /* Full #2192FF under the profile copy measured 3.21:1 for muted text, so
+     the blue stop is a lighter cut of it; with the field at 60% (aurora-
+     background.tsx) muted text stays ≥5.58:1 and the olive step label
+     ≥4.84:1 over every stop. */
+  --aurora-a: #8fd0ff;
+  --aurora-b: #2b9fff;
+  --aurora-c: #fdff00;
+  --aurora-d: #2a8ee0;
+  --aurora-veil: #faf753;
+  /* AuroraText on the hero word "Align": blue into gold, no outline. Palette
+     yellow measures 1.01:1 here and palette blue 2.97:1, so neither can carry
+     a 72px word on its own; these are the nearest pair that each clear the
+     3:1 large-text floor (3.37:1 and 3.11:1). They sit 0.018 apart in OKLCH
+     lightness (0.626 / 0.644), which is what keeps a near-complementary pair
+     from reading as grey where they meet. The palette yellow still lands in
+     the same headline, on the marker over "passion". */
+  --align-a: #1a88f2;
+  --align-b: rgb(247, 243, 57);
+  --stage-assessment: #2192ff;
+  --stage-assessment-strong: #005bc4;
+  --stage-assessment-soft: #e1efff;
+  --stage-assessment-foreground: #0a1a33;
+  /* The stop that sits between blue and yellow in the answer-card gradients.
+     Those two are near-complementary, so EVERY direct blend of them is green
+     at the midpoint (#8FC980 in sRGB, #96D0BC in oklab: switching color space
+     does not help, the green is real). A pale stop between them splits the
+     blend into blue -> pale (#8FC9E9, still blue) and pale -> yellow
+     (#FDFF69, still yellow), so neither leg ever passes through green. Any
+     replacement must keep a blue channel high enough to survive the first
+     leg; drop it and the green comes straight back. */
+  --answer-bridge: #fdffd2;
+  --stage-results: #38e54d;
+  --stage-results-strong: #127a26;
+  --stage-results-soft: #ddfbe1;
+  --stage-results-foreground: #06310f;
+  --positive: #127a26;
+  --positive-soft: #38e54d;
+  /* Glow under the wordmark (components/blocks/wordmark.tsx), composed into
+     --drop-shadow-wordmark above. The palette yellow in "ED" measures 1.15:1
+     on the bar, so the letters need an edge rather than a different fill:
+     -edge is a tight halo that defines the letterforms, -lift a soft one that
+     sits the lockup on the bar. Both are the ink at low alpha, and drop-shadow
+     follows the PNG's alpha, so the glow traces the letters, not a box. */
+  --wordmark-glow-edge: rgb(10 26 51 / 0.45);
+  --wordmark-glow-lift: rgb(10 26 51 / 0.18);
   --radius: 0.75rem;
-  /* Stage remap: profile = highlight yellow, assessment = primary blue,
-     results = secondary green. */
-  --stage-profile: #fbefa8;
-  --stage-profile-strong: #7d5f00;
-  --stage-profile-soft: #fcf7de;
-  --stage-profile-foreground: #5c4a12;
-  /* Aurora Background stops (Profile Setup). Light uses the pastels as-is;
-     dark needs light tones, because the dark accent and secondary are
-     themselves near-black and blur into a brown haze. */
-  --aurora-a: #78aae2;
-  --aurora-b: #bfddff;
-  --aurora-c: #fbefa8;
-  --aurora-d: #cbe7b6;
-  /* Cuts the colour layer into ribbons. Page-colored in light; in dark it
-     would only add more black, so it drops out there. */
-  --aurora-veil: #eff6ff;
-  /* AuroraText stops for the hero word "Align" (app/(site)/page.tsx). Tied to
-     "profession" (blue) and "Step 1 of 3" (gold), so each stop is a saturated
-     cut of primary-strong / stage-profile-strong rather than a freehand pick.
-     Held to the WCAG AA large-text floor (3:1), which is the bar that actually
-     applies to a 72px bold word: align-a measures 4.71:1 and align-b 3.66:1
-     against --background. Clamping the gold to 4.5:1 instead pushes it to
-     roughly #8a6900, and because blue and gold are near-complementary the
-     sweep between them crosses through grey, so a darker gold turns the word
-     olive. Keeping the two stops within ~6 points of lightness shortens that
-     crossing and is what keeps the gradient reading as warm metal.
-     The previous --align-b (#d6be54) measured 1.70:1, failing even this 3:1
-     floor; the comment here still described #846f24, a value that had been
-     replaced, which is how the regression went unnoticed. Re-measure both
-     whenever --background moves. */
-  --align-a: #106dce;
-  --align-b: #a47800;
-  --stage-assessment: #78aae2;
-  --stage-assessment-strong: #275a96;
-  --stage-assessment-soft: #e5f0ff;
-  --stage-assessment-foreground: #0d192f;
-  --stage-results: #cbe7b6;
-  --stage-results-strong: #3e6c1d;
-  --stage-results-soft: #ecf7e3;
-  --stage-results-foreground: #244309;
-  --positive: #3e6c1d;
-  --positive-soft: #cbe7b6;
   --sidebar: var(--card);
   --sidebar-foreground: var(--foreground);
   --sidebar-primary: var(--primary);
@@ -276,9 +314,20 @@
   --secondary-foreground: #cde8b7;
   --success-strong: #abd58e;
   --highlight: #362d0a;
+  /* The one fill that does NOT darken for this theme. It marks the chosen quiz
+     answer, and a dim olive made that card read as switched off against its
+     white neighbour; dark's own trait chips already work this way, as pale
+     fills carrying dark ink. Pitched at L92.3 rather than the light theme's
+     L95.0, which is glare on a dark page, and it stands 13.78:1 clear of the
+     card with the ink at 14.21:1. Its text does not flip with the theme, so
+     everything on it takes --highlight-soft-foreground, never --foreground. */
+  --highlight-soft: #e9ee82;
+  --highlight-soft-foreground: #0d192f;
   --highlight-foreground: #fcf1aa;
   --muted: #1c293c;
   --muted-foreground: #93a5be;
+  --primary-soft: #9ec8f2;
+  --primary-spark: #d9ebff;
   --accent: #1b2b48;
   --accent-foreground: #c5e0ff;
   --destructive: oklch(0.66 0.2 28);
@@ -314,54 +363,38 @@
   --stage-assessment-strong: #a3cbf9;
   --stage-assessment-soft: #121d33;
   --stage-assessment-foreground: #0d192f;
+  /* Dark's two stops are already pastels, so the bridge only has to stay out
+     of their way: pale and barely chromatic, keeping both legs blue (#AECCEC)
+     and cream (#EDECCC). It is not --stage-profile-soft, which is a near-black
+     brown here and would read as a gap in the glow rather than a bridge. */
+  --answer-bridge: #dfe9ef;
   --stage-results: #cbe7b6;
   --stage-results-strong: #cde8b7;
   --stage-results-soft: #15210d;
   --stage-results-foreground: #244309;
   --positive: #abd58e;
   --positive-soft: #283c1d;
+  /* No glow on dark: the mark's blue clears 5.90:1 there and its yellow
+     17.37:1, so an ink halo would only muddy edges that already read. */
+  --wordmark-glow-edge: transparent;
+  --wordmark-glow-lift: transparent;
 }
 
-/* Aceternity BackgroundGradient in palette colors. Stage tokens are pastel
-   fills in both themes; the -strong anchors keep the glow visible on light.
-   Rest position (0% 50%) is the calm blue region; panning reveals sage and
-   cream. */
-@utility bg-answer-gradient {
-  background-image:
-    radial-gradient(
-      circle farthest-side at 0 100%,
-      var(--stage-assessment-strong),
-      transparent
-    ),
-    radial-gradient(
-      circle farthest-side at 100% 0,
-      var(--stage-results-strong),
-      transparent
-    ),
-    radial-gradient(
-      circle farthest-side at 100% 100%,
-      var(--stage-profile-strong),
-      transparent
-    ),
-    radial-gradient(
-      circle farthest-side at 0 0,
-      var(--stage-assessment),
-      var(--stage-results-strong)
-    );
-  background-size: 400% 400%;
-  background-position: 0% 50%;
-}
-
-/* The glow behind the answer cards. Deliberately NOT bg-answer-gradient:
-   that one fades to `transparent` at three of its four anchors, which is
-   right for a 3px border but blurs into a lopsided bloom, bright at one
-   corner and cut off at the other. Fully opaque stops bloom evenly. */
+/* The glow behind the answer cards. Fully opaque stops, so it blooms evenly;
+   an earlier version fed this from the card frame's gradient, which fades to
+   `transparent` at two of its anchors and blurred into a lopsided bloom,
+   bright at one corner and cut off at the other.
+   Symmetric about the yellow so the 200% pan wraps without a seam, and every
+   adjacent pair is a short hop that stays in one hue family: the bridge is
+   what keeps blue from meeting yellow directly. */
 @utility bg-answer-glow {
   background-image: linear-gradient(
     115deg,
     var(--stage-assessment-strong),
-    var(--stage-results),
+    var(--stage-assessment),
+    var(--answer-bridge),
     var(--stage-profile),
+    var(--answer-bridge),
     var(--stage-assessment),
     var(--stage-assessment-strong)
   );
@@ -393,9 +426,9 @@
   );
 }
 
-/* Pan for bg-answer-gradient, written as longhands on purpose: the
-   `animation` shorthand would reset animation-play-state and override the
-   paused/running classes BackgroundGradient toggles on interaction. */
+/* Pan for bg-answer-glow, written as longhands on purpose: the `animation`
+   shorthand would reset animation-play-state and override the paused/running
+   classes BackgroundGradient toggles on interaction. */
 @keyframes gradient-pan {
   from {
     background-position: 0% 50%;

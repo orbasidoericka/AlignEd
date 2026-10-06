@@ -36,7 +36,7 @@ import {
 } from "@/lib/career-look/face-anchor";
 import { CAREER_LOOKS, type CareerLook } from "@/lib/career-look/looks";
 import { RIASEC_PATHWAYS } from "@/lib/riasec/career-pathways";
-import { letterChip } from "@/lib/riasec/letter-chip-styles";
+import { TraitEmblem } from "@/components/riasec/trait-emblem";
 import type { RiasecLetter } from "@/lib/riasec/types";
 import { cn } from "@/lib/utils";
 
@@ -74,7 +74,14 @@ export function CareerLookDialog({
     <Dialog>
       <DialogTrigger
         render={
+          // All three layers stay in the blue family. The component's default
+          // spark and rail are the palette yellow, which over a blue fill
+          // composites to green along the whole rim; the rail's midpoint is
+          // --primary so the pale pill still has a 3.17:1 edge on the card.
           <ShimmerButton
+            background="var(--primary-soft)"
+            shimmerColor="var(--primary-spark)"
+            rail="linear-gradient(145deg, var(--primary-spark), var(--primary) 55%, var(--primary-spark))"
             className="mb-1 self-start print:hidden"
             data-print-hidden
           />
@@ -112,15 +119,7 @@ export function CareerLookDialog({
                       : "border-transparent bg-muted text-muted-foreground hover:text-foreground",
                   )}
                 >
-                  <span
-                    aria-hidden
-                    className={cn(
-                      "flex size-7 items-center justify-center rounded-full text-sm font-extrabold",
-                      letterChip(option),
-                    )}
-                  >
-                    {option}
-                  </span>
+                  <TraitEmblem letter={option} className="size-7" />
                   {RIASEC_PATHWAYS[option].name}
                 </button>
               );

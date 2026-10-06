@@ -14,6 +14,7 @@ import { ShineBorder } from "@/components/magic/shine-border";
 import { PathwayResults } from "@/components/riasec/pathway-results";
 import { RiasecRadar } from "@/components/riasec/riasec-radar";
 import { Progress } from "@/components/ui/progress";
+import { TraitEmblem } from "@/components/riasec/trait-emblem";
 import { letterChip } from "@/lib/riasec/letter-chip-styles";
 import { QUESTIONS } from "@/lib/riasec/questions";
 import {
@@ -73,17 +74,26 @@ export function ResultsDashboard() {
           <BlurFade inView className={cn("md:col-span-2", printSingle)}>
             <BentoGridItem
               headingId="code-heading"
-              className="relative isolate h-full justify-center overflow-hidden bg-linear-to-br from-accent/70 via-card to-highlight/60"
+              // Blue into yellow, with the card's own white as the middle
+              // stop: those two hues blend to green wherever they meet
+              // directly, so `via-card` is doing real work here, not spacing.
+              // /40 keeps the "Your Holland Code" label at 5.52:1 on the blue
+              // end; past /55 it drops under AA.
+              className="relative isolate h-full justify-center overflow-hidden bg-linear-to-br from-primary/40 via-card to-highlight/60"
             >
               {/* The code is the payoff of the whole journey: a slow shine
-                  traces this card and nothing else on the page. */}
+                  traces this card and nothing else on the page. One hue at
+                  three depths rather than three trait colors: the shine sweeps
+                  the full perimeter, so any two stops that are not neighbours
+                  blend somewhere along the way, and blue against the trait
+                  green turned the frame's top edge green. */}
               <ShineBorder
                 borderWidth={2}
                 duration={12}
                 shineColor={[
-                  "var(--trait-r)",
-                  "var(--trait-s)",
-                  "var(--trait-a)",
+                  "var(--primary-spark)",
+                  "var(--primary)",
+                  "var(--primary-strong)",
                 ]}
                 className="z-0"
               />
@@ -92,11 +102,14 @@ export function ResultsDashboard() {
               <HexagonPattern
                 radius={28}
                 gap={3}
+                // Blue cells with one yellow, matching the wash they sit on;
+                // the green and lime cells read as a third hue the card no
+                // longer uses.
                 hexagons={[
                   [0, 1, "fill-primary/70"],
-                  [1, 2, "fill-secondary"],
+                  [1, 2, "fill-primary/35"],
                   [2, 1, "fill-highlight"],
-                  [1, 0, "fill-accent"],
+                  [1, 0, "fill-primary/20"],
                 ]}
                 className="-z-10 -scale-x-100 stroke-primary/40 mask-[linear-gradient(to_right,white,transparent_75%)] print:hidden dark:stroke-primary/20"
               />
@@ -114,17 +127,15 @@ export function ResultsDashboard() {
                   {formatHollandCode(code)}
                 </span>
               </h2>
+              {/* The code spelled as emblems. The h2 above already says it
+                  in letters, so these stay decorative. */}
               <div className="flex gap-3" aria-hidden>
                 {code.map((letter) => (
-                  <span
+                  <TraitEmblem
                     key={letter}
-                    className={cn(
-                      "flex size-16 items-center justify-center rounded-2xl font-heading text-3xl font-extrabold sm:size-20 sm:text-4xl",
-                      letterChip(letter),
-                    )}
-                  >
-                    {letter}
-                  </span>
+                    letter={letter}
+                    className="size-16 sm:size-20"
+                  />
                 ))}
               </div>
               <p className="text-base text-muted-foreground">
@@ -240,7 +251,11 @@ export function ResultsDashboard() {
                   aria-hidden
                 />
               }
-              className="bg-highlight"
+              // Highlight is pure #FDFF00: right for a chip, a glare across a
+              // full-width reading panel, so the panel takes the yellow wash
+              // and the neon stays on small marks. Dark's highlight is
+              // already a dim wash.
+              className="bg-stage-profile-soft dark:bg-highlight"
             >
               <p className="max-w-2xl text-sm text-highlight-foreground">
                 {flatProfile

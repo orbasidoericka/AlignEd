@@ -5,6 +5,12 @@ import { RIASEC_PATHWAYS } from "@/lib/riasec/career-pathways";
 
 import { PathwayResults } from "./pathway-results";
 
+// The crown badge is a lucide <svg aria-hidden> as well, so the art is
+// addressed by its own viewBox rather than by being decorative: the mascot
+// keeps the authored 800x600 canvas, the emblem crops it to the badge.
+const MASCOT = "svg[viewBox='0 0 800 600']";
+const EMBLEM = "svg[viewBox='176 32 448 534']";
+
 describe("PathwayResults", () => {
   it("renders one card per top letter, in code order", () => {
     render(<PathwayResults topThreeLetters={["R", "I", "A"]} />);
@@ -56,33 +62,55 @@ describe("PathwayResults", () => {
     );
   });
 
-  it("gives each card the mascot for its own letter", () => {
+  it("gives each card the mascot cover and the emblem icon for its own letter", () => {
     const { container } = render(<PathwayResults topThreeLetters={["R", "I", "A"]} />);
     const cards = Array.from(container.querySelectorAll("section"));
 
-    // The files are named by trait while the cards are keyed by letter, so
-    // this is the mapping most likely to silently drift.
-    const expected = ["realistic", "investigative", "artistic"];
+    // Both paint from `currentColor`, so the letter -> trait token mapping is
+    // the thing most likely to silently drift.
+    const expected = ["var(--trait-r)", "var(--trait-i)", "var(--trait-a)"];
     cards.forEach((card, i) => {
-      const img = card.querySelector("img");
-      expect(img).not.toBeNull();
-      // next/image rewrites src to /_next/image?url=..., so match the name.
-      expect(img!.getAttribute("src")).toContain(expected[i]!);
+      for (const selector of [MASCOT, EMBLEM]) {
+        const art = card.querySelector(selector);
+        expect(art).not.toBeNull();
+        expect(art!.getAttribute("style")).toContain(expected[i]!);
+      }
     });
   });
 
-  it("keeps the mascots decorative, so the card reads the same aloud", () => {
-    const { container } = render(<PathwayResults topThreeLetters={["R", "I", "A"]} />);
-    for (const img of Array.from(container.querySelectorAll("img"))) {
-      expect(img.getAttribute("alt")).toBe("");
+  it("shows no bare letter chip beside the trait name", () => {
+    render(<PathwayResults topThreeLetters={["R", "I", "A"]} />);
+    // The emblem replaced the letter; the heading is the only text label.
+    for (const letter of ["R", "I", "A"]) {
+      expect(screen.queryByText(letter, { exact: true })).toBeNull();
     }
   });
 
-  it("gives the first letter of the code a more prominent mascot", () => {
+  it("keeps the art decorative, so the card reads the same aloud", () => {
+    const { container } = render(<PathwayResults topThreeLetters={["R", "I", "A"]} />);
+    const art = Array.from(container.querySelectorAll(`${MASCOT}, ${EMBLEM}`));
+    expect(art).toHaveLength(6);
+    for (const svg of art) {
+      expect(svg.getAttribute("aria-hidden")).toBe("true");
+    }
+  });
+
+  it("never lets two cards share an SVG id", () => {
+    const { container } = render(<PathwayResults topThreeLetters={["S", "E", "C"]} />);
+    // Every mascot clips its neck with an id; unscoped, the three would
+    // collide and two figures would clip against the wrong shape.
+    const ids = Array.from(container.querySelectorAll("[id]"))
+      .map((el) => el.id)
+      .filter((id) => id.endsWith("neckclip") || id.endsWith("s-l"));
+    expect(ids.length).toBeGreaterThan(3);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it("gives the first letter of the code a more prominent cover", () => {
     const { container } = render(<PathwayResults topThreeLetters={["R", "I", "A"]} />);
     const [first, ...rest] = Array.from(
       container.querySelectorAll("section"),
-    ).map((card) => card.querySelector("img")!.parentElement!.className);
+    ).map((card) => card.querySelector(MASCOT)!.parentElement!.className);
 
     // Height is one of three primacy signals; the badge and the trait-colored
     // border are asserted separately below. Colors are expected to differ

@@ -44,8 +44,7 @@ function RadioCard({
         // while the wash alone would not be. Resting is a filled card with a
         // hairline, selected is a filled card with an opaque accent and a
         // check mark, so hover reads as "outlined" and can be mistaken for
-        // neither. A card that drops the border (the quiz answers, which wear
-        // a gradient frame instead) re-adds the outline as an inset ring.
+        // neither. Every card uses this border, the quiz answers included.
         // Scoped with data-unchecked (Base UI sets it whenever the radio is
         // not checked) so hover can never fight the checked styles for
         // specificity, and so the chosen card stops offering itself.
@@ -57,7 +56,7 @@ function RadioCard({
         // the hover wash and it fires on tap.
         "data-unchecked:active:control-wash-strong",
         // Solid ring token (≥3:1 on card and page) with an offset so it
-        // stays distinct from the card's own border or gradient frame.
+        // stays distinct from the card's own border.
         "focus-visible:ring-3 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none",
         "data-checked:border-current",
         // Disabled must not light up: pointer-events already blocks hover, but
