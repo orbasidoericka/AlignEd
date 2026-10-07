@@ -18,14 +18,14 @@ const input = {
   code: ["I", "R", "A"] as const,
   maxScore: 7,
   takenOn: new Date(2026, 8, 30),
-  password: "MARI09302026",
+  password: "MARIIRA",
   ownerPassword: "owner-secret",
 };
 
 describe("buildResultsPdf", () => {
   it("encrypts with the student's password using AES-256", () => {
     const doc = buildResultsPdf(input);
-    expect(doc.userPassword).toBe("MARI09302026");
+    expect(doc.userPassword).toBe("MARIIRA");
     // PDF 1.7 extension level 3 is what makes PDFKit use AES-256.
     expect(doc.version).toBe("1.7ext3");
   });

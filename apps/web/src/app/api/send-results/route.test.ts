@@ -78,6 +78,25 @@ describe("POST /api/send-results", () => {
     expect(pdf).not.toContain("Marine Biology");
   }, 30_000);
 
+  it("attaches the career look photo when one is sent", async () => {
+    const jpeg = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3, 0xff, 0xd9]);
+    const { POST } = await loadRoute();
+    await POST(post({ ...body, photo: jpeg.toString("base64") }));
+
+    const { attachments, text } = sendMail.mock.calls[0]![0];
+    expect(attachments).toHaveLength(2);
+    expect(attachments[1].filename).toBe("AlignEd-career-look-MARI.jpg");
+    expect(attachments[1].contentType).toBe("image/jpeg");
+    expect((attachments[1].content as Buffer).equals(jpeg)).toBe(true);
+    expect(text).toContain("career look photo");
+  }, 30_000);
+
+  it("sends the PDF alone when there is no photo", async () => {
+    const { POST } = await loadRoute();
+    await POST(post(body));
+    expect(sendMail.mock.calls[0]![0].attachments).toHaveLength(1);
+  }, 30_000);
+
   it("says it is not set up when the Gmail settings are missing", async () => {
     vi.stubEnv("GMAIL_APP_PASSWORD", "");
     const { POST } = await loadRoute();

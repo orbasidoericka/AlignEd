@@ -35,6 +35,10 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import {
+  useCareerLookPhoto,
+  type CareerLookPhoto,
+} from "@/lib/career-look/photo-store";
+import {
   sendResultsEmail,
   type SendOutcome,
 } from "@/lib/results-email/send-results-email";
@@ -52,9 +56,11 @@ import { useAssessmentStore } from "@/store/useAssessmentStore";
 export function ResultsActions() {
   const router = useRouter();
   const reset = useAssessmentStore((state) => state.reset);
+  const clearPhoto = useCareerLookPhoto((state) => state.setPhoto);
 
   const handleRetake = () => {
     reset();
+    clearPhoto(null);
     router.push("/assessment/profile");
   };
 
@@ -130,7 +136,8 @@ function DownloadPdfDialog() {
   const [failed, setFailed] = useState(false);
 
   const takenOn = resultsTakenOn(completedAt, lastUpdated);
-  const password = resultsPdfPassword(profile.nickname, takenOn);
+  const code = computeHollandCode(scores);
+  const password = resultsPdfPassword(profile.nickname, code);
 
   const download = async () => {
     setBusy(true);
@@ -142,7 +149,7 @@ function DownloadPdfDialog() {
         age: profile.age,
         school: profile.school,
         scores,
-        code: computeHollandCode(scores),
+        code,
         maxScore: maxScorePerTrait(QUESTIONS),
         takenOn,
         password,
@@ -184,8 +191,8 @@ function DownloadPdfDialog() {
             {password}
           </p>
           <p className="text-sm text-muted-foreground">
-            Your nickname, then the date you took the assessment
-            (month, day, year: MMDDYYYY). Password is CASE-SENSITIVE.
+            Your nickname, then your three-letter RIASEC code. Password is
+            CASE-SENSITIVE.
           </p>
         </div>
         {failed && (
@@ -225,14 +232,18 @@ const EMAIL_ERRORS: Record<Exclude<SendOutcome, "sent">, string> = {
 
 // Email export (PRD FR-8): validation and consent here; the app's
 // /api/send-results route emails the same password-protected PDF as
-// Download PDF, and never stores the address.
+// Download PDF, plus the career-look photo if the student took one, and
+// never stores the address or the photo.
 function EmailResultsDialog() {
   const profile = useAssessmentStore((state) => state.profile);
   const scores = useAssessmentStore((state) => state.scores);
   const completedAt = useAssessmentStore((state) => state.completedAt);
   const lastUpdated = useAssessmentStore((state) => state.lastUpdated);
   const takenOn = resultsTakenOn(completedAt, lastUpdated);
-  const password = resultsPdfPassword(profile.nickname, takenOn);
+  const code = computeHollandCode(scores);
+  const password = resultsPdfPassword(profile.nickname, code);
+  const photo = useCareerLookPhoto((state) => state.photo);
+  const [includePhoto, setIncludePhoto] = useState(true);
   const [email, setEmail] = useState("");
   const [consent, setConsent] = useState(false);
   // Honeypot: hidden from people and screen readers, so only bots fill it.
@@ -252,10 +263,11 @@ function EmailResultsDialog() {
       website,
       nickname: profile.nickname,
       gradeLevel: profile.gradeLevel,
-      code: computeHollandCode(scores),
+      code,
       scores,
       maxScore: maxScorePerTrait(QUESTIONS),
       takenOn,
+      photo: includePhoto ? (photo?.blob ?? null) : null,
     });
     setSending(false);
     setOutcome(result);
@@ -296,11 +308,19 @@ function EmailResultsDialog() {
             {password}
           </p>
           <p className="text-sm text-muted-foreground">
-            Your nickname, then the date you took the assessment (MMDDYYYY).
-            Password is CASE-SENSITIVE. It isn&apos;t written in the email, so
-            keep it somewhere safe.
+            Your nickname, then your three-letter RIASEC code. Password is
+            CASE-SENSITIVE. It isn&apos;t written in the email, so keep it
+            somewhere safe.
           </p>
         </div>
+
+        {photo && outcome !== "sent" && (
+          <EmailPhotoOption
+            photo={photo}
+            included={includePhoto}
+            onIncludedChange={setIncludePhoto}
+          />
+        )}
 
         {outcome === "sent" ? (
           <div
@@ -310,8 +330,9 @@ function EmailResultsDialog() {
             <CheckCircle2Icon className="mt-0.5 size-5 shrink-0 text-primary-strong" />
             <p className="text-sm text-foreground">
               Sent! Check <strong className="break-all">{email.trim()}</strong>{" "}
-              for your results PDF. It may take a minute, and it might land in
-              your spam folder.
+              for your results PDF
+              {photo && includePhoto ? " and career look photo" : ""}. It may
+              take a minute, and it might land in your spam folder.
             </p>
           </div>
         ) : (
@@ -390,5 +411,33 @@ function EmailResultsDialog() {
         )}
       </DialogContent>
     </Dialog>
+  );
+}
+
+// The career-look photo the student took, shown so they know it goes with
+// the email. On by default; unticking sends the PDF alone.
+function EmailPhotoOption({
+  photo,
+  included,
+  onIncludedChange,
+}: {
+  photo: CareerLookPhoto;
+  included: boolean;
+  onIncludedChange: (included: boolean) => void;
+}) {
+  return (
+    <label className="flex items-center gap-3 rounded-2xl bg-muted p-3 text-sm text-foreground">
+      <Checkbox
+        checked={included}
+        onCheckedChange={(checked) => onIncludedChange(checked === true)}
+      />
+      {/* eslint-disable-next-line @next/next/no-img-element -- local blob URL */}
+      <img
+        src={photo.url}
+        alt={`Your career look photo: ${photo.caption}`}
+        className="h-14 w-auto shrink-0 rounded-lg object-cover"
+      />
+      <span>Attach my career look photo</span>
+    </label>
   );
 }

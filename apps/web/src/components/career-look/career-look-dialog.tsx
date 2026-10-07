@@ -35,6 +35,7 @@ import {
   type Shoulders,
 } from "@/lib/career-look/face-anchor";
 import { CAREER_LOOKS, type CareerLook } from "@/lib/career-look/looks";
+import { useCareerLookPhoto } from "@/lib/career-look/photo-store";
 import { RIASEC_PATHWAYS } from "@/lib/riasec/career-pathways";
 import { TraitEmblem } from "@/components/riasec/trait-emblem";
 import type { RiasecLetter } from "@/lib/riasec/types";
@@ -42,8 +43,9 @@ import { cn } from "@/lib/utils";
 
 // WebAR career look: a Snapchat-style filter for the student's code. The
 // camera feed and face tracking stay entirely on the device. Nothing is
-// recorded or uploaded; a photo exists only if the student takes one, and
-// only as a local file they choose to save or share.
+// recorded or uploaded; a photo exists only if the student takes one, as a
+// local file they choose to save or share, and it leaves the device only
+// if they email their results with it attached.
 //
 // MediaPipe (~3.7 MB face model + WASM, self-hosted under /mediapipe) is
 // imported only once the dialog opens, so the results page pays nothing for
@@ -95,7 +97,7 @@ export function CareerLookDialog({
           <DialogTitle>Your career look</DialogTitle>
           <DialogDescription>
             Each letter of your code has its own look. Your camera stays on
-            this device. Nothing is recorded or uploaded.
+            this device. A photo you take is added to your results email.
           </DialogDescription>
         </DialogHeader>
         {code.length > 1 && (
@@ -154,6 +156,7 @@ function CareerLookCamera({ look }: { look: CareerLook }) {
   const [photo, setPhoto] = useState<{ url: string; file: File } | null>(
     null,
   );
+  const setEmailPhoto = useCareerLookPhoto((state) => state.setPhoto);
 
   useEffect(() => {
     let cancelled = false;
@@ -329,11 +332,20 @@ function CareerLookCamera({ look }: { look: CareerLook }) {
       });
       setPhoto({ url: URL.createObjectURL(blob), file });
     }, "image/png");
+    // A JPEG copy for Email me my results; the PNG is too big to mail.
+    canvas.toBlob(
+      (blob) => {
+        if (blob) setEmailPhoto({ blob, caption: look.caption });
+      },
+      "image/jpeg",
+      0.85,
+    );
   };
 
   const retake = () => {
     frozenRef.current = false;
     setPhoto(null);
+    setEmailPhoto(null);
   };
 
   const canShare =

@@ -1,32 +1,18 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  formatPasswordDate,
-  resultsPdfPassword,
-  resultsTakenOn,
-} from "./password";
+import { resultsPdfPassword, resultsTakenOn } from "./password";
 
 describe("results PDF password", () => {
-  it("is the nickname followed by MMDDYYYY", () => {
-    expect(resultsPdfPassword("MARI", new Date(2026, 8, 30))).toBe(
-      "MARI09302026",
-    );
+  it("is the nickname followed by the RIASEC code", () => {
+    expect(resultsPdfPassword("MARI", ["I", "R", "A"])).toBe("MARIIRA");
   });
 
-  it("pads single-digit months and days", () => {
-    expect(formatPasswordDate(new Date(2026, 0, 5))).toBe("01052026");
+  it("keeps the code's letter order", () => {
+    expect(resultsPdfPassword("JUAN", ["S", "E", "C"])).toBe("JUANSEC");
   });
 
   it("keeps hyphens in the nickname, exactly as the student typed it", () => {
-    expect(resultsPdfPassword("MARI-EL", new Date(2026, 11, 25))).toBe(
-      "MARI-EL12252026",
-    );
-  });
-
-  it("uses the student's local date, not UTC", () => {
-    // Local midnight on 1 October: the UTC date may still be 30 September.
-    const localMidnight = new Date(2026, 9, 1, 0, 30);
-    expect(formatPasswordDate(localMidnight)).toBe("10012026");
+    expect(resultsPdfPassword("MARI-EL", ["A", "S", "E"])).toBe("MARI-ELASE");
   });
 });
 

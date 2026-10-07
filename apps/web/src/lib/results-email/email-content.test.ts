@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildResultsEmail,
+  MAX_PHOTO_BYTES,
   normalizeEmail,
   parseTakenOn,
   validateRequest,
@@ -59,6 +60,32 @@ describe("validateRequest", () => {
   });
 });
 
+describe("career look photo", () => {
+  const jpeg = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3, 0xff, 0xd9]);
+  const withPhoto = (photo: unknown) => validateRequest({ ...valid, photo });
+
+  it("is optional", () => {
+    const result = validateRequest(valid);
+    expect(result.ok && result.value.photo).toBeNull();
+  });
+
+  it("accepts a base64 JPEG", () => {
+    const result = withPhoto(jpeg.toString("base64"));
+    expect(result.ok && result.value.photo?.equals(jpeg)).toBe(true);
+  });
+
+  it("rejects anything that is not a JPEG, or is too big", () => {
+    const png = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0, 0, 0xff, 0xd9]);
+    expect(withPhoto(png.toString("base64")).ok).toBe(false);
+    expect(withPhoto("not base64!").ok).toBe(false);
+    expect(withPhoto(42).ok).toBe(false);
+    const huge = Buffer.alloc(MAX_PHOTO_BYTES + 10);
+    huge.set([0xff, 0xd8, 0xff]);
+    huge.set([0xff, 0xd9], huge.length - 2);
+    expect(withPhoto(huge.toString("base64")).ok).toBe(false);
+  });
+});
+
 describe("normalizeEmail", () => {
   it("treats case and spaces as the same address for rate limiting", () => {
     expect(normalizeEmail(" Mari@Example.COM ")).toBe("mari@example.com");
@@ -111,11 +138,27 @@ describe("buildResultsEmail", () => {
 
   it("explains the password rule without giving away the password", () => {
     for (const body of [email.html, email.text]) {
-      expect(body).toContain("MMDDYYYY");
+      expect(body).toContain("three-letter RIASEC code");
       // This student's real password must never be in the email.
-      expect(body).not.toContain("MARI09302026");
-      expect(body).not.toContain("09302026");
+      expect(body).not.toContain("MARIIRA");
     }
+  });
+
+  it("mentions the career look photo only when it is attached", () => {
+    expect(email.text).not.toContain("career look photo");
+    const withPhoto = buildResultsEmail(
+      {
+        nickname: "MARI",
+        gradeLevel: "11",
+        code: ["I", "R", "A"],
+        scores,
+        maxScore: 7,
+        takenOn: "2026-09-30",
+      },
+      { withPhoto: true },
+    );
+    expect(withPhoto.text).toContain("career look photo");
+    expect(withPhoto.photoName).toBe("AlignEd-career-look-MARI.jpg");
   });
 
   it("keeps the results themselves inside the locked PDF", () => {
