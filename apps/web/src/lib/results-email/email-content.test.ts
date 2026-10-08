@@ -60,6 +60,24 @@ describe("validateRequest", () => {
   });
 });
 
+describe("results ID", () => {
+  const withId = (resultsId: unknown) =>
+    validateRequest({ ...valid, results: { ...valid.results, resultsId } });
+
+  it("is optional, and passed through when well-formed", () => {
+    const missing = validateRequest(valid);
+    expect(missing.ok && missing.value.results.resultsId).toBeNull();
+    const given = withId("ALGN-7KQ2-MX9P");
+    expect(given.ok && given.value.results.resultsId).toBe("ALGN-7KQ2-MX9P");
+  });
+
+  it("rejects anything that is not a results ID", () => {
+    expect(withId("ALGN-0000-0000").ok).toBe(false);
+    expect(withId("<b>hi</b>").ok).toBe(false);
+    expect(withId(12).ok).toBe(false);
+  });
+});
+
 describe("career look photo", () => {
   const jpeg = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3, 0xff, 0xd9]);
   const withPhoto = (photo: unknown) => validateRequest({ ...valid, photo });
@@ -127,6 +145,7 @@ describe("buildResultsEmail", () => {
     scores,
     maxScore: 7,
     takenOn: "2026-09-30",
+    resultsId: "ALGN-7KQ2-MX9P",
   });
 
   it("greets the student and names the PDF attachment", () => {
@@ -154,6 +173,7 @@ describe("buildResultsEmail", () => {
         scores,
         maxScore: 7,
         takenOn: "2026-09-30",
+        resultsId: null,
       },
       { withPhoto: true },
     );
@@ -163,6 +183,8 @@ describe("buildResultsEmail", () => {
 
   it("keeps the results themselves inside the locked PDF", () => {
     for (const body of [email.html, email.text]) {
+      // The results ID opens the saved copy, so it stays in the PDF too.
+      expect(body).not.toContain("ALGN-7KQ2-MX9P");
       expect(body).not.toContain("I-R-A");
       expect(body).not.toContain("7 / 7");
       expect(body).not.toContain("Marine Biology");

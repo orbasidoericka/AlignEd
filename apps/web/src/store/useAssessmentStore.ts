@@ -49,8 +49,13 @@ interface AssessmentState {
   profile: ProfileState;
   lastUpdated: string | null;
   // When the last question was first answered (ISO). Unlike lastUpdated it
-  // does not move on later edits; the results PDF password uses its date.
+  // does not move on later edits; the results PDF prints its date.
   completedAt: string | null;
+  // The saved-results ID (ALGN-XXXX-XXXX) once these results are saved to
+  // the server, so they are saved only once. Cleared with the answers.
+  resultsId: string | null;
+  // The student deleted the saved copy, so it is not saved again.
+  resultsDeleted: boolean;
 }
 
 interface AssessmentActions {
@@ -62,6 +67,8 @@ interface AssessmentActions {
   // and leaves a valid one untouched so a resumed session keeps its order.
   ensureQuestionOrder: () => void;
   setProfile: (patch: Partial<ProfileState>) => void;
+  setResultsId: (resultsId: string | null) => void;
+  markResultsDeleted: () => void;
   resetAnswers: () => void;
   reset: () => void;
 }
@@ -138,6 +145,8 @@ export const useAssessmentStore = create<AssessmentStore>()(
       profile: { ...emptyProfile },
       lastUpdated: null,
       completedAt: null,
+      resultsId: null,
+      resultsDeleted: false,
       setTotalQuestions: (total) =>
         set({ totalQuestions: total, lastUpdated: new Date().toISOString() }),
       setCurrentStep: (step) =>
@@ -206,6 +215,8 @@ export const useAssessmentStore = create<AssessmentStore>()(
           profile: { ...state.profile, ...patch },
           lastUpdated: new Date().toISOString(),
         })),
+      setResultsId: (resultsId) => set({ resultsId }),
+      markResultsDeleted: () => set({ resultsId: null, resultsDeleted: true }),
       // Retake keeps the profile (PRD FR-3.6): only answers and scores clear.
       // A fresh order too, so the statements come back in a new sequence.
       resetAnswers: () =>
@@ -216,6 +227,8 @@ export const useAssessmentStore = create<AssessmentStore>()(
           questionOrder: shuffleQuestionIds(),
           lastUpdated: new Date().toISOString(),
           completedAt: null,
+          resultsId: null,
+          resultsDeleted: false,
         }),
       reset: () =>
         set({
@@ -227,6 +240,8 @@ export const useAssessmentStore = create<AssessmentStore>()(
           profile: { ...emptyProfile },
           lastUpdated: null,
           completedAt: null,
+          resultsId: null,
+          resultsDeleted: false,
         }),
     }),
     {
@@ -268,6 +283,8 @@ export const useAssessmentStore = create<AssessmentStore>()(
         profile: state.profile,
         lastUpdated: state.lastUpdated,
         completedAt: state.completedAt,
+        resultsId: state.resultsId,
+        resultsDeleted: state.resultsDeleted,
       }),
       migrate: (persisted, version) => {
         // v1 payloads predate the profile step; inject an empty profile.

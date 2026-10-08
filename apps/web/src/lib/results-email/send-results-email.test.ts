@@ -20,6 +20,7 @@ const input = {
   maxScore: 7,
   // Late evening local time: the date sent must still be the 30th.
   takenOn: new Date(2026, 8, 30, 23, 30),
+  resultsId: "ALGN-7KQ2-MX9P",
 };
 
 function reply(status: number, body: object = {}) {
@@ -51,6 +52,7 @@ describe("sendResultsEmail", () => {
         scores: input.scores,
         maxScore: 7,
         takenOn: "2026-09-30",
+        resultsId: "ALGN-7KQ2-MX9P",
       },
     });
   });

@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { SavedResultsPanel } from "@/components/journey/saved-results-panel";
 import {
   useCareerLookPhoto,
   type CareerLookPhoto,
@@ -43,10 +44,7 @@ import {
   type SendOutcome,
 } from "@/lib/results-email/send-results-email";
 import { downloadResultsPdf } from "@/lib/results-pdf/download-results-pdf";
-import {
-  resultsPdfPassword,
-  resultsTakenOn,
-} from "@/lib/results-pdf/password";
+import { resultsPdfPassword, resultsTakenOn } from "@/lib/results-pdf/password";
 import { QUESTIONS } from "@/lib/riasec/questions";
 import { computeHollandCode, maxScorePerTrait } from "@/lib/riasec/scoring";
 import { useAssessmentStore } from "@/store/useAssessmentStore";
@@ -66,60 +64,67 @@ export function ResultsActions() {
 
   return (
     <div
-      className="flex flex-col gap-4 border-t border-highlight-foreground/15 pt-4 sm:flex-row sm:items-center sm:justify-between print:hidden"
+      className="flex flex-col gap-4 border-t border-highlight-foreground/15 pt-4 print:hidden"
       data-print-hidden
     >
-      <div>
-        <h3 className="font-heading text-base font-bold text-foreground">
-          Keep your results
-        </h3>
-        <p className="text-sm text-muted-foreground">
-          They live only on this device until you save them.
-        </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h3 className="font-heading text-base font-bold text-foreground">
+            Keep your results
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            This screen clears from this device after 30 minutes. Save a PDF to
+            keep everything.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <DownloadPdfDialog />
+          <EmailResultsDialog />
+          <AlertDialog>
+            <AlertDialogTrigger
+              render={
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="rounded-full bg-card"
+                />
+              }
+            >
+              <RotateCcwIcon className="size-4" />
+              Retake assessment
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Retake the assessment?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This clears your profile, answers, and current results. You
+                  will start fresh from the profile setup. Note your results ID
+                  first if you want to compare later.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogClose
+                  render={<Button variant="outline" size="lg" />}
+                >
+                  Keep my results
+                </AlertDialogClose>
+                <AlertDialogClose
+                  render={
+                    <Button
+                      variant="destructive"
+                      size="lg"
+                      onClick={handleRetake}
+                    />
+                  }
+                >
+                  Clear and retake
+                </AlertDialogClose>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
       </div>
-      <div className="flex flex-wrap gap-2">
-        <DownloadPdfDialog />
-        <EmailResultsDialog />
-        <AlertDialog>
-          <AlertDialogTrigger
-            render={
-              <Button
-                variant="outline"
-                size="lg"
-                className="rounded-full bg-card"
-              />
-            }
-          >
-            <RotateCcwIcon className="size-4" />
-            Retake assessment
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Retake the assessment?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This clears your profile, answers, and current results. You will
-                start fresh from the profile setup.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogClose render={<Button variant="outline" size="lg" />}>
-                Keep my results
-              </AlertDialogClose>
-              <AlertDialogClose
-                render={
-                  <Button
-                    variant="destructive"
-                    size="lg"
-                    onClick={handleRetake}
-                  />
-                }
-              >
-                Clear and retake
-              </AlertDialogClose>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </div>
+      <SavedResultsPanel />
     </div>
   );
 }
@@ -136,6 +141,7 @@ function DownloadPdfDialog() {
   const [failed, setFailed] = useState(false);
 
   const takenOn = resultsTakenOn(completedAt, lastUpdated);
+  const resultsId = useAssessmentStore((state) => state.resultsId);
   const code = computeHollandCode(scores);
   const password = resultsPdfPassword(profile.nickname, code);
 
@@ -152,6 +158,7 @@ function DownloadPdfDialog() {
         code,
         maxScore: maxScorePerTrait(QUESTIONS),
         takenOn,
+        resultsId,
         password,
       });
     } catch (error) {
@@ -166,7 +173,10 @@ function DownloadPdfDialog() {
     <Dialog>
       <DialogTrigger
         render={
-          <Button size="lg" className="rounded-full font-heading font-semibold" />
+          <Button
+            size="lg"
+            className="rounded-full font-heading font-semibold"
+          />
         }
       >
         <DownloadIcon className="size-4" />
@@ -223,7 +233,8 @@ function DownloadPdfDialog() {
 const EMAIL_ERRORS: Record<Exclude<SendOutcome, "sent">, string> = {
   rate_limited:
     "Too many emails have been sent from here recently. Please try again later, or use Download PDF.",
-  invalid: "That email address couldn't be used. Please check it and try again.",
+  invalid:
+    "That email address couldn't be used. Please check it and try again.",
   failed:
     "We couldn't send the email just now. Please try again, or use Download PDF to keep a copy.",
   not_configured:
@@ -240,6 +251,7 @@ function EmailResultsDialog() {
   const completedAt = useAssessmentStore((state) => state.completedAt);
   const lastUpdated = useAssessmentStore((state) => state.lastUpdated);
   const takenOn = resultsTakenOn(completedAt, lastUpdated);
+  const resultsId = useAssessmentStore((state) => state.resultsId);
   const code = computeHollandCode(scores);
   const password = resultsPdfPassword(profile.nickname, code);
   const photo = useCareerLookPhoto((state) => state.photo);
@@ -267,6 +279,7 @@ function EmailResultsDialog() {
       scores,
       maxScore: maxScorePerTrait(QUESTIONS),
       takenOn,
+      resultsId,
       photo: includePhoto ? (photo?.blob ?? null) : null,
     });
     setSending(false);
@@ -284,7 +297,11 @@ function EmailResultsDialog() {
     <Dialog onOpenChange={reset}>
       <DialogTrigger
         render={
-          <Button variant="outline" size="lg" className="rounded-full bg-card" />
+          <Button
+            variant="outline"
+            size="lg"
+            className="rounded-full bg-card"
+          />
         }
       >
         <MailIcon className="size-4" />
@@ -361,7 +378,10 @@ function EmailResultsDialog() {
                 className="h-11 rounded-xl text-base"
               />
               {email.length > 0 && !emailValid && (
-                <p className="text-sm font-medium text-destructive" role="alert">
+                <p
+                  className="text-sm font-medium text-destructive"
+                  role="alert"
+                >
                   Enter a valid email address.
                 </p>
               )}

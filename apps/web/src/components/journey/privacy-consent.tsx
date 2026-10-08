@@ -17,10 +17,12 @@ import {
 import { cn } from "@/lib/utils";
 
 // The privacy notice the PRD requires (Data Privacy Act of 2012, RA 10173).
-// Discloses: client-side session data, server-side statistics record (age,
-// school, RIASEC scores for admin dashboard), email route, and analytics.
+// Discloses: client-side session data, the saved-results record (grade,
+// age, RIASEC scores and code, date, results ID; no name, nickname, school
+// or answers; kept one year; see supabase/migrations/0003 and 0004), the private
+// admin page, the email route with its optional photo, and analytics.
 // Change the code and this changes too — keep claims accurate.
-export const PRIVACY_POLICY_VERSION = "v1.1";
+export const PRIVACY_POLICY_VERSION = "v1.3";
 
 type PolicyItem =
   | { type: "para"; text: string }
@@ -104,10 +106,15 @@ const POLICY_SECTIONS: PolicySection[] = [
         type: "para",
         text: "Your responses are automatically scored according to the AlignEd assessment method to determine your scores in the six RIASEC interest areas: Realistic, Investigative, Artistic, Social, Enterprising, and Conventional.",
       },
+      { type: "subheading", text: "Comparing your results later." },
+      {
+        type: "para",
+        text: "A copy of your scores is saved under a random results ID so that you can compare them with a later retake of the assessment.",
+      },
       { type: "subheading", text: "Program statistics." },
       {
         type: "para",
-        text: "Limited information from completed assessments is used to understand the general career interests, age ranges, and school distribution of participants. This information helps program administrators evaluate and improve AlignEd and better understand student career-guidance needs.",
+        text: "The same saved records (grade level, age, and RIASEC scores, with no name) are used to understand the general career interests and age ranges of participants. This information helps program administrators evaluate and improve AlignEd and better understand student career-guidance needs.",
       },
       {
         type: "para",
@@ -151,19 +158,22 @@ const POLICY_SECTIONS: PolicySection[] = [
       { type: "subheading", text: "After you complete the assessment" },
       {
         type: "para",
-        text: "When you complete the assessment, AlignEd sends a limited summary record to the program's secure database.",
+        text: "When you reach your results, AlignEd saves a limited record to the program's secure database so you can compare your results later.",
+      },
+      {
+        type: "list",
+        items: [
+          "The saved record contains: your grade level, your age, your six RIASEC interest-area scores and three-letter code, the date you took the assessment, and a random results ID (for example, ALGN-7KQ2-MX9P).",
+          "It does not contain your name, nickname, school, email address, photo, or your individual answers to the 42 assessment statements.",
+        ],
       },
       {
         type: "para",
-        text: "The summary record contains your age, your school name (if provided), and your RIASEC interest-area scores.",
+        text: "Your results ID is shown on your results screen and printed in your results PDF. Anyone who has your results ID can see the scores saved under it (but nothing that names you), so keep it private like a password.",
       },
       {
         type: "para",
-        text: "The server summary record does not contain your nickname or your individual answers to the 42 assessment statements.",
-      },
-      {
-        type: "para",
-        text: "Because combinations such as age, school, and assessment scores may still relate to an individual in some circumstances, AlignEd treats these records as protected data rather than claiming that they are completely anonymous.",
+        text: "Even without a name, AlignEd treats these records as protected data rather than claiming that they are completely anonymous.",
       },
     ],
   },
@@ -181,7 +191,7 @@ const POLICY_SECTIONS: PolicySection[] = [
       {
         type: "list",
         items: [
-          "authorized AlignEd program administrators;",
+          "authorized AlignEd program administrators, through a private admin page that shows the saved records (with their results IDs) but no names;",
           "authorized school guidance personnel or designated school staff; and",
           "service providers that host or support AlignEd's technical infrastructure, where necessary.",
         ],
@@ -196,7 +206,7 @@ const POLICY_SECTIONS: PolicySection[] = [
       },
       {
         type: "para",
-        text: "Your individual assessment answers are not included in the program-statistics record made available to administrators.",
+        text: "Your nickname, school, and individual assessment answers are not included in the saved record made available to administrators.",
       },
     ],
   },
@@ -216,14 +226,14 @@ const POLICY_SECTIONS: PolicySection[] = [
         type: "para",
         text: "This is especially important when using a shared computer or school device because it helps prevent the next user from seeing your assessment information.",
       },
-      { type: "subheading", text: "Summary records stored on the server" },
+      { type: "subheading", text: "Saved results on the server" },
       {
         type: "para",
-        text: 'The summary record containing age, school information, and RIASEC scores will be retained until: [Insert a definite retention period, for example: "12 months after the end of the school year/program."]',
+        text: "Your saved record (grade level, age, RIASEC scores and code, date, and results ID) is kept for one year from the day it was saved, then automatically deleted.",
       },
       {
         type: "para",
-        text: "After that period, the record will be securely deleted or anonymized unless continued retention is required or permitted by law.",
+        text: "You can delete it sooner at any time by selecting Delete saved copy on your results page, or by giving your results ID to the program administrators.",
       },
       {
         type: "para",
@@ -244,7 +254,8 @@ const POLICY_SECTIONS: PolicySection[] = [
         items: [
           "you will be asked separately before your email address is used;",
           "your email address will be used to send the requested results;",
-          "your email address will not be added to the assessment summary record;",
+          "your email address will not be added to your saved results record;",
+          "if you took a career look photo, it is attached to the email unless you untick it, and it is not stored by AlignEd;",
           "AlignEd will not use your address for advertising or marketing; and",
           "the generated results PDF will be protected according to the security measures implemented by the system.",
         ],
@@ -320,7 +331,7 @@ const POLICY_SECTIONS: PolicySection[] = [
       },
       {
         type: "para",
-        text: "For information stored only in your current browser session, selecting Start over removes the session data from that browser.",
+        text: "For information stored only in your current browser session, selecting Start over removes the session data from that browser. Your saved results can be deleted with Delete saved copy on your results page, or by giving your results ID to the program administrators.",
       },
     ],
   },
@@ -411,9 +422,10 @@ export function PrivacyConsent({
         Data privacy
       </h2>
       <p className="text-sm text-muted-foreground">
-        Your session erases from this device after 30 minutes. Your age, school,
-        and interest scores are recorded for program statistics. No real name or
-        account needed.
+        Your session erases from this device after 30 minutes. Your grade, age,
+        and interest scores are saved for one year, with no name, so you can
+        compare later and for program statistics. No real name or account
+        needed.
       </p>
 
       <label className="flex items-start gap-3 text-sm text-foreground">

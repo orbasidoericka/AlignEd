@@ -1,12 +1,13 @@
 // Copyright (c) 2026 EdTech. All rights reserved.
 
-import { TRAIT_META, TRAIT_ORDER } from "@/lib/riasec/scoring";
 import {
-  GRADE_LEVELS,
-  type GradeLevel,
-  type RiasecLetter,
-} from "@/lib/riasec/types";
-import type { RiasecScores } from "@/store/useAssessmentStore";
+  isRecord,
+  validateScoredResults,
+  type ScoredResults,
+} from "@/lib/riasec/validate-results";
+import { isResultsId } from "@/lib/saved-results/results-id";
+
+export { parseTakenOn } from "@/lib/riasec/validate-results";
 
 // Server-side logic for emailing results (PRD FR-8): request validation,
 // rate-limit rules, and the email itself. The email and its PDF attachment
@@ -14,28 +15,11 @@ import type { RiasecScores } from "@/store/useAssessmentStore";
 // date), never from text the browser sends, so the route cannot be used to
 // mail arbitrary content or attachments.
 
-export interface ResultsPayload {
+export interface ResultsPayload extends ScoredResults {
   nickname: string;
-  gradeLevel: GradeLevel | null;
-  code: [RiasecLetter, RiasecLetter, RiasecLetter];
-  scores: RiasecScores;
-  maxScore: number;
-  // The student's local calendar date when they finished, "YYYY-MM-DD".
-  // Printed on the PDF, matching the download.
-  takenOn: string;
-}
-
-// "YYYY-MM-DD" to a local Date at midnight, or null if not a real date.
-export function parseTakenOn(value: string): Date | null {
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
-  if (!match) return null;
-  const [year, month, day] = match.slice(1).map(Number) as [number, number, number];
-  const date = new Date(year, month - 1, day);
-  const real =
-    date.getFullYear() === year &&
-    date.getMonth() === month - 1 &&
-    date.getDate() === day;
-  return real && year >= 2020 && year <= 2100 ? date : null;
+  // The saved-results ID, printed on the PDF so the student can compare
+  // later; null when the results were not saved.
+  resultsId: string | null;
 }
 
 export interface SendResultsRequest {
@@ -54,7 +38,6 @@ export type Validation =
   | { ok: false; error: string };
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const LETTERS = TRAIT_ORDER.map((trait) => TRAIT_META[trait].letter);
 
 // Largest career-look photo the route will attach, in bytes of JPEG.
 export const MAX_PHOTO_BYTES = 3 * 1024 * 1024;
@@ -85,10 +68,6 @@ export function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
 export function validateRequest(body: unknown): Validation {
   if (!isRecord(body)) return { ok: false, error: "Body must be a JSON object." };
 
@@ -109,54 +88,16 @@ export function validateRequest(body: unknown): Validation {
     return { ok: false, error: "Invalid nickname." };
   }
 
-  const gradeLevel = results.gradeLevel ?? null;
-  if (gradeLevel !== null && !GRADE_LEVELS.includes(gradeLevel as GradeLevel)) {
-    return { ok: false, error: "Invalid grade level." };
+  const resultsId = results.resultsId ?? null;
+  if (resultsId !== null && !(typeof resultsId === "string" && isResultsId(resultsId))) {
+    return { ok: false, error: "Invalid results ID." };
   }
 
-  const takenOn = typeof results.takenOn === "string" ? results.takenOn : "";
-  if (!parseTakenOn(takenOn)) {
-    return { ok: false, error: "Invalid assessment date." };
-  }
-
-  const maxScore = results.maxScore;
-  if (
-    typeof maxScore !== "number" ||
-    !Number.isInteger(maxScore) ||
-    maxScore < 1 ||
-    maxScore > 100
-  ) {
-    return { ok: false, error: "Invalid maximum score." };
-  }
-
-  const code = results.code;
-  if (
-    !Array.isArray(code) ||
-    code.length !== 3 ||
-    !code.every((letter) => LETTERS.includes(letter as RiasecLetter)) ||
-    new Set(code).size !== 3
-  ) {
-    return { ok: false, error: "Invalid Holland Code." };
-  }
+  const scored = validateScoredResults(results);
+  if (!scored.ok) return scored;
 
   const photo = parsePhoto(body.photo);
   if (photo === undefined) return { ok: false, error: "Invalid photo." };
-
-  const rawScores = results.scores;
-  if (!isRecord(rawScores)) return { ok: false, error: "Missing scores." };
-  const scores = {} as RiasecScores;
-  for (const trait of TRAIT_ORDER) {
-    const score = rawScores[trait];
-    if (
-      typeof score !== "number" ||
-      !Number.isInteger(score) ||
-      score < 0 ||
-      score > maxScore
-    ) {
-      return { ok: false, error: `Invalid ${trait} score.` };
-    }
-    scores[trait] = score;
-  }
 
   return {
     ok: true,
@@ -164,14 +105,7 @@ export function validateRequest(body: unknown): Validation {
       email,
       consent: true,
       website,
-      results: {
-        nickname,
-        gradeLevel: gradeLevel as GradeLevel | null,
-        code: code as [RiasecLetter, RiasecLetter, RiasecLetter],
-        scores,
-        maxScore,
-        takenOn,
-      },
+      results: { ...scored.value, nickname, resultsId },
       photo,
     },
   };

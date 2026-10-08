@@ -86,6 +86,7 @@ export async function POST(request: Request) {
       code: results.code,
       maxScore: results.maxScore,
       takenOn,
+      resultsId: results.resultsId,
       password: resultsPdfPassword(results.nickname, results.code),
     });
   } catch (error) {

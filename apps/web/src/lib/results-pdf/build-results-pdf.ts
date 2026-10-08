@@ -33,6 +33,8 @@ export interface ResultsPdfInput {
   code: HollandCode;
   maxScore: number;
   takenOn: Date;
+  // The saved-results ID, so the student can compare a later retake.
+  resultsId?: string | null;
   password: string;
   // Guards the permissions below. Nobody needs to know it: pass a random
   // one per file. Without it PDFKit forbids printing and copying even for
@@ -255,6 +257,20 @@ export function buildResultsPdf(input: ResultsPdfInput): TDocumentDefinitions {
       { text: "Your AlignEd results", style: "h1" },
       { text: who, color: MUTED },
       { text: `Assessment taken ${longDate(input.takenOn)}`, color: MUTED },
+      ...(input.resultsId
+        ? [
+            {
+              text: [
+                { text: "Results ID: ", color: MUTED },
+                { text: input.resultsId, bold: true },
+                {
+                  text: " (keep this to compare your results next time)",
+                  color: MUTED,
+                },
+              ],
+            },
+          ]
+        : []),
 
       eyebrow("Your Holland Code"),
       {
