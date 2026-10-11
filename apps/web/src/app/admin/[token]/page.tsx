@@ -44,7 +44,7 @@ export default async function AdminPage({
     return (
       <AdminShell>
         <Notice>
-          Supabase is not set up. Add NEXT_PUBLIC_SUPABASE_URL and
+          Supabase is not set up. Add SUPABASE_URL and
           SUPABASE_SERVICE_ROLE_KEY to apps/web/.env.local, run the
           0003_saved_results migration, then restart the server.
         </Notice>
