@@ -17,7 +17,6 @@ function renderNavigator(
   props: Partial<React.ComponentProps<typeof QuestionNavigator>> = {},
 ) {
   const onJump = vi.fn();
-  const onFinish = vi.fn();
   render(
     <QuestionNavigator
       questions={QUESTIONS}
@@ -25,11 +24,10 @@ function renderNavigator(
       currentIndex={0}
       flagOpen={false}
       onJump={onJump}
-      onFinish={onFinish}
       {...props}
     />,
   );
-  return { onJump, onFinish };
+  return { onJump };
 }
 
 const cell = (n: number) =>
@@ -132,18 +130,18 @@ describe("QuestionNavigator", () => {
     expect(screen.getByRole("status")).toBeEmptyDOMElement();
   });
 
-  it("offers Finish whatever the state, and reports the click", () => {
-    const { onFinish } = renderNavigator();
-    fireEvent.click(screen.getByRole("button", { name: "Finish assessment" }));
-    expect(onFinish).toHaveBeenCalledOnce();
+  it("leaves Finish to the runner", () => {
+    renderNavigator({
+      answers: answered(...QUESTIONS.map((_, i) => i + 1)),
+    });
+    expect(
+      screen.queryByRole("button", { name: "Finish assessment" }),
+    ).toBeNull();
   });
 
   it("disables every control while the quiz is paused", () => {
     const { onJump } = renderNavigator({ disabled: true });
     expect(cell(1)).toBeDisabled();
-    expect(
-      screen.getByRole("button", { name: "Finish assessment" }),
-    ).toBeDisabled();
     fireEvent.click(cell(5));
     expect(onJump).not.toHaveBeenCalled();
   });

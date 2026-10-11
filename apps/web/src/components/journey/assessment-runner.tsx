@@ -77,6 +77,11 @@ function FocusBackground() {
   );
 }
 
+// The control in the bottom-right corner: move on from an answered statement,
+// leave an unanswered one for later, or — on the only statement still open —
+// the nudge to answer it.
+type ForwardControl = "next" | "skip" | "hint" | "none";
+
 // RIASEC quiz runner (PRD FR-3): one statement in focus, answers persist on
 // every change, resume at the first unanswered statement. Stage accent:
 // calming blue.
@@ -129,7 +134,12 @@ export function AssessmentRunner() {
   // Armed when the student arrives already finished, so reopening a completed
   // quiz is silent.
   const celebrated = useRef(questions.every((q) => q.id in answers));
-  const [advancePending, setAdvancePending] = useState(false);
+  // Holds the forward control's state through a pending advance, so answering
+  // does not flash a different control (or none) for the 280ms before the next
+  // statement arrives. Null whenever no advance is in flight.
+  const [lockedControl, setLockedControl] = useState<ForwardControl | null>(
+    null,
+  );
   // Set by a finish attempt that found gaps: the navigator then marks every
   // open statement and explains why the quiz can't finish yet.
   const [flagOpen, setFlagOpen] = useState(false);
@@ -195,7 +205,7 @@ export function AssessmentRunner() {
   const cancelAdvance = () => {
     if (advanceTimer.current) clearTimeout(advanceTimer.current);
     advanceTimer.current = null;
-    setAdvancePending(false);
+    setLockedControl(null);
   };
 
   const moveTo = (target: number) => {
@@ -261,9 +271,31 @@ export function AssessmentRunner() {
     }
   };
 
+  // Skip leaves the statement open for later: the next open one ahead,
+  // wrapping to the earliest. -1 when this is the only one left.
+  const skipTarget = (() => {
+    const isOpen = (q: (typeof questions)[number]) => !(q.id in answers);
+    const ahead = questions.findIndex((q, i) => i > index && isOpen(q));
+    if (ahead !== -1) return ahead;
+    return questions.findIndex((q, i) => i < index && isOpen(q));
+  })();
+
+  const control: ForwardControl = currentAnswered
+    ? !isBlocked && index < LAST_INDEX
+      ? "next"
+      : "none"
+    : skipTarget !== -1
+      ? "skip"
+      : "hint";
+  // What the corner actually renders: the control this statement calls for,
+  // or the one it had when the advance started.
+  const shownControl = lockedControl ?? control;
+
   const scheduleAdvance = (advance: () => void = goForward) => {
     cancelAdvance();
-    setAdvancePending(true);
+    // `control` is this render's value, so it predates the answer that
+    // triggered the advance — exactly the one to hold on screen.
+    setLockedControl(control);
     advanceTimer.current = setTimeout(advance, ADVANCE_DELAY_MS);
   };
 
@@ -462,7 +494,6 @@ export function AssessmentRunner() {
           flagOpen={flagOpen}
           disabled={isBlocked}
           onJump={moveTo}
-          onFinish={requestFinish}
           className="relative z-10 lg:col-start-2 lg:row-start-1 lg:self-start"
         />
 
@@ -475,9 +506,9 @@ export function AssessmentRunner() {
           {allAnswered && !finishing && (
             <p className="rounded-2xl bg-card px-4 py-3 text-sm font-medium text-foreground/80">
               All {QUESTIONS.length} statements answered! Review your answers
-              using the question grid, then tap{" "}
-              <strong className="font-semibold">Finish assessment</strong> when
-              ready.
+              if you like, then tap{" "}
+              <strong className="font-semibold">Finish assessment</strong> below
+              when ready.
             </p>
           )}
 
@@ -487,8 +518,9 @@ export function AssessmentRunner() {
               vertical edge (the runner root's overflow-hidden still contains
               it). The slack must stay ahead of the glow's reach in
               BackgroundGradient: -inset-1 plus blur-2xl carries roughly 64px.
-              Negative margin and padding cancel, so content width is unchanged. */}
-          <div className="relative -mx-24 flex flex-1 flex-col justify-center overflow-x-clip px-24">
+              Negative margin and padding cancel, so content width is unchanged.
+              The bottom padding lifts the question above dead centre. */}
+          <div className="relative -mx-24 flex flex-1 flex-col justify-center overflow-x-clip px-24 pb-[12vh]">
             <AnimatePresence mode="popLayout" initial={false} custom={direction}>
               <motion.div
                 key={question.id}
@@ -603,10 +635,7 @@ export function AssessmentRunner() {
               <ArrowLeft className="size-4" />
               Back
             </Button>
-            {currentAnswered &&
-            !advancePending &&
-            !isBlocked &&
-            index < LAST_INDEX ? (
+            {shownControl === "next" ? (
               <Button
                 variant="outline"
                 size="lg"
@@ -616,13 +645,39 @@ export function AssessmentRunner() {
                 Next
                 <ArrowRight className="size-4" />
               </Button>
-            ) : !currentAnswered ? (
+            ) : shownControl === "skip" ? (
+              <Button
+                variant="outline"
+                size="lg"
+                // The locked control outlives the skip target it was computed
+                // from, so re-read it on the click.
+                onClick={() => {
+                  if (skipTarget !== -1) moveTo(skipTarget);
+                }}
+                disabled={isBlocked}
+                className="h-11 rounded-full bg-card px-5"
+              >
+                Skip for now
+                <ArrowRight className="size-4" />
+              </Button>
+            ) : shownControl === "hint" ? (
               <p className="text-right text-sm text-muted-foreground">
                 Tap an answer to continue
                 <span className="hidden sm:inline">, or press Y or N</span>
               </p>
             ) : null}
           </div>
+
+          {allAnswered && (
+            <Button
+              size="lg"
+              onClick={requestFinish}
+              disabled={isBlocked}
+              className="h-13 w-full rounded-full bg-stage-results font-heading text-lg font-semibold text-stage-results-foreground hover:bg-stage-results/85"
+            >
+              Finish assessment
+            </Button>
+          )}
         </div>
       </div>
     </div>

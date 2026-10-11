@@ -37,7 +37,6 @@ interface QuestionNavigatorProps {
   /** True while the rapid-answer pause is up. */
   disabled?: boolean;
   onJump: (index: number) => void;
-  onFinish: () => void;
   className?: string;
 }
 
@@ -64,14 +63,12 @@ export function QuestionNavigator({
   flagOpen,
   disabled = false,
   onJump,
-  onFinish,
   className,
 }: QuestionNavigatorProps) {
   const [expanded, setExpanded] = useState(false);
   const listRef = useRef<HTMLOListElement>(null);
   const cells = useRef<(HTMLButtonElement | null)[]>([]);
   const regionId = useId();
-  const remainingId = useId();
 
   const total = questions.length;
   const openNumbers = questions.flatMap((question, i) =>
@@ -158,7 +155,7 @@ export function QuestionNavigator({
             >
               Question {currentIndex + 1} of {total}
             </p>
-            <p id={remainingId} className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               {complete ? "All answered" : `${remaining} to go`}
             </p>
           </div>
@@ -277,22 +274,6 @@ export function QuestionNavigator({
             Not answered
           </li>
         </ul>
-
-        <Button
-          variant={complete ? "default" : "outline"}
-          size="lg"
-          onClick={onFinish}
-          disabled={disabled}
-          aria-describedby={remainingId}
-          className={cn(
-            "h-11 w-full rounded-full font-heading text-base font-semibold",
-            complete
-              ? "bg-stage-results text-stage-results-foreground hover:bg-stage-results/85"
-              : "bg-card",
-          )}
-        >
-          Finish assessment
-        </Button>
       </div>
     </section>
   );

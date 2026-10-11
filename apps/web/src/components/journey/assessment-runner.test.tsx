@@ -238,7 +238,7 @@ describe("AssessmentRunner hardening", () => {
     expect(screen.queryByText("All done!")).toBeNull();
     expect(playSound).not.toHaveBeenCalledWith("celebration");
 
-    // Finishing via the navigator triggers the celebration.
+    // Finish appears once all are answered; tapping it celebrates.
     fireEvent.click(screen.getByRole("button", { name: "Finish assessment" }));
     expect(screen.getByText("All done!")).toBeInTheDocument();
     expect(playSound.mock.calls.filter(([n]) => n === "celebration")).toHaveLength(1);
@@ -338,33 +338,55 @@ describe("AssessmentRunner question navigator", () => {
     expect(cell(1)).toHaveAttribute("data-state", "answered");
   });
 
-  it("refuses to finish with gaps, explains, and goes to the first one", () => {
+  it("hides Finish until every statement is answered", () => {
     answerAllExcept(4, 11);
     render(<AssessmentRunner />);
+    expect(
+      screen.queryByRole("button", { name: "Finish assessment" }),
+    ).toBeNull();
+  });
+
+  it("skips a statement without answering it, and comes back to it", () => {
+    render(<AssessmentRunner />);
+    fireEvent.click(screen.getByRole("button", { name: /Skip for now/ }));
+    expect(statement(1)).toBeInTheDocument();
+    expect(useAssessmentStore.getState().answers[QUESTIONS[0]!.id]).toBeUndefined();
+    expect(cell(1)).toHaveAccessibleName("Question 1, not answered");
+
+    // Skipping past the end wraps to the earliest open statement.
+    answerAllExcept(0, QUESTIONS.length - 1);
     fireEvent.click(cell(QUESTIONS.length));
-    expect(statement(QUESTIONS.length - 1)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Skip for now/ }));
+    expect(statement(0)).toBeInTheDocument();
+  });
 
-    fireEvent.click(screen.getByRole("button", { name: "Finish assessment" }));
+  it("holds Skip on screen while the answer advances", () => {
+    render(<AssessmentRunner />);
+    const skip = () => screen.queryByRole("button", { name: /Skip for now/ });
+    expect(skip()).toBeInTheDocument();
 
-    expect(screen.queryByText("All done!")).toBeNull();
-    expect(screen.getByRole("status")).toHaveTextContent(
-      "Answer every statement to finish. Still open: 5 and 12.",
-    );
+    wait(RAPID_ANSWER_THRESHOLD_MS + 10);
+    fireEvent.keyDown(document, { key: "y" });
+    // Mid-advance the corner keeps Skip rather than blanking or flashing Next.
+    wait(ADVANCE_DELAY_MS - 10);
+    expect(skip()).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Next/ })).toBeNull();
+
+    wait(20);
+    expect(statement(1)).toBeInTheDocument();
+    expect(skip()).toBeInTheDocument();
+  });
+
+  it("offers no Skip on the last open statement", () => {
+    answerAllExcept(4);
+    render(<AssessmentRunner />);
     expect(statement(4)).toBeInTheDocument();
-    expect(statement(4)).toHaveFocus();
-    expect(cell(5)).toHaveAccessibleName("Question 5, not answered");
-    expect(cell(12)).toHaveAccessibleName("Question 12, not answered");
-    expect(cell(1)).toHaveAccessibleName("Question 1, answered");
-    // Nothing already answered was touched.
-    expect(Object.keys(useAssessmentStore.getState().answers)).toHaveLength(
-      QUESTIONS.length - 2,
-    );
+    expect(screen.queryByRole("button", { name: /Skip for now/ })).toBeNull();
   });
 
   it("finishes only once every gap is answered, and submits once", () => {
     answerAllExcept(4, 11);
     render(<AssessmentRunner />);
-    fireEvent.click(screen.getByRole("button", { name: "Finish assessment" }));
     expect(statement(4)).toBeInTheDocument();
 
     // A fresh answer skips the statements that already have one.
@@ -372,7 +394,6 @@ describe("AssessmentRunner question navigator", () => {
     fireEvent.keyDown(document, { key: "y" });
     wait(ADVANCE_DELAY_MS + 10);
     expect(statement(11)).toBeInTheDocument();
-    expect(screen.getByRole("status")).toHaveTextContent("Still open: 12.");
 
     wait(RAPID_ANSWER_THRESHOLD_MS + 10);
     fireEvent.keyDown(document, { key: "n" });
