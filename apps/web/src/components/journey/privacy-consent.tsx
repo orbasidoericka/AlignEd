@@ -440,7 +440,7 @@ export function PrivacyConsent({
           <button
             type="button"
             onClick={() => setOpen(true)}
-            className="rounded-sm font-semibold text-stage-profile-strong underline underline-offset-2 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+            className="cursor-pointer rounded-sm font-semibold text-stage-profile-strong underline underline-offset-2 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
           >
             Data Privacy Policy
           </button>

@@ -360,7 +360,10 @@ export function NavbarLogo({
   return (
     <Link
       href={href}
-      className={cn("relative z-20 flex items-center px-2 py-1", className)}
+      className={cn(
+        "relative z-20 flex cursor-pointer items-center px-2 py-1",
+        className,
+      )}
     >
       {children}
     </Link>
