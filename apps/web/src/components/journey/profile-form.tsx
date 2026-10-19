@@ -82,7 +82,7 @@ export function ProfileForm() {
             spellCheck={false}
             aria-invalid={showHints && profile.nickname.length === 0}
             aria-describedby="nickname-hint"
-            className="h-12 rounded-xl bg-card text-base font-bold tracking-widest uppercase"
+            className="h-12 rounded-xl bg-card text-base"
           />
           {showHints && profile.nickname.length === 0 && (
             <p className="text-sm font-semibold text-destructive" role="alert">
@@ -147,7 +147,7 @@ export function ProfileForm() {
             }}
             placeholder="YOUR AGE"
             aria-invalid={showHints && profile.age === ""}
-            className="h-12 rounded-xl bg-card text-base font-bold"
+            className="h-12 rounded-xl bg-card text-base"
           />
           {showHints && profile.age === "" && (
             <p className="text-sm font-semibold text-destructive" role="alert">

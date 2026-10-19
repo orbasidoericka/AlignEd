@@ -2,6 +2,7 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
+import Link from "next/link";
 import { CheckIcon, RotateCcw, XIcon } from "lucide-react";
 
 import {
@@ -53,7 +54,13 @@ export function FocusBar() {
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-sm">
       <div className="mx-auto flex h-14 w-full max-w-3xl items-center justify-between px-4">
-        <Wordmark className="h-7" priority />
+        <Link
+          href="/"
+          aria-label="Go to AlignEd home"
+          className="cursor-pointer rounded-sm focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+        >
+          <Wordmark className="h-7" priority />
+        </Link>
 
         <div className="flex items-center gap-2">
           {saved && (
