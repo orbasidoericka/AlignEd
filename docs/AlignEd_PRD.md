@@ -82,9 +82,10 @@ Captured before the assessment begins; stored client-side only (localStorage via
 | :--- | :--- | :--- |
 | Nickname | Text | **Required.** 1–8 characters, uppercase letters `A–Z` and the hyphen `-` only. Input is normalized on every keystroke: characters are upper-cased, digits and all other symbols are discarded, and entry stops at 8 characters. It is a display handle, not a real name; it is never sent to the server and never included in the anonymous completion record. |
 | Grade Level | Enum | **Required.** Exactly six values: `Grade 7` through `Grade 12`. No free text. |
+| SHS Strand | Enum | **Required.** One of the supported academic, Arts and Design, Sports, or TVL strands: ABM, STEM, HUMSS, GAS, Arts and Design, Sports, AFA, HE, IA, or ICT. No free text. |
 | School | Text | **Optional.** Max 120 characters. Never used for identification; excluded from analytics aggregation keys. |
 
-- FR-2.1. The "Continue to assessment" action is disabled until both required fields (nickname, grade level) are set.
+- FR-2.1. The "Continue to assessment" action is disabled until all required fields (nickname, grade level, and SHS strand) are set.
 - FR-2.2. Profile values are editable by returning to this step before completing the assessment.
 
 ### FR-3 RIASEC Assessment Engine

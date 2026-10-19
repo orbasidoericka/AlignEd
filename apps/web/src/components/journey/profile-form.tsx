@@ -18,18 +18,18 @@ import {
   AGE_MAX,
   AGE_MIN,
   GRADE_LEVELS,
-  NICKNAME_MAX_LENGTH,
+  SHS_STRANDS,
   SCHOOL_MAX_LENGTH,
   sanitizeNickname,
 } from "@/lib/riasec/types";
-import type { GradeLevel } from "@/lib/riasec/types";
+import type { GradeLevel, ShsStrand } from "@/lib/riasec/types";
 import {
   selectIsProfileComplete,
   useAssessmentStore,
 } from "@/store/useAssessmentStore";
 import { cn } from "@/lib/utils";
 
-// Profile Setup (PRD FR-2): grade level as tappable cards, optional school.
+// Profile Setup (PRD FR-2): grade and strand as tappable cards, optional school.
 // Stage accent: soft yellow. Everything stays client-side in the store.
 export function ProfileForm() {
   const router = useRouter();
@@ -122,6 +122,37 @@ export function ProfileForm() {
           {showHints && profile.gradeLevel === null && (
             <p className="text-sm font-semibold text-destructive" role="alert">
               Choose your grade level to continue.
+            </p>
+          )}
+        </fieldset>
+
+        {/* SHS strand */}
+        <fieldset className="flex flex-col gap-3">
+          <legend className="mb-2 text-lg font-semibold text-foreground">
+            What is your SHS strand?
+          </legend>
+          <RadioGroup
+            aria-label="SHS strand"
+            value={profile.strand}
+            onValueChange={(value) =>
+              setProfile({ strand: value as ShsStrand })
+            }
+            className="grid gap-3 sm:grid-cols-2"
+          >
+            {SHS_STRANDS.map((strand) => (
+              <RadioCard
+                key={strand}
+                value={strand}
+                className="min-h-16 text-sm text-stage-profile-strong data-checked:bg-stage-profile/15"
+              >
+                <RadioCardIndicator className="sr-only" />
+                <span className="font-medium">{strand}</span>
+              </RadioCard>
+            ))}
+          </RadioGroup>
+          {showHints && profile.strand === null && (
+            <p className="text-sm font-semibold text-destructive" role="alert">
+              Choose your SHS strand to continue.
             </p>
           )}
         </fieldset>

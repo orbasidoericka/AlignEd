@@ -27,6 +27,7 @@ import { ALIGNED_WORDMARK_PNG } from "./logo";
 export interface ResultsPdfInput {
   nickname: string;
   gradeLevel: string | null;
+  strand: string | null;
   age: string;
   school: string;
   scores: RiasecScores;
@@ -124,12 +125,14 @@ function scoreBar(letter: RiasecLetter, score: number, max: number): Content {
 }
 
 export function buildResultsPdf(input: ResultsPdfInput): TDocumentDefinitions {
-  const { nickname, gradeLevel, age, school, scores, code, maxScore } = input;
+  const { nickname, gradeLevel, strand, age, school, scores, code, maxScore } =
+    input;
 
   const who = [
     nickname || "Student",
     age ? `${age} years old` : null,
     gradeLevel ? `Grade ${gradeLevel}` : null,
+    strand || null,
     school || null,
   ]
     .filter(Boolean)

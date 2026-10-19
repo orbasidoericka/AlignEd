@@ -14,9 +14,25 @@ export const GRADE_LEVELS = ["11", "12"] as const;
 
 export type GradeLevel = (typeof GRADE_LEVELS)[number];
 
+export const SHS_STRANDS = [
+  "Accountancy, Business and Management (ABM)",
+  "Science, Technology, Engineering, and Mathematics (STEM)",
+  "Humanities and Social Sciences (HUMSS)",
+  "General Academic Strand (GAS)",
+  "Arts and Design",
+  "Sports",
+  "Agri-Fishery Arts (AFA)",
+  "Home Economics (HE)",
+  "Industrial Arts (IA)",
+  "Information and Communications Technology (ICT)",
+] as const;
+
+export type ShsStrand = (typeof SHS_STRANDS)[number];
+
 export interface StudentProfile {
   nickname: string;
   gradeLevel: GradeLevel;
+  strand: ShsStrand;
   age: string;
   school: string;
 }

@@ -214,6 +214,7 @@ describe("useAssessmentStore", () => {
     expect(profile).toEqual({
       nickname: "MARI-EL",
       gradeLevel: "11",
+      strand: null,
       age: "",
       privacyAccepted: false,
       school: "San Fernando NHS",
@@ -244,6 +245,7 @@ describe("useAssessmentStore", () => {
     expect(useAssessmentStore.getState().profile).toEqual({
       nickname: "",
       gradeLevel: null,
+      strand: null,
       age: "",
       privacyAccepted: false,
       school: "",
@@ -256,7 +258,10 @@ describe("useAssessmentStore", () => {
     expect(selectIsProfileComplete(useAssessmentStore.getState())).toBe(false);
     useAssessmentStore.getState().setProfile({ nickname: "MARI-EL" });
     expect(selectIsProfileComplete(useAssessmentStore.getState())).toBe(false);
-    useAssessmentStore.getState().setProfile({ age: "17" });
+    useAssessmentStore.getState().setProfile({
+      age: "17",
+      strand: "General Academic Strand (GAS)",
+    });
     // Everything filled in, but the privacy notice has not been agreed to.
     expect(selectIsProfileComplete(useAssessmentStore.getState())).toBe(false);
     useAssessmentStore.getState().setProfile({ privacyAccepted: true });
@@ -267,6 +272,7 @@ describe("useAssessmentStore", () => {
     useAssessmentStore.getState().setProfile({
       nickname: "MARI-EL",
       gradeLevel: "11",
+      strand: "General Academic Strand (GAS)",
       age: "17",
       privacyAccepted: true,
     });
@@ -313,6 +319,7 @@ describe("useAssessmentStore", () => {
     expect(migrated.profile).toEqual({
       nickname: "",
       gradeLevel: null,
+      strand: null,
       age: "",
       privacyAccepted: false,
       school: "",
@@ -356,6 +363,7 @@ describe("useAssessmentStore", () => {
     expect(migrated.profile).toEqual({
       nickname: "",
       gradeLevel: "12",
+      strand: null,
       age: "",
       privacyAccepted: false,
       school: "San Fernando NHS",
@@ -403,6 +411,7 @@ describe("useAssessmentStore", () => {
     expect(migrated.profile).toEqual({
       nickname: "",
       gradeLevel: "10",
+      strand: null,
       age: "",
       privacyAccepted: false,
       school: "San Fernando NHS",

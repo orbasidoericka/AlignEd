@@ -78,6 +78,7 @@ export async function POST(request: Request) {
     pdf = await renderResultsPdf({
       nickname: results.nickname,
       gradeLevel: results.gradeLevel,
+      strand: null,
       // Not sent by the browser: free text has no place in a server-built
       // attachment, and it is optional on the download too.
       age: "",

@@ -152,6 +152,7 @@ function DownloadPdfDialog() {
       await downloadResultsPdf({
         nickname: profile.nickname,
         gradeLevel: profile.gradeLevel,
+        strand: profile.strand,
         age: profile.age,
         school: profile.school,
         scores,

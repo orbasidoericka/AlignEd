@@ -13,6 +13,11 @@ function fillProfile() {
     target: { value: "MARI" },
   });
   fireEvent.click(screen.getByRole("radio", { name: /Grade 12/i }));
+  fireEvent.click(
+    screen.getByRole("radio", {
+      name: /Science, Technology, Engineering, and Mathematics/i,
+    }),
+  );
   fireEvent.change(screen.getByLabelText(/How old are you/i), {
     target: { value: "17" },
   });

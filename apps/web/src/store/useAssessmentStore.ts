@@ -8,7 +8,7 @@ import {
   QUESTIONS,
   shuffleQuestionIds,
 } from "@/lib/riasec/questions";
-import type { GradeLevel } from "@/lib/riasec/types";
+import type { GradeLevel, ShsStrand } from "@/lib/riasec/types";
 
 export type RiasecTrait =
   | "realistic"
@@ -28,6 +28,7 @@ export interface AssessmentAnswer {
 export interface ProfileState {
   nickname: string;
   gradeLevel: GradeLevel | null;
+  strand: ShsStrand | null;
   age: string;
   school: string;
   // Data Privacy Act consent, given on the profile step. Part of the profile
@@ -87,6 +88,7 @@ const emptyScores: RiasecScores = {
 const emptyProfile: ProfileState = {
   nickname: "",
   gradeLevel: null,
+  strand: null,
   age: "",
   school: "",
   privacyAccepted: false,
@@ -246,7 +248,7 @@ export const useAssessmentStore = create<AssessmentStore>()(
     }),
     {
       name: STORAGE_KEY,
-      version: 7,
+      version: 8,
       storage: createJSONStorage(() => ssrSafeStorage()),
       // 30-minute TTL. zustand calls this after `merge` has set the rehydrated state
       // but *before* it flips `hasHydrated`, so JourneyGuard — which gates on
@@ -322,9 +324,9 @@ export const useAssessmentStore = create<AssessmentStore>()(
         // merge leaves questionOrder empty and ensureQuestionOrder seeds it on
         // the next visit, so no explicit field is injected here.
 
-        // v6 added age and v7 the privacy consent. merge's spread over
-        // emptyProfile fills both for older blobs, so nothing is injected
-        // here: an unconsented session simply has to agree before starting.
+        // v6 added age, v7 the privacy consent, and v8 the SHS strand.
+        // merge's spread over emptyProfile fills these for older blobs, so
+        // an older session simply has to complete the new profile choice.
         return withNickname;
       },
     },
@@ -338,6 +340,7 @@ export const selectIsProfileComplete = (state: {
 }): boolean =>
   state.profile.nickname.length > 0 &&
   state.profile.gradeLevel !== null &&
+  state.profile.strand !== null &&
   state.profile.age !== "" &&
   state.profile.privacyAccepted;
 

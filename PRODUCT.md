@@ -13,9 +13,9 @@ Grade 7 through 12 students in the Philippines, mobile-first on budget Android d
 ## The journey (strict, linear)
 
 1. **Landing** (`/`) — value proposition, ~5-minute promise, journey-aware CTA.
-2. **Profile Setup** (`/assessment/profile`) — nickname (required, up to 8 uppercase letters/hyphens, never leaves the device), grade level (7–12), optional school (max 120 chars). Client-side only.
+2. **Profile Setup** (`/assessment/profile`) — nickname (required, up to 8 uppercase letters/hyphens, never leaves the device), grade level, SHS strand (required), and optional school (max 120 chars). Client-side only.
 3. **RIASEC Assessment** (`/assessment`) — 42 yes/no statements, one per screen, auto-advancing (no Next button) with Back to revise; localStorage resume, deterministic scoring (tie-break R→I→A→S→E→C).
-4. **Results** (`/results`) — Holland code + trait breakdown, careers, degree programs, PDF + email export, results ID + compare with a past result.
+4. **Results** (`/results`) — Holland code + trait breakdown, careers, degree programs, PDF + email export (including the selected SHS strand), results ID + compare with a past result.
 
 ## Non-goals
 
