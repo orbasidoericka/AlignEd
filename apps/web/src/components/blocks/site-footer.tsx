@@ -52,7 +52,7 @@ export function SiteFooter() {
       <div className="border-t border-chrome-border/60 bg-chrome-border/25 py-5 text-center">
         <p className="text-xs text-muted-foreground">
           © 2026 AlignEd · Polytechnic University of the Philippines — Santa
-          Maria Campus ·
+          Maria Campus
         </p>
       </div>
     </footer>
