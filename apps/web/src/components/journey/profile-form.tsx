@@ -76,7 +76,7 @@ export function ProfileForm() {
             onChange={(event) =>
               setProfile({ nickname: sanitizeNickname(event.target.value) })
             }
-            placeholder="Your nickname"
+            placeholder="YOUR NICKNAME"
             autoCapitalize="characters"
             autoComplete="off"
             spellCheck={false}
@@ -145,7 +145,7 @@ export function ProfileForm() {
               const raw = event.target.value.replace(/\D/g, "").slice(0, 2);
               setProfile({ age: raw });
             }}
-            placeholder="Your age"
+            placeholder="YOUR AGE"
             aria-invalid={showHints && profile.age === ""}
             className="h-12 rounded-xl bg-card text-base font-bold"
           />
@@ -176,7 +176,7 @@ export function ProfileForm() {
                 school: event.target.value.slice(0, SCHOOL_MAX_LENGTH),
               })
             }
-            placeholder="Your School"
+            placeholder="YOUR SCHOOL"
             className="h-11 rounded-xl bg-card text-base"
           />
           <p
