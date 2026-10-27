@@ -58,11 +58,31 @@ describe("/api/results", () => {
   it("saves the scores and answers with the results ID", async () => {
     const { collection } = await load();
     const response = await collection.POST(
-      request("POST", "/api/results", { ...results, age: "16" }),
+      request("POST", "/api/results", {
+        ...results,
+        age: "16",
+        strand: "Sports",
+      }),
     );
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ resultsId: "ALGN-7KQ2-MX9P" });
-    expect(saveResult).toHaveBeenCalledWith({}, { ...results, age: 16 });
+    expect(saveResult).toHaveBeenCalledWith(
+      {},
+      { ...results, age: 16, strand: "Sports" },
+    );
+  });
+
+  it("saves without a strand when none is given, and rejects any other text", async () => {
+    const { collection } = await load();
+    await collection.POST(request("POST", "/api/results", results));
+    expect(saveResult.mock.calls[0]![1].strand).toBeNull();
+    for (const strand of ["STEM", "", "My school club", 3]) {
+      const response = await collection.POST(
+        request("POST", "/api/results", { ...results, strand }),
+      );
+      expect(response.status).toBe(400);
+    }
+    expect(saveResult).toHaveBeenCalledTimes(1);
   });
 
   it("saves without an age when none is given, and rejects a bad one", async () => {

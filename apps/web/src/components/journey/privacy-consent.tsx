@@ -18,8 +18,8 @@ import { cn } from "@/lib/utils";
 
 // The privacy notice the PRD requires (Data Privacy Act of 2012, RA 10173).
 // Discloses: client-side session data, the saved-results record (grade,
-// age, RIASEC scores and code, date, results ID; no name, nickname, school
-// or answers; kept one year; see supabase/migrations/0003 and 0004), the private
+// strand, age, RIASEC scores and code, date, results ID; no name, nickname,
+// school or answers; kept one year; see supabase/migrations/0003 to 0005), the private
 // admin page, the email route with its optional photo, and analytics.
 // Change the code and this changes too — keep claims accurate.
 export const PRIVACY_POLICY_VERSION = "v1.3";
@@ -74,6 +74,7 @@ const POLICY_SECTIONS: PolicySection[] = [
           "the nickname you choose;",
           "your age;",
           "your grade level;",
+          "your SHS strand;",
           "your school name, if requested or provided;",
           "your answers to the 42 assessment statements; and",
           "the RIASEC interest scores calculated from your answers.",
@@ -114,7 +115,7 @@ const POLICY_SECTIONS: PolicySection[] = [
       { type: "subheading", text: "Program statistics." },
       {
         type: "para",
-        text: "The same saved records (grade level, age, and RIASEC scores, with no name) are used to understand the general career interests and age ranges of participants. This information helps program administrators evaluate and improve AlignEd and better understand student career-guidance needs.",
+        text: "The same saved records (grade level, SHS strand, age, and RIASEC scores, with no name) are used to understand the general career interests, strands, and age ranges of participants. This information helps program administrators evaluate and improve AlignEd and better understand student career-guidance needs.",
       },
       {
         type: "para",
@@ -163,7 +164,7 @@ const POLICY_SECTIONS: PolicySection[] = [
       {
         type: "list",
         items: [
-          "The saved record contains: your grade level, your age, your six RIASEC interest-area scores and three-letter code, the date you took the assessment, and a random results ID (for example, ALGN-7KQ2-MX9P).",
+          "The saved record contains: your grade level, your SHS strand, your age, your six RIASEC interest-area scores and three-letter code, the date you took the assessment, and a random results ID (for example, ALGN-7KQ2-MX9P).",
           "It does not contain your name, nickname, school, email address, photo, or your individual answers to the 42 assessment statements.",
         ],
       },
@@ -229,7 +230,7 @@ const POLICY_SECTIONS: PolicySection[] = [
       { type: "subheading", text: "Saved results on the server" },
       {
         type: "para",
-        text: "Your saved record (grade level, age, RIASEC scores and code, date, and results ID) is kept for one year from the day it was saved, then automatically deleted.",
+        text: "Your saved record (grade level, SHS strand, age, RIASEC scores and code, date, and results ID) is kept for one year from the day it was saved, then automatically deleted.",
       },
       {
         type: "para",
@@ -422,8 +423,8 @@ export function PrivacyConsent({
         Data privacy
       </h2>
       <p className="text-sm text-muted-foreground">
-        Your session erases from this device after 30 minutes. Your grade, age,
-        and interest scores are saved for one year, with no name, so you can
+        Your session erases from this device after 30 minutes. Your grade,
+        strand, age, and interest scores are saved for one year, with no name, so you can
         compare later and for program statistics. No real name or account
         needed.
       </p>

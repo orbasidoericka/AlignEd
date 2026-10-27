@@ -4,7 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { TRAIT_ORDER } from "@/lib/riasec/scoring";
 import type { ScoredResults } from "@/lib/riasec/validate-results";
-import type { GradeLevel, RiasecLetter } from "@/lib/riasec/types";
+import type { GradeLevel, RiasecLetter, ShsStrand } from "@/lib/riasec/types";
 import type { RiasecScores } from "@/store/useAssessmentStore";
 
 import { generateResultsId } from "./results-id";
@@ -20,13 +20,18 @@ export interface SavedResult {
   scores: RiasecScores;
   maxScore: number;
   gradeLevel: GradeLevel | null;
+  strand: ShsStrand | null;
   age: number | null;
   takenOn: string; // YYYY-MM-DD
   createdAt: string; // ISO
 }
 
-// What the save route stores: the scored results plus the student's age.
-export type SaveInput = ScoredResults & { age: number | null };
+// What the save route stores: the scored results plus the student's age
+// and strand.
+export type SaveInput = ScoredResults & {
+  age: number | null;
+  strand: ShsStrand | null;
+};
 
 interface Row {
   results_id: string;
@@ -39,13 +44,14 @@ interface Row {
   max_score: number;
   holland_code: string;
   grade_level: GradeLevel | null;
+  strand: ShsStrand | null;
   age: number | null;
   taken_on: string;
   created_at: string;
 }
 
 const COLUMNS =
-  "results_id, realistic, investigative, artistic, social, enterprising, conventional, max_score, holland_code, grade_level, age, taken_on, created_at";
+  "results_id, realistic, investigative, artistic, social, enterprising, conventional, max_score, holland_code, grade_level, strand, age, taken_on, created_at";
 
 export function fromRow(row: Row): SavedResult {
   const scores = {} as RiasecScores;
@@ -56,6 +62,7 @@ export function fromRow(row: Row): SavedResult {
     scores,
     maxScore: row.max_score,
     gradeLevel: row.grade_level,
+    strand: row.strand,
     age: row.age,
     takenOn: row.taken_on,
     createdAt: row.created_at,
@@ -78,6 +85,7 @@ export async function saveResult(
       max_score: results.maxScore,
       holland_code: results.code.join(""),
       grade_level: results.gradeLevel,
+      strand: results.strand,
       age: results.age,
       taken_on: results.takenOn,
     });
@@ -123,6 +131,28 @@ export async function purgeExpired(db: SupabaseClient): Promise<void> {
     .delete()
     .lte("expires_at", new Date().toISOString());
   if (error) throw error;
+}
+
+// Every saved row, newest first, for the admin export. Read a page at a
+// time, since Supabase caps how many rows one request returns (1000 by
+// default).
+export async function listAllResults(
+  db: SupabaseClient,
+  pageSize = 1000,
+): Promise<SavedResult[]> {
+  const all: SavedResult[] = [];
+  for (let from = 0; ; from += pageSize) {
+    const { data, error } = await db
+      .from(TABLE)
+      .select(COLUMNS)
+      .order("created_at", { ascending: false })
+      .order("results_id")
+      .range(from, from + pageSize - 1)
+      .returns<Row[]>();
+    if (error) throw error;
+    all.push(...(data ?? []).map(fromRow));
+    if ((data ?? []).length < pageSize) return all;
+  }
 }
 
 export async function listResults(

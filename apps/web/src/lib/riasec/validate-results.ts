@@ -5,8 +5,10 @@ import {
   AGE_MAX,
   AGE_MIN,
   GRADE_LEVELS,
+  SHS_STRANDS,
   type GradeLevel,
   type RiasecLetter,
+  type ShsStrand,
 } from "@/lib/riasec/types";
 import type { RiasecScores } from "@/store/useAssessmentStore";
 
@@ -42,6 +44,13 @@ export function parseAge(value: unknown): number | null | undefined {
     age <= AGE_MAX
     ? age
     : undefined;
+}
+
+// The student's SHS strand, exactly one of SHS_STRANDS, null when not
+// given, or undefined when it is anything else.
+export function parseStrand(value: unknown): ShsStrand | null | undefined {
+  if (value === undefined || value === null) return null;
+  return SHS_STRANDS.find((strand) => strand === value);
 }
 
 // "YYYY-MM-DD" to a local Date at midnight, or null if not a real date.

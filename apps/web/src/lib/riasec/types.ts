@@ -29,6 +29,12 @@ export const SHS_STRANDS = [
 
 export type ShsStrand = (typeof SHS_STRANDS)[number];
 
+// The abbreviation in brackets ("STEM"), or the whole name when it has none
+// ("Sports"), for tight spaces like table cells.
+export function strandShortName(strand: ShsStrand): string {
+  return /\(([^)]+)\)$/.exec(strand)?.[1] ?? strand;
+}
+
 export interface StudentProfile {
   nickname: string;
   gradeLevel: GradeLevel;

@@ -10,6 +10,7 @@ function result(
   gradeLevel: SavedResult["gradeLevel"],
   createdAt: string,
   age: number | null = 16,
+  strand: SavedResult["strand"] = null,
 ): SavedResult {
   return {
     resultsId: "ALGN-7KQ2-MX9P",
@@ -24,6 +25,7 @@ function result(
     },
     maxScore: 7,
     gradeLevel,
+    strand,
     age,
     takenOn: createdAt.slice(0, 10),
     createdAt,
@@ -33,9 +35,9 @@ function result(
 describe("summarize", () => {
   const summary = summarize(
     [
-      result("IRA", "11", "2026-10-01T00:00:00Z", 16),
-      result("IRA", "12", "2026-10-02T00:00:00Z", 17),
-      result("SEC", "12", "2026-01-01T00:00:00Z", 17),
+      result("IRA", "11", "2026-10-01T00:00:00Z", 16, "Sports"),
+      result("IRA", "12", "2026-10-02T00:00:00Z", 17, "Arts and Design"),
+      result("SEC", "12", "2026-01-01T00:00:00Z", 17, "Arts and Design"),
       result("ASE", null, "2026-09-20T00:00:00Z", null),
     ],
     NOW,
@@ -73,6 +75,14 @@ describe("summarize", () => {
     expect(summary.ageNotGiven).toBe(1);
     expect(summary.averageAge).toBe(16.7);
     expect(summarize([], NOW).averageAge).toBeNull();
+  });
+
+  it("counts strands most common first, and rows without one", () => {
+    expect(summary.byStrand).toEqual([
+      { strand: "Arts and Design", count: 2 },
+      { strand: "Sports", count: 1 },
+    ]);
+    expect(summary.strandNotGiven).toBe(1);
   });
 
   it("counts grades, and missing grades only when there are some", () => {

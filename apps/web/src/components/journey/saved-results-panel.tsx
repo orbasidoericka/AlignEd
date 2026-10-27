@@ -55,7 +55,7 @@ import { cn } from "@/lib/utils";
 import { useAssessmentStore } from "@/store/useAssessmentStore";
 
 // Saved results (compare later): on reaching Results the scores, code,
-// grade, age and date are saved once, with no name, and the student gets a
+// grade, strand, age and date are saved once, with no name, and the student gets a
 // results ID to compare a later retake against. Hidden entirely when the
 // server has no database configured.
 
@@ -86,6 +86,7 @@ function useSavedResultsId(): [SaveState, () => void] {
       const store = useAssessmentStore.getState();
       const outcome = await saveResults({
         gradeLevel: store.profile.gradeLevel,
+        strand: store.profile.strand,
         age: store.profile.age,
         code: computeHollandCode(store.scores),
         scores: store.scores,

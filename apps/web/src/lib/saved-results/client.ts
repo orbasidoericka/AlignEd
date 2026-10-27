@@ -1,13 +1,13 @@
 // Copyright (c) 2026 EdTech. All rights reserved.
 
 import type { HollandCode } from "@/lib/riasec/scoring";
-import type { GradeLevel } from "@/lib/riasec/types";
+import type { GradeLevel, ShsStrand } from "@/lib/riasec/types";
 import type { RiasecScores } from "@/store/useAssessmentStore";
 
 import type { SavedResult } from "./repository";
 
 // Browser calls to the saved-results routes. Only scores, the code, grade,
-// age and date are sent: never the nickname, school, or answers.
+// strand, age and date are sent: never the nickname, school, or answers.
 
 export type SavedResultsError =
   | "not_found"
@@ -53,6 +53,7 @@ function localDate(date: Date): string {
 
 export function saveResults(input: {
   gradeLevel: GradeLevel | null;
+  strand: ShsStrand | null;
   // As typed on the profile step; "" when not given.
   age: string;
   code: HollandCode;

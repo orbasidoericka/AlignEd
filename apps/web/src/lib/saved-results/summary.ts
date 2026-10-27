@@ -1,7 +1,11 @@
 // Copyright (c) 2026 EdTech. All rights reserved.
 
 import { TRAIT_META, TRAIT_ORDER } from "@/lib/riasec/scoring";
-import { GRADE_LEVELS, type RiasecLetter } from "@/lib/riasec/types";
+import {
+  GRADE_LEVELS,
+  type RiasecLetter,
+  type ShsStrand,
+} from "@/lib/riasec/types";
 
 import type { SavedResult } from "./repository";
 
@@ -15,6 +19,10 @@ export interface ResultsSummary {
   // Most common full codes, most frequent first.
   topCodes: { code: string; count: number }[];
   byGrade: { grade: string; count: number }[];
+  // Students per strand, most common first; only strands someone is in.
+  byStrand: { strand: ShsStrand; count: number }[];
+  // Rows saved without a strand (before strands were saved).
+  strandNotGiven: number;
   // Students per age, youngest first; only ages someone actually has.
   byAge: { age: number; count: number }[];
   // Rows saved without an age (before ages were saved).
@@ -33,7 +41,9 @@ export function summarize(
   const topLetters = new Map<RiasecLetter, number>();
   const codes = new Map<string, number>();
   const grades = new Map<string, number>();
+  const strands = new Map<ShsStrand, number>();
   const ages = new Map<number, number>();
+  let strandNotGiven = 0;
   let ageNotGiven = 0;
   let last30Days = 0;
 
@@ -44,6 +54,8 @@ export function summarize(
     codes.set(code, (codes.get(code) ?? 0) + 1);
     const grade = result.gradeLevel ?? "Not given";
     grades.set(grade, (grades.get(grade) ?? 0) + 1);
+    if (result.strand === null) strandNotGiven++;
+    else strands.set(result.strand, (strands.get(result.strand) ?? 0) + 1);
     if (result.age === null) ageNotGiven++;
     else ages.set(result.age, (ages.get(result.age) ?? 0) + 1);
     if (now - new Date(result.createdAt).getTime() <= 30 * DAY) last30Days++;
@@ -69,6 +81,10 @@ export function summarize(
     byGrade: [...GRADE_LEVELS, "Not given"]
       .map((grade) => ({ grade, count: grades.get(grade) ?? 0 }))
       .filter((row) => row.grade !== "Not given" || row.count > 0),
+    byStrand: [...strands]
+      .map(([strand, count]) => ({ strand, count }))
+      .sort((a, b) => b.count - a.count || a.strand.localeCompare(b.strand)),
+    strandNotGiven,
     byAge,
     ageNotGiven,
     averageAge: withAge ? Math.round((ageTotal / withAge) * 10) / 10 : null,
