@@ -44,21 +44,74 @@ describe("QuestionNavigator", () => {
     );
   });
 
-  it("keeps the progress gauge at the top of the card", () => {
-    renderNavigator({ answers: answered(1, 2, 3) });
-    const gauge = screen.getByRole("progressbar", {
+  it("shows count, percent and a progress bar above the grid", () => {
+    renderNavigator({ answers: answered(1, 2, 3), currentIndex: 2 });
+    const bar = screen.getByRole("progressbar", {
       name: "Assessment progress",
     });
-    expect(gauge).toHaveAttribute("aria-valuenow", "3");
-    expect(gauge).toHaveAttribute(
+    expect(bar).toHaveAttribute("aria-valuenow", "3");
+    expect(bar).toHaveAttribute(
       "aria-valuetext",
       `3 of ${QUESTIONS.length} statements answered`,
     );
+    expect(screen.getByText("25%")).toBeInTheDocument();
+    expect(
+      screen.getByText(`Question 3 of ${QUESTIONS.length}`),
+    ).toBeInTheDocument();
+    expect(screen.getByText("9 to go")).toBeInTheDocument();
     const nav = screen.getByRole("navigation", { name: "Question navigator" });
     expect(
-      gauge.compareDocumentPosition(nav) & Node.DOCUMENT_POSITION_FOLLOWING,
+      bar.compareDocumentPosition(nav) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
-    expect(screen.getByText("9 to go")).toBeInTheDocument();
+  });
+
+  it("never lowers progress when the student goes back", () => {
+    const { rerender } = render(
+      <QuestionNavigator
+        questions={QUESTIONS}
+        answers={answered(1, 2, 3, 4)}
+        currentIndex={3}
+        flagOpen={false}
+        onJump={vi.fn()}
+      />,
+    );
+    rerender(
+      <QuestionNavigator
+        questions={QUESTIONS}
+        answers={answered(1, 2, 3, 4)}
+        currentIndex={0}
+        flagOpen={false}
+        onJump={vi.fn()}
+      />,
+    );
+    expect(
+      screen.getByRole("progressbar", { name: "Assessment progress" }),
+    ).toHaveAttribute("aria-valuenow", "4");
+  });
+
+  it("cuts the bar into chunks of seven with decorative notches", () => {
+    const questions = Array.from({ length: 42 }, (_, i) => ({ id: `q${i + 1}` }));
+    renderNavigator({ questions, answers: answered(...Array.from({ length: 14 }, (_, i) => i + 1)) });
+    const notches = Array.from(
+      document.querySelectorAll<HTMLElement>("[data-milestone]"),
+    );
+    expect(notches.map((n) => n.dataset.milestone)).toEqual([
+      "7",
+      "14",
+      "21",
+      "28",
+      "35",
+    ]);
+    expect(notches.every((n) => n.getAttribute("aria-hidden") === "true")).toBe(
+      true,
+    );
+    expect(notches.map((n) => n.hasAttribute("data-passed"))).toEqual([
+      true,
+      true,
+      false,
+      false,
+      false,
+    ]);
   });
 
   it("tells current, answered and unanswered apart without relying on color", () => {
@@ -146,7 +199,7 @@ describe("QuestionNavigator", () => {
     expect(onJump).not.toHaveBeenCalled();
   });
 
-  it("folds the grid behind a toggle on small screens", () => {
+  it("folds the grid behind a toggle, closed by default at every width", () => {
     renderNavigator();
     const toggle = screen.getByRole("button", { name: "All questions" });
     const region = document.getElementById(
@@ -156,7 +209,8 @@ describe("QuestionNavigator", () => {
       screen.getByRole("navigation", { name: "Question navigator" }),
     );
     expect(toggle).toHaveAttribute("aria-expanded", "false");
-    expect(region).toHaveClass("hidden", "lg:flex");
+    expect(region).toHaveClass("hidden");
+    expect(region).not.toHaveClass("lg:flex");
 
     fireEvent.click(toggle);
     expect(toggle).toHaveAttribute("aria-expanded", "true");
@@ -166,5 +220,18 @@ describe("QuestionNavigator", () => {
     // Choosing a statement folds it away again so the question is in view.
     fireEvent.click(cell(2));
     expect(toggle).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("opens the grid when a finish attempt leaves statements open", () => {
+    renderNavigator({ answers: answered(1), flagOpen: true });
+    expect(screen.getByRole("button", { name: "All questions" })).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
+  });
+
+  it("disables the toggle while the quiz is paused", () => {
+    renderNavigator({ disabled: true });
+    expect(screen.getByRole("button", { name: "All questions" })).toBeDisabled();
   });
 });

@@ -483,10 +483,10 @@ export function AssessmentRunner() {
         className="pointer-events-none absolute bottom-0 left-0 -z-10 hidden h-auto w-56 select-none lg:block xl:w-72 print:hidden"
       />
       <RapidAnswerDialog open={isBlocked} onAcknowledge={acknowledge} />
-      {/* One column below lg, navigator on top; from lg the navigator sits
-          beside the question. It is z-10 so the question area's widened clip
-          box (below) can never sit over it and swallow its clicks. */}
-      <div className="mx-auto grid w-full max-w-2xl flex-1 grid-cols-1 grid-rows-[auto_1fr] gap-6 px-4 py-8 lg:max-w-5xl lg:grid-cols-[minmax(0,1fr)_19rem] lg:grid-rows-1 lg:gap-x-12">
+      {/* One column at every width, progress strip on top. It is z-10 so the
+          question area's widened clip box (below) can never sit over it and
+          swallow its clicks. */}
+      <div className="mx-auto grid w-full max-w-2xl flex-1 grid-cols-1 grid-rows-[auto_1fr] gap-6 px-4 py-8">
         <QuestionNavigator
           questions={questions}
           answers={answers}
@@ -494,10 +494,10 @@ export function AssessmentRunner() {
           flagOpen={flagOpen}
           disabled={isBlocked}
           onJump={moveTo}
-          className="relative z-10 lg:col-start-2 lg:row-start-1 lg:self-start"
+          className="relative z-10"
         />
 
-        <div className="flex min-w-0 flex-col gap-6 lg:col-start-1 lg:row-start-1">
+        <div className="flex min-w-0 flex-col gap-6">
           {resumed && !flagOpen && index === firstUnanswered && (
             <p className="rounded-2xl bg-card px-4 py-3 text-sm font-medium text-foreground/80">
               Welcome back! You are continuing right where you left off.

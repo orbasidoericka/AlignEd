@@ -4,8 +4,8 @@
 import { useId, useRef, useState } from "react";
 import { ChevronDown, CircleAlert, LayoutGrid } from "lucide-react";
 
-import { AnimatedCircularProgressBar } from "@/components/magic/animated-circular-progress-bar";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import type { RiasecQuestion } from "@/lib/riasec/questions";
 import { cn } from "@/lib/utils";
 import type { AssessmentAnswer } from "@/store/useAssessmentStore";
@@ -15,6 +15,10 @@ import type { AssessmentAnswer } from "@/store/useAssessmentStore";
 const MAX_LISTED_OPEN = 6;
 // Used for Up/Down when the grid's column count can't be read (no layout).
 const FALLBACK_COLUMNS = 6;
+
+// One notch per chunk of statements, so the bar reads as six short stretches
+// instead of one long climb. 42 statements put the notches at 7/14/21/28/35.
+const MILESTONE_EVERY = 7;
 
 const openList = new Intl.ListFormat("en", {
   style: "long",
@@ -51,11 +55,10 @@ function columnCount(list: HTMLElement | null): number {
   return tracks || FALLBACK_COLUMNS;
 }
 
-// Assessment progress and question map in one card (Focus Mode). The gauge
-// heads it; beneath, one numbered cell per statement shows which are answered
-// and jumps straight to any of them. At lg+ it sits beside the question; below
-// that it sits above it and the number grid folds away behind a toggle so the
-// statement keeps the screen.
+// Assessment progress and question map in one card (Focus Mode). A slim
+// milestone bar heads it; the numbered grid (one cell per statement, answered
+// or not, jump to any) is folded away behind an "All questions" toggle at every
+// width so the statement keeps the screen. A failed finish opens it on its own.
 export function QuestionNavigator({
   questions,
   answers,
@@ -78,6 +81,20 @@ export function QuestionNavigator({
   const remaining = openNumbers.length;
   const complete = remaining === 0;
   const showNotice = flagOpen && !complete;
+  const percent = total === 0 ? 0 : Math.round((answeredCount / total) * 100);
+  const milestones = Array.from(
+    { length: Math.max(0, Math.ceil(total / MILESTONE_EVERY) - 1) },
+    (_, k) => (k + 1) * MILESTONE_EVERY,
+  );
+
+  // A failed finish names the open statements; show them in the grid too.
+  // Adjusted during render, on the notice's rising edge only, so the student
+  // can still fold the grid away while the notice stays up.
+  const [noticeShown, setNoticeShown] = useState(false);
+  if (showNotice !== noticeShown) {
+    setNoticeShown(showNotice);
+    if (showNotice) setExpanded(true);
+  }
 
   const jump = (index: number) => {
     // Fold the grid away on small screens so the chosen statement is in view.
@@ -134,17 +151,9 @@ export function QuestionNavigator({
       )}
     >
       <div>
-        {/* Progress (PRD FR-3.3): the circular gauge is the primary tracker. */}
-        <div className="flex items-center gap-3 sm:gap-4">
-          <AnimatedCircularProgressBar
-            value={answeredCount}
-            max={total}
-            gaugePrimaryColor="var(--stage-assessment-strong)"
-            gaugeSecondaryColor="color-mix(in oklab, var(--stage-assessment) 30%, transparent)"
-            label="Assessment progress"
-            valueText={`${answeredCount} of ${total} statements answered`}
-            className="size-16 shrink-0 font-heading text-base font-bold text-stage-assessment-strong sm:size-20 sm:text-xl"
-          />
+        {/* Progress (PRD FR-3.3): count and percent stay in view; the bar is
+            the tracker. Value is answers recorded, so Back never lowers it. */}
+        <div className="flex items-center gap-3">
           <div className="flex min-w-0 flex-1 flex-col">
             <p className="font-heading text-sm font-bold text-stage-assessment-strong">
               Step 2 of 3
@@ -155,26 +164,52 @@ export function QuestionNavigator({
             >
               Question {currentIndex + 1} of {total}
             </p>
-            <p className="text-sm text-muted-foreground">
-              {complete ? "All answered" : `${remaining} to go`}
-            </p>
           </div>
+          <p className="font-heading text-xl font-bold text-stage-assessment-strong tabular-nums">
+            {percent}%
+          </p>
           <Button
             variant="outline"
             size="lg"
+            disabled={disabled}
             aria-expanded={expanded}
             aria-controls={regionId}
             onClick={() => setExpanded((open) => !open)}
-            className="h-11 min-w-11 shrink-0 self-center rounded-full bg-card px-0 sm:px-3 lg:hidden"
+            className="h-11 min-w-11 shrink-0 self-center rounded-full bg-card px-0 sm:px-3"
           >
             <LayoutGrid className="size-4" aria-hidden />
             <span className="sr-only sm:not-sr-only">All questions</span>
             <ChevronDown
-              className="hidden size-4 transition-transform duration-200 group-aria-expanded/button:rotate-180 sm:block"
+              className="hidden size-4 transition-transform duration-200 group-aria-expanded/button:rotate-180 motion-reduce:transition-none sm:block"
               aria-hidden
             />
           </Button>
         </div>
+
+        <div className="relative mt-3">
+          <Progress
+            value={answeredCount}
+            max={total}
+            aria-label="Assessment progress"
+            aria-valuetext={`${answeredCount} of ${total} statements answered`}
+            className="h-2 bg-stage-assessment/30"
+            indicatorClassName="bg-stage-assessment-strong motion-reduce:transition-none"
+          />
+          {/* Decorative: gaps cut the bar into chunks of seven. */}
+          {milestones.map((at) => (
+            <span
+              key={at}
+              aria-hidden
+              data-milestone={at}
+              data-passed={answeredCount >= at || undefined}
+              style={{ left: `${(at / total) * 100}%` }}
+              className="pointer-events-none absolute inset-y-0 w-0.5 -translate-x-1/2 bg-card"
+            />
+          ))}
+        </div>
+        <p className="mt-1.5 text-sm text-muted-foreground">
+          {complete ? "All answered" : `${remaining} to go`}
+        </p>
 
         {/* Always mounted so the notice is announced when it appears. */}
         <div role="status">
@@ -195,7 +230,7 @@ export function QuestionNavigator({
       <div
         id={regionId}
         className={cn(
-          "flex-col gap-4 border-t border-border pt-4 lg:flex",
+          "flex-col gap-4 border-t border-border pt-4",
           expanded ? "flex" : "hidden",
         )}
       >
@@ -203,7 +238,7 @@ export function QuestionNavigator({
           <ol
             ref={listRef}
             onKeyDown={handleGridKeyDown}
-            className="grid grid-cols-7 gap-1.5 sm:grid-cols-14 lg:grid-cols-6"
+            className="grid grid-cols-7 gap-1.5 sm:grid-cols-14"
           >
             {questions.map((question, i) => {
               const answered = question.id in answers;
