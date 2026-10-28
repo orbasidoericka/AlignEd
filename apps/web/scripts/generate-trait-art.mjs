@@ -193,7 +193,7 @@ export function TraitMascot({
   primary = false,
 }: {
   letter: RiasecLetter;
-  /** The first letter of the Holland code gets a taller, ringed band. */
+  /** The first letter of the Holland code gets the badge and a lifted figure. */
   primary?: boolean;
 }) {
   // Every figure clips its neck with an id; three cards on one page must not
@@ -208,12 +208,13 @@ export function TraitMascot({
         // A full-bleed illustration per card is a lot of ink for decoration.
         "print:hidden",
         letterWash(letter),
-        primary ? "h-36 sm:h-40" : "h-28 sm:h-32",
+        // One height for every card, so the three cards' text rows line up.
+        "h-32 sm:h-36",
       )}
     >
       {primary && (
-        // Stated in words, not only in size and color: a border and a taller
-        // band tell a screen reader user nothing. The card ground rather than
+        // Stated in words, not only in color: a colored edge tells a screen
+        // reader user nothing. The card ground rather than
         // a trait tint, so one badge reads over all six washes in both themes.
         <p
           className="absolute top-3 left-4 z-10 inline-flex items-center gap-1.5 rounded-full

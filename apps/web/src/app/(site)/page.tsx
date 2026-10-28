@@ -10,11 +10,8 @@ import {
   HexagonPattern,
   scatterHexagons,
 } from "@/components/magic/hexagon-pattern";
-import { NumberTicker } from "@/components/magic/number-ticker";
 import { ShineBorder } from "@/components/magic/shine-border";
-import { SectionLink } from "@/components/blocks/section-link";
 import { HeroCta } from "@/components/journey/hero-cta";
-import { buttonVariants } from "@/components/ui/button";
 import { RIASEC_PATHWAYS } from "@/lib/riasec/career-pathways";
 import { TraitEmblem } from "@/components/riasec/trait-emblem";
 import { cn } from "@/lib/utils";
@@ -118,7 +115,7 @@ export default function HomePage() {
           className="-z-10 stroke-primary/50 mask-[linear-gradient(to_bottom,white,white_55%,transparent_96%)] print:hidden dark:stroke-primary/25"
         />
 
-        <div className="mx-auto flex w-full max-w-4xl flex-col items-center px-4 pt-16 pb-20 text-center sm:pt-24">
+        <div className="mx-auto flex min-h-[min(72svh,40rem)] w-full max-w-4xl flex-col items-center justify-center px-4 pt-14 pb-24 text-center sm:pt-20">
           <BlurFade delay={0.08}>
             {/* Two hand-drawn marks, drawn one after the other: the marker
                 sweeps "passion", then the line underscores "profession". */}
@@ -152,54 +149,32 @@ export default function HomePage() {
           </BlurFade>
 
           <BlurFade delay={0.16}>
-            <p className="mx-auto mt-6 max-w-xl text-lg text-muted-foreground">
-              Take the interest assessment to discover your Holland Code, 
-              along with the careers and college programs that best match to you.
+            <p className="mx-auto mt-6 max-w-xl text-lg text-balance text-muted-foreground sm:text-xl">
+              Answer 42 quick yes-or-no statements to discover your Holland
+              Code, and the careers and college programs that match you. About
+              5 minutes, free, no sign-up.
             </p>
           </BlurFade>
 
-          <BlurFade
-            delay={0.24}
-            className="mt-8 flex flex-col items-center gap-3"
+          {/* The six traits as the hero's image: the code the student is
+              about to find, previewed in the same emblems the results page
+              uses. Decorative; the section below names each one. The
+              journey's call to action lives in the navbar directly above. */}
+          <ul
+            className="mt-12 flex justify-center gap-2 sm:gap-5"
+            aria-hidden
           >
-            <div className="flex flex-col items-center gap-3 sm:flex-row">
-              <HeroCta />
-              <SectionLink
-                href="/#how-it-works"
-                className={cn(
-                  buttonVariants({ variant: "outline", size: "lg" }),
-                  "h-13 rounded-full px-7 text-lg font-semibold",
-                )}
-              >
-                See how it works
-              </SectionLink>
-            </div>
-            <p className="text-sm font-medium text-muted-foreground">
-              Takes about 5 minutes. Free, anonymous, no sign-up.
-            </p>
-          </BlurFade>
-
-          {/* Colorful stats */}
-          <BlurFade delay={0.32} className="mt-14 w-full">
-            <dl className="mx-auto grid w-full max-w-md grid-cols-2 gap-4">
-              <div className="flex flex-col items-center gap-1">
-                <dd className="font-heading text-5xl font-extrabold text-stage-assessment-strong">
-                  <NumberTicker value={40} />+
-                </dd>
-                <dt className="text-sm font-semibold text-muted-foreground">
-                  careers mapped
-                </dt>
-              </div>
-              <div className="flex flex-col items-center gap-1">
-                <dd className="font-heading text-5xl font-extrabold text-stage-results-strong">
-                  <NumberTicker value={6} />
-                </dd>
-                <dt className="text-sm font-semibold text-muted-foreground">
-                  personality traits
-                </dt>
-              </div>
-            </dl>
-          </BlurFade>
+            {traitPreview.map((trait, index) => (
+              <li key={trait.letter}>
+                <BlurFade delay={0.32 + index * 0.06}>
+                  <TraitEmblem
+                    letter={trait.letter}
+                    className="size-10 sm:size-16"
+                  />
+                </BlurFade>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 
@@ -252,7 +227,10 @@ export default function HomePage() {
       </section>
 
       {/* The six traits: a legend, deliberately not another card grid */}
-      <section className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6">
+      <section
+        id="six-traits"
+        className="mx-auto w-full max-w-6xl scroll-mt-24 px-4 py-16 sm:px-6"
+      >
         <BlurFade inView>
           <h2 className="text-center text-3xl font-bold text-foreground sm:text-4xl">
             Six traits, one code

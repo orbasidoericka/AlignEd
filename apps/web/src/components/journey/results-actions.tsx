@@ -1,7 +1,7 @@
 // Copyright (c) 2026 EdTech. All rights reserved.
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactElement, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import {
   CheckCircle2Icon,
@@ -34,7 +34,12 @@ import {
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { SavedResultsPanel } from "@/components/journey/saved-results-panel";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   useCareerLookPhoto,
   type CareerLookPhoto,
@@ -49,9 +54,47 @@ import { QUESTIONS } from "@/lib/riasec/questions";
 import { computeHollandCode, maxScorePerTrait } from "@/lib/riasec/scoring";
 import { useAssessmentStore } from "@/store/useAssessmentStore";
 
-// Keepsake actions for the results dashboard (PRD FR-8): password-protected
-// PDF, email stub, and retake. Hidden from the printed page.
-export function ResultsActions() {
+// Every keepsake trigger is the same round outline button: 44px for touch,
+// the card ground so it reads over the hero's wash and hexagons.
+const iconTrigger = (
+  <Button
+    variant="outline"
+    size="icon-lg"
+    className="size-11 rounded-full bg-card/90 backdrop-blur-sm"
+  />
+);
+
+// Keepsake actions (PRD FR-8) as icon-only buttons beside the career look:
+// password-protected PDF, email, and retake. The label is the accessible
+// name and the tooltip, so nothing is lost by dropping the visible text.
+export function ResultsKeepsakeActions() {
+  return (
+    <TooltipProvider>
+      <div className="flex items-center gap-2">
+        <DownloadPdfDialog />
+        <EmailResultsDialog />
+        <RetakeDialog />
+      </div>
+    </TooltipProvider>
+  );
+}
+
+function IconTooltip({
+  trigger,
+  children,
+}: {
+  trigger: ReactElement;
+  children: ReactNode;
+}) {
+  return (
+    <Tooltip>
+      <TooltipTrigger render={trigger} />
+      <TooltipContent>{children}</TooltipContent>
+    </Tooltip>
+  );
+}
+
+function RetakeDialog() {
   const router = useRouter();
   const reset = useAssessmentStore((state) => state.reset);
   const clearPhoto = useCareerLookPhoto((state) => state.setPhoto);
@@ -63,69 +106,48 @@ export function ResultsActions() {
   };
 
   return (
-    <div
-      className="flex flex-col gap-4 border-t border-highlight-foreground/15 pt-4 print:hidden"
-      data-print-hidden
-    >
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h3 className="font-heading text-base font-bold text-foreground">
-            Keep your results
-          </h3>
-          <p className="text-sm text-muted-foreground">
-            This screen clears from this device after 30 minutes. Save a PDF to
-            keep everything.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <DownloadPdfDialog />
-          <EmailResultsDialog />
-          <AlertDialog>
-            <AlertDialogTrigger
-              render={
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="rounded-full bg-card"
-                />
-              }
-            >
-              <RotateCcwIcon className="size-4" />
-              Retake assessment
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Retake the assessment?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This clears your profile, answers, and current results. You
-                  will start fresh from the profile setup. Note your results ID
-                  first if you want to compare later.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogClose
-                  render={<Button variant="outline" size="lg" />}
-                >
-                  Keep my results
-                </AlertDialogClose>
-                <AlertDialogClose
-                  render={
-                    <Button
-                      variant="destructive"
-                      size="lg"
-                      onClick={handleRetake}
-                    />
-                  }
-                >
-                  Clear and retake
-                </AlertDialogClose>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
-      </div>
-      <SavedResultsPanel />
-    </div>
+    <AlertDialog>
+      <IconTooltip
+        trigger={
+          <AlertDialogTrigger
+            render={iconTrigger}
+            aria-label="Retake assessment"
+          >
+            <RotateCcwIcon className="size-5" aria-hidden />
+          </AlertDialogTrigger>
+        }
+      >
+        Retake assessment
+      </IconTooltip>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Retake the assessment?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This clears your profile, answers, and current results. You
+            will start fresh from the profile setup. Note your results ID
+            first if you want to compare later.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogClose
+            render={<Button variant="outline" size="lg" />}
+          >
+            Keep my results
+          </AlertDialogClose>
+          <AlertDialogClose
+            render={
+              <Button
+                variant="destructive"
+                size="lg"
+                onClick={handleRetake}
+              />
+            }
+          >
+            Clear and retake
+          </AlertDialogClose>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
 
@@ -172,23 +194,22 @@ function DownloadPdfDialog() {
 
   return (
     <Dialog>
-      <DialogTrigger
-        render={
-          <Button
-            size="lg"
-            className="rounded-full font-heading font-semibold"
-          />
+      <IconTooltip
+        trigger={
+          <DialogTrigger render={iconTrigger} aria-label="Download PDF">
+            <DownloadIcon className="size-5" aria-hidden />
+          </DialogTrigger>
         }
       >
-        <DownloadIcon className="size-4" />
-        Download PDF
-      </DialogTrigger>
+        Download PDF. This screen clears after 30 minutes.
+      </IconTooltip>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Download your results PDF</DialogTitle>
           <DialogDescription>
-            Your PDF is locked with a password, so only you can open it. Keep
-            this password somewhere safe.
+            This screen clears from this device after 30 minutes, so save a
+            copy to keep everything. Your PDF is locked with a password, so
+            only you can open it. Keep this password somewhere safe.
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-1.5 rounded-2xl bg-muted p-4">
@@ -296,18 +317,15 @@ function EmailResultsDialog() {
 
   return (
     <Dialog onOpenChange={reset}>
-      <DialogTrigger
-        render={
-          <Button
-            variant="outline"
-            size="lg"
-            className="rounded-full bg-card"
-          />
+      <IconTooltip
+        trigger={
+          <DialogTrigger render={iconTrigger} aria-label="Email me my results">
+            <MailIcon className="size-5" aria-hidden />
+          </DialogTrigger>
         }
       >
-        <MailIcon className="size-4" />
         Email me my results
-      </DialogTrigger>
+      </IconTooltip>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Email my results</DialogTitle>

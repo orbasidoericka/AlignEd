@@ -8,11 +8,13 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
@@ -393,6 +395,49 @@ const POLICY_SECTIONS: PolicySection[] = [
   },
 ];
 
+// The section content, shared by the profile step's consent dialog and the
+// footer's read-only Privacy Policy dialog, so the notice can only ever say
+// one thing.
+function PolicyBody() {
+  return (
+    <div className="flex max-h-[55vh] flex-col gap-5 overflow-y-auto p-6">
+      {POLICY_SECTIONS.map((section) => (
+        <div key={section.heading} className="flex flex-col gap-2">
+          <h3 className="font-heading text-base font-bold text-foreground">
+            {section.heading}
+          </h3>
+          {section.items.map((item, i) => {
+            if (item.type === "subheading") {
+              return (
+                <p key={i} className="text-sm font-semibold text-foreground">
+                  {item.text}
+                </p>
+              );
+            }
+            if (item.type === "list") {
+              return (
+                <ul
+                  key={i}
+                  className="list-disc space-y-0.5 pl-5 text-sm text-muted-foreground"
+                >
+                  {item.items.map((li, j) => (
+                    <li key={j}>{li}</li>
+                  ))}
+                </ul>
+              );
+            }
+            return (
+              <p key={i} className="text-sm text-pretty text-muted-foreground">
+                {item.text}
+              </p>
+            );
+          })}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 interface PrivacyConsentProps {
   accepted: boolean;
   onAcceptedChange: (accepted: boolean) => void;
@@ -469,47 +514,7 @@ export function PrivacyConsent({
             </DialogDescription>
           </DialogHeader>
 
-          <div className="flex max-h-[55vh] flex-col gap-5 overflow-y-auto p-6">
-            {POLICY_SECTIONS.map((section) => (
-              <div key={section.heading} className="flex flex-col gap-2">
-                <h3 className="font-heading text-base font-bold text-foreground">
-                  {section.heading}
-                </h3>
-                {section.items.map((item, i) => {
-                  if (item.type === "subheading") {
-                    return (
-                      <p
-                        key={i}
-                        className="text-sm font-semibold text-foreground"
-                      >
-                        {item.text}
-                      </p>
-                    );
-                  }
-                  if (item.type === "list") {
-                    return (
-                      <ul
-                        key={i}
-                        className="list-disc space-y-0.5 pl-5 text-sm text-muted-foreground"
-                      >
-                        {item.items.map((li, j) => (
-                          <li key={j}>{li}</li>
-                        ))}
-                      </ul>
-                    );
-                  }
-                  return (
-                    <p
-                      key={i}
-                      className="text-sm text-pretty text-muted-foreground"
-                    >
-                      {item.text}
-                    </p>
-                  );
-                })}
-              </div>
-            ))}
-          </div>
+          <PolicyBody />
 
           <DialogFooter className="border-t border-border p-6">
             <Button
@@ -532,5 +537,38 @@ export function PrivacyConsent({
         </DialogContent>
       </Dialog>
     </section>
+  );
+}
+
+// Read-only Privacy Policy dialog for anyone outside the consent flow (the
+// footer link): same notice, same version, no checkbox and no "I agree" —
+// there is nothing here for a visitor to consent to.
+export function PrivacyPolicyDialog({
+  trigger,
+  children,
+}: {
+  trigger: React.ReactElement;
+  children: React.ReactNode;
+}) {
+  return (
+    <Dialog>
+      <DialogTrigger render={trigger}>{children}</DialogTrigger>
+      <DialogContent className="max-w-xl gap-0 p-0">
+        <DialogHeader className="border-b border-border p-6 pr-14">
+          <DialogTitle className="text-xl">Data Privacy Policy</DialogTitle>
+          <DialogDescription>
+            How AlignEd handles your data ({PRIVACY_POLICY_VERSION}).
+          </DialogDescription>
+        </DialogHeader>
+
+        <PolicyBody />
+
+        <DialogFooter className="border-t border-border p-6">
+          <DialogClose render={<Button variant="outline" className="rounded-full" />}>
+            Close
+          </DialogClose>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

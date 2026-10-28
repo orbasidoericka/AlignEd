@@ -78,3 +78,18 @@ export const letterBorderStyles: Readonly<Record<RiasecLetter, string>> = {
 export function letterBorder(letter: RiasecLetter): string {
   return letterBorderStyles[letter];
 }
+
+// Paired with the border above: a ring is a box-shadow, so it doubles the
+// top card's edge without changing its size.
+export const letterRingStyles: Readonly<Record<RiasecLetter, string>> = {
+  R: "ring-trait-r",
+  I: "ring-trait-i",
+  A: "ring-trait-a",
+  S: "ring-trait-s",
+  E: "ring-trait-e",
+  C: "ring-trait-c",
+};
+
+export function letterRing(letter: RiasecLetter): string {
+  return letterRingStyles[letter];
+}

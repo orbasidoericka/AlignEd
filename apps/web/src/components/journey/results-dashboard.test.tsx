@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { QUESTIONS } from "@/lib/riasec/questions";
@@ -51,6 +51,39 @@ describe("ResultsDashboard greeting", () => {
     expect(
       screen.getByRole("button", { name: /Try your career look/ }),
     ).toBeInTheDocument();
+  });
+
+  it("puts the keepsake actions in the Holland Code card as named icon buttons", () => {
+    completeAssessment("FERF");
+    render(<ResultsDashboard />);
+
+    const codeCard = screen
+      .getByRole("heading", { level: 2, name: /You are an/ })
+      .closest("section")!;
+    for (const name of [
+      "Download PDF",
+      "Email me my results",
+      "Retake assessment",
+    ]) {
+      const button = within(codeCard).getByRole("button", { name });
+      // Icon only: the name comes from aria-label, not visible text.
+      expect(button.textContent).toBe("");
+    }
+  });
+
+  it("centers each trait name under its own emblem", () => {
+    completeAssessment("FERF");
+    render(<ResultsDashboard />);
+
+    const codeCard = screen
+      .getByRole("heading", { level: 2, name: /You are an/ })
+      .closest("section")!;
+    const items = within(codeCard).getAllByRole("listitem");
+    expect(items).toHaveLength(3);
+    for (const item of items) {
+      expect(item.querySelector("svg")).not.toBeNull();
+      expect(item.className).toContain("items-center");
+    }
   });
 
   it("drops the name, not the greeting, when there is no nickname", () => {

@@ -1,14 +1,20 @@
 // Copyright (c) 2026 EdTech. All rights reserved.
+"use client";
 
 import Link from "next/link";
 
 import { SectionLink } from "@/components/blocks/section-link";
 import { Wordmark } from "@/components/blocks/wordmark";
+import { PrivacyPolicyDialog } from "@/components/journey/privacy-consent";
+import { cn } from "@/lib/utils";
 
-// Server component. Footer links mirror the journey plus the legal pages.
+const linkClassName =
+  "text-sm text-muted-foreground transition-colors hover:text-foreground";
+
+// Not the journey (that belongs to the navbar CTA): About Us, how the
+// assessment works, and the legal notice, in that order.
 const footerLinks = [
-  { href: "/assessment/profile", label: "Start the assessment" },
-  { href: "/results", label: "My Results" },
+  { href: "/about", label: "About Us" },
   { href: "/#how-it-works", label: "How it works" },
 ] as const;
 
@@ -27,26 +33,29 @@ export function SiteFooter() {
           </p>
         </div>
         <nav aria-label="Footer" className="flex flex-col gap-2">
-          <p className="text-sm font-semibold text-foreground">Your journey</p>
+          <p className="text-sm font-semibold text-foreground">AlignEd</p>
           {footerLinks.map((link) =>
             link.href.includes("#") ? (
               <SectionLink
                 key={link.href}
                 href={link.href}
-                className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                className={linkClassName}
               >
                 {link.label}
               </SectionLink>
             ) : (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-              >
+              <Link key={link.href} href={link.href} className={linkClassName}>
                 {link.label}
               </Link>
             ),
           )}
+          <PrivacyPolicyDialog
+            trigger={
+              <button type="button" className={cn(linkClassName, "text-left")} />
+            }
+          >
+            Privacy Policy
+          </PrivacyPolicyDialog>
         </nav>
       </div>
       <div className="border-t border-chrome-border/60 bg-chrome-border/25 py-5 text-center">

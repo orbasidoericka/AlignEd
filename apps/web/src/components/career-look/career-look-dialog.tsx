@@ -84,7 +84,7 @@ export function CareerLookDialog({
             background="var(--primary-soft)"
             shimmerColor="var(--primary-spark)"
             rail="linear-gradient(145deg, var(--primary-spark), var(--primary) 55%, var(--primary-spark))"
-            className="mb-1 self-start print:hidden"
+            className="self-start print:hidden"
             data-print-hidden
           />
         }

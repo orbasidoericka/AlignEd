@@ -24,6 +24,10 @@
      most surfaces its text does not flip with the theme. */
   --color-highlight-soft-foreground: var(--highlight-soft-foreground);
   --color-highlight-foreground: var(--highlight-foreground);
+  /* Neutral gray for equal-weight tags (the pathway cards' majors and
+     pathways): they carry no meaning of their own, so no brand hue. */
+  --color-tag: var(--tag);
+  --color-tag-foreground: var(--tag-foreground);
   --color-success-strong: var(--success-strong);
   /* Chrome surface for the site header and footer: tinted toward the brand
      blue so they read as distinct bands against the near-white page. */
@@ -46,12 +50,6 @@
   --color-notice-border: rgb(255 255 255 / 0.08);
   --color-notice-foreground: #f8fafc;
   --color-notice-muted: #cbd5e1;
-  /* See --wordmark-glow-* for why the lockup carries a halo at all. Two
-     passes, not one: a 1.5px edge alone reads as a hard outline, and a 4px
-     lift alone blurs away before it defines anything. Both stops drop to
-     `transparent` on dark, where the mark needs no help. */
-  --drop-shadow-wordmark:
-    0 0 1.5px var(--wordmark-glow-edge), 0 1px 4px var(--wordmark-glow-lift);
   --shadow-bento:
     0 1px 2px rgb(13 25 47 / 0.05), 0 8px 24px -12px rgb(39 90 150 / 0.22);
   /* Deeper sibling, so the top trait card sits forward of its neighbours. */
@@ -195,6 +193,10 @@
   --highlight-soft: #f2f78a;
   --highlight-soft-foreground: #0a1a33;
   --highlight-foreground: #4a4a00;
+  /* Ink clears 15.9:1 on it; 1.16:1 against a white card, the same separation
+     --muted ships as a chip. */
+  --tag: #eceef2;
+  --tag-foreground: #0a1a33;
   --muted: #e4efff;
   --muted-foreground: #384c6d;
   /* Lighter cut of --primary for the one filled CTA (the career-look button),
@@ -260,14 +262,6 @@
   --stage-results-foreground: #06310f;
   --positive: #127a26;
   --positive-soft: #38e54d;
-  /* Glow under the wordmark (components/blocks/wordmark.tsx), composed into
-     --drop-shadow-wordmark above. The palette yellow in "ED" measures 1.15:1
-     on the bar, so the letters need an edge rather than a different fill:
-     -edge is a tight halo that defines the letterforms, -lift a soft one that
-     sits the lockup on the bar. Both are the ink at low alpha, and drop-shadow
-     follows the PNG's alpha, so the glow traces the letters, not a box. */
-  --wordmark-glow-edge: rgb(10 26 51 / 0.45);
-  --wordmark-glow-lift: rgb(10 26 51 / 0.18);
   --radius: 0.75rem;
   --sidebar: var(--card);
   --sidebar-foreground: var(--foreground);
@@ -323,6 +317,8 @@
   --highlight-soft: #e9ee82;
   --highlight-soft-foreground: #0d192f;
   --highlight-foreground: #fcf1aa;
+  --tag: #262d38;
+  --tag-foreground: #e4e9f0;
   --muted: #1c293c;
   --muted-foreground: #93a5be;
   --primary-soft: #9ec8f2;
@@ -373,10 +369,6 @@
   --stage-results-foreground: #244309;
   --positive: #abd58e;
   --positive-soft: #283c1d;
-  /* No glow on dark: the mark's blue clears 5.90:1 there and its yellow
-     17.37:1, so an ink halo would only muddy edges that already read. */
-  --wordmark-glow-edge: transparent;
-  --wordmark-glow-lift: transparent;
 }
 
 /* The glow behind the answer cards. Fully opaque stops, so it blooms evenly;

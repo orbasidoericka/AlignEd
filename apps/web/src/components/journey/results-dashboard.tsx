@@ -2,11 +2,11 @@
 "use client";
 
 import { useMemo } from "react";
-import { Lightbulb, Radar as RadarIcon } from "lucide-react";
+import { Radar as RadarIcon } from "lucide-react";
 
 import { BentoGrid, BentoGridItem } from "@/components/aceternity/bento-grid";
 import { CareerLookDialog } from "@/components/career-look/career-look-dialog";
-import { ResultsActions } from "@/components/journey/results-actions";
+import { ResultsKeepsakeActions } from "@/components/journey/results-actions";
 import { BlurFade } from "@/components/magic/blur-fade";
 import { HexagonPattern } from "@/components/magic/hexagon-pattern";
 import { NumberTicker } from "@/components/magic/number-ticker";
@@ -46,8 +46,6 @@ export function ResultsDashboard() {
 
   const code = useMemo(() => computeHollandCode(scores), [scores]);
   const max = useMemo(() => maxScorePerTrait(QUESTIONS), []);
-
-  const flatProfile = new Set(Object.values(scores)).size === 1;
 
   return (
     <div className="flex flex-1 flex-col bg-background print:bg-white">
@@ -127,23 +125,32 @@ export function ResultsDashboard() {
                   {formatHollandCode(code)}
                 </span>
               </h2>
-              {/* The code spelled as emblems. The h2 above already says it
-                  in letters, so these stay decorative. */}
-              <div className="flex gap-3" aria-hidden>
+              {/* The code spelled as emblems, each centered over its own
+                  name in equal-width columns. The emblems are decorative (the
+                  h2 says the letters); the names stay readable. */}
+              {/* Plain 1fr (not Tailwind's minmax(0,1fr)): under w-fit, only
+                  an auto minimum makes the three columns share the widest
+                  name's width. */}
+              <ul className="grid w-fit grid-cols-[repeat(3,1fr)] gap-x-3 sm:gap-x-5">
                 {code.map((letter) => (
-                  <TraitEmblem
+                  <li
                     key={letter}
-                    letter={letter}
-                    className="size-16 sm:size-20"
-                  />
+                    className="flex flex-col items-center gap-1.5 text-center"
+                  >
+                    <TraitEmblem letter={letter} className="size-16 sm:size-20" />
+                    <span className="text-sm text-muted-foreground sm:text-base">
+                      {TRAIT_META[traitForLetter(letter)].label}
+                    </span>
+                  </li>
                 ))}
+              </ul>
+              <div
+                className="flex flex-wrap items-center gap-2 print:hidden"
+                data-print-hidden
+              >
+                <CareerLookDialog code={code} />
+                <ResultsKeepsakeActions />
               </div>
-              <p className="text-base text-muted-foreground">
-                {code
-                  .map((letter) => TRAIT_META[traitForLetter(letter)].label)
-                  .join(" · ")}
-              </p>
-              <CareerLookDialog code={code} />
             </BentoGridItem>
           </BlurFade>
 
@@ -234,36 +241,6 @@ export function ResultsDashboard() {
             className={cn("md:col-span-3", printSingle)}
           >
             <PathwayResults topThreeLetters={code} />
-          </BlurFade>
-
-          {/* Insight and keepsake actions */}
-          <BlurFade
-            inView
-            delay={0.22}
-            className={cn("md:col-span-3", printSingle)}
-          >
-            <BentoGridItem
-              headingId="insight-heading"
-              title={flatProfile ? "A balanced profile" : "Your next step"}
-              icon={
-                <Lightbulb
-                  className="size-5 text-highlight-foreground"
-                  aria-hidden
-                />
-              }
-              // Highlight is pure #FDFF00: right for a chip, a glare across a
-              // full-width reading panel, so the panel takes the yellow wash
-              // and the neon stays on small marks. Dark's highlight is
-              // already a dim wash.
-              className="bg-stage-profile-soft dark:bg-highlight"
-            >
-              <p className="max-w-2xl text-sm text-highlight-foreground">
-                {flatProfile
-                  ? "Your six traits scored evenly, which means you are balanced across many interests. Read these results as a starting point for exploration rather than a final answer."
-                  : "Talk these matches over with your guidance counselor or family. Your code is a starting point for exploring, not a final answer."}
-              </p>
-              <ResultsActions />
-            </BentoGridItem>
           </BlurFade>
         </BentoGrid>
 

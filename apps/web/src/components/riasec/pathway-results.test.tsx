@@ -106,18 +106,24 @@ describe("PathwayResults", () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  it("gives the first letter of the code a more prominent cover", () => {
+  it("keeps every cover the same height, so the cards' text lines up", () => {
     const { container } = render(<PathwayResults topThreeLetters={["R", "I", "A"]} />);
-    const [first, ...rest] = Array.from(
-      container.querySelectorAll("section"),
-    ).map((card) => card.querySelector(MASCOT)!.parentElement!.className);
+    const mascots = Array.from(container.querySelectorAll("section")).map(
+      (card) => card.querySelector(MASCOT)!,
+    );
 
-    // Height is one of three primacy signals; the badge and the trait-colored
-    // border are asserted separately below. Colors are expected to differ
-    // between all three, since each card wears its own trait wash.
-    expect(first).toContain("h-36");
-    for (const other of rest) {
-      expect(other).toContain("h-28");
+    // The top trait is marked by its badge and colored edge, never by size.
+    for (const mascot of mascots) {
+      expect(mascot.parentElement!.className).toContain("h-32 sm:h-36");
+    }
+    expect(mascots[0]!.getAttribute("class")).toContain("drop-shadow-sm");
+  });
+
+  it("aligns the cards' rows on a shared subgrid", () => {
+    const { container } = render(<PathwayResults topThreeLetters={["R", "I", "A"]} />);
+    for (const card of Array.from(container.querySelectorAll("section"))) {
+      expect(card.className).toContain("md:grid-rows-subgrid");
+      expect(card.parentElement!.className).toContain("md:grid-rows-subgrid");
     }
   });
 
@@ -134,7 +140,7 @@ describe("PathwayResults", () => {
     );
   });
 
-  it("borders only the top card, in that letter's own color", () => {
+  it("edges only the top card, in that letter's own color, without resizing it", () => {
     const { container } = render(
       <PathwayResults topThreeLetters={["S", "E", "C"]} />,
     );
@@ -143,9 +149,11 @@ describe("PathwayResults", () => {
     );
 
     expect(frames[0]).toContain("border-trait-s");
-    expect(frames[0]).toContain("border-2");
+    expect(frames[0]).toContain("ring-trait-s");
+    // A wider border would shrink the top card's content box.
+    expect(frames[0]).not.toContain("border-2");
     for (const frame of frames.slice(1)) {
-      expect(frame).not.toMatch(/border-trait-/);
+      expect(frame).not.toMatch(/(border|ring)-trait-/);
     }
   });
 });

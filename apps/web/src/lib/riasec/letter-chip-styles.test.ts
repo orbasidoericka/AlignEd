@@ -5,6 +5,8 @@ import {
   letterBorderStyles,
   letterChip,
   letterChipStyles,
+  letterRing,
+  letterRingStyles,
   letterWash,
   letterWashStyles,
 } from "./letter-chip-styles";
@@ -47,6 +49,16 @@ describe("letter chips", () => {
     for (const letter of LETTERS) {
       expect(letterBorderStyles[letter]).toBe(
         `border-trait-${letter.toLowerCase()}`,
+      );
+    }
+  });
+
+  it("gives every letter its own ring, matching its border", () => {
+    const rings = LETTERS.map((letter) => letterRing(letter));
+    expect(new Set(rings).size).toBe(LETTERS.length);
+    for (const letter of LETTERS) {
+      expect(letterRingStyles[letter]).toBe(
+        `ring-trait-${letter.toLowerCase()}`,
       );
     }
   });

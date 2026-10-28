@@ -73,11 +73,12 @@ export function Navbar({ children, className }: NavbarProps) {
     <header
       className={cn(
         "sticky inset-x-0 top-0 z-50 w-full py-2 transition-colors duration-300",
-        // Glass chrome at rest so the header reads as a distinct surface over
-        // the hexagon field; the floating pill carries its own surface.
+        // White glass at rest: the blue-and-yellow wordmark needs a pale
+        // ground to stand up, and the tint-free card color gives it one in
+        // both themes. The floating pill carries its own surface.
         visible
           ? "border-b border-transparent bg-transparent"
-          : "border-b border-chrome-border bg-chrome/85 backdrop-blur-md",
+          : "border-b border-chrome-border bg-card/80 backdrop-blur-md",
         className,
       )}
     >
@@ -116,7 +117,7 @@ export function NavBody({
       transition={transition}
       className={cn(
         "relative z-60 mx-auto hidden w-full max-w-6xl min-w-200 flex-row items-center justify-between gap-4 self-start rounded-full px-4 py-2 lg:flex",
-        visible && "bg-chrome/90 shadow-bento ring-1 ring-chrome-border",
+        visible && "bg-card/85 shadow-bento ring-1 ring-chrome-border",
         className,
       )}
     >
@@ -248,7 +249,7 @@ export function MobileNav({
       transition={transition}
       className={cn(
         "relative z-50 mx-auto flex w-full max-w-[calc(100vw-2rem)] flex-col items-center justify-between py-2 lg:hidden",
-        visible && "bg-chrome/90 shadow-bento ring-1 ring-chrome-border",
+        visible && "bg-card/85 shadow-bento ring-1 ring-chrome-border",
         className,
       )}
     >
