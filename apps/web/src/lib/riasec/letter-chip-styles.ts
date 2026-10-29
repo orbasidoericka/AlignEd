@@ -36,6 +36,24 @@ export function letterWash(letter: RiasecLetter): string {
   return letterWashStyles[letter];
 }
 
+// Same wash, gated behind :hover — for rows/cells that are plain surfaces at
+// rest and pick up their trait color only on interaction (the landing page's
+// trait legend). Literal for the same reason as the fills above: Tailwind
+// cannot compile a class built at runtime, e.g. by string-replacing
+// `letterWashStyles` at call time.
+export const letterHoverWashStyles: Readonly<Record<RiasecLetter, string>> = {
+  R: "hover:bg-trait-r/25 dark:hover:bg-trait-r/35",
+  I: "hover:bg-trait-i/25 dark:hover:bg-trait-i/35",
+  A: "hover:bg-trait-a/25 dark:hover:bg-trait-a/35",
+  S: "hover:bg-trait-s/25 dark:hover:bg-trait-s/35",
+  E: "hover:bg-trait-e/25 dark:hover:bg-trait-e/35",
+  C: "hover:bg-trait-c/25 dark:hover:bg-trait-c/35",
+};
+
+export function letterHoverWash(letter: RiasecLetter): string {
+  return letterHoverWashStyles[letter];
+}
+
 // The same six colors as a bare custom-property reference, for the places
 // that cannot use a class: the inline SVG trait art, which paints from
 // `currentColor`. A token, never a hex, so the art follows the palette.

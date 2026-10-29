@@ -12,10 +12,11 @@
   --color-accent-strong-foreground: var(--highlight-foreground);
 
   /* Palette extensions. primary-strong is the text-safe primary: never set
-     the neon primary as text on white. highlight = palette yellow (#FDFF00). */
+     the neon primary as text on white. highlight = palette yellow (mustard
+     #FFC000). */
   --color-primary-strong: var(--primary-strong);
   --color-highlight: var(--highlight);
-  /* The same yellow as a large fill. #FDFF00 across a whole answer card or a
+  /* The same yellow as a large fill. #FFC000 across a whole answer card or a
      row of chips is a glare, not an accent, so anything bigger than a mark
      takes this pastel cut and the neon stays on small marks. */
   --color-highlight-soft: var(--highlight-soft);
@@ -142,8 +143,10 @@
 }
 
 /* Palette ("Vivid"): the popping palette Blue #2192FF, Green #38E54D, Lime
-   #9CFF2E, Yellow #FDFF00, at full strength. This is the light-ground theme;
-   it replaced the earlier pastel set (#78AAE2 / #CBE7B6 / #FBEFA8 / #BFDDFF).
+   #9CFF2E, Mustard #FFC000 (it was neon #FDFF00 until the brand mark moved to
+   mustard, so the logo and every yellow button share one shade), at full
+   strength. This is the light-ground theme; it replaced the earlier pastel set
+   (#78AAE2 / #CBE7B6 / #FBEFA8 / #BFDDFF).
 
    Same roles the pastels had, louder fills: blue = primary + assessment, green =
    secondary + results, yellow = highlight + profile, lime = accent (hover and
@@ -152,11 +155,12 @@
    statements on them; the neons live on chrome, CTAs, chips, progress,
    charts, hexagon cells and the answer-card glow.
 
-   None of the four neons is text-safe on white (3.17 / 1.68 / 1.25 / 1.08:1)
-   and none carries white text, but all clear AA under the ink (5.48 / 10.33 /
-   13.87 / 16.12:1). So every neon fill takes dark ink, and colored text uses
-   the -strong darks only: blue #005BC4 5.98:1, green #127A26 5.13:1, olive
-   #5C5C00 6.59:1 on the page, and each ≥4.94:1 on its own -soft wash.
+   None of the four is text-safe on white (3.17 / 1.68 / 1.25 / 1.64:1) and
+   none carries white text, but all clear AA under the ink (5.48 / 10.33 /
+   13.87 / 10.59:1). So every fill takes dark ink (the mustard's own is the
+   brown #3A2800, 8.62:1), and colored text uses the -strong darks only: blue
+   #005BC4 5.98:1, green #127A26 5.13:1, amber #7A5600 6.23:1 on the page, and
+   each ≥4.94:1 on its own -soft wash (amber 5.92:1).
    --input clears 3:1 on card (3.78) and page (3.54); --border is a 1.67:1
    hairline. Re-measure whenever any of these moves. */
 :root {
@@ -184,15 +188,15 @@
   --secondary: #38e54d;
   --secondary-foreground: #06310f;
   --success-strong: #127a26;
-  --highlight: #fdff00;
-  /* Pastel cut of the neon, for fills too big to carry it: the selected answer
-     card and the "College majors" chips. Pitched at 1.14:1 against a white
-     card, the same separation --muted (1.16:1) already ships as a chip, so it
-     reads as a filled surface without glaring; the ink clears 15.26:1 on it
-     and muted text 7.61:1. */
-  --highlight-soft: #f2f78a;
+  --highlight: #ffc000;
+  /* Pastel cut of the mustard, for fills too big to carry it: the selected
+     answer card and the "College majors" chips. Pitched at 1.19:1 against a
+     white card, the same separation --muted (1.16:1) already ships as a chip,
+     so it reads as a filled surface without glaring; the ink clears 14.58:1 on
+     it and muted text 7.27:1. */
+  --highlight-soft: #ffeaad;
   --highlight-soft-foreground: #0a1a33;
-  --highlight-foreground: #4a4a00;
+  --highlight-foreground: #3a2800;
   /* Ink clears 15.9:1 on it; 1.16:1 against a white card, the same separation
      --muted ships as a chip. */
   --tag: #eceef2;
@@ -217,32 +221,24 @@
   --chart-1: #2192ff;
   --chart-2: #38e54d;
   --chart-3: #9cff2e;
-  --chart-4: #fdff00;
+  --chart-4: #ffc000;
   --chart-5: #005bc4;
   --brand: #005bc4;
-  --accent-strong: #fdff00;
-  --stage-profile: #fdff00;
-  --stage-profile-strong: #5c5c00;
-  --stage-profile-soft: #fdffd2;
-  --stage-profile-foreground: #3d3d00;
+  --accent-strong: #ffc000;
+  --stage-profile: #ffc000;
+  --stage-profile-strong: #7a5600;
+  --stage-profile-soft: #fff1cc;
+  --stage-profile-foreground: #3a2800;
   /* Full #2192FF under the profile copy measured 3.21:1 for muted text, so
-     the blue stop is a lighter cut of it; with the field at 60% (aurora-
-     background.tsx) muted text stays ≥5.58:1 and the olive step label
-     ≥4.84:1 over every stop. */
+     the blue stop is a lighter cut of it; the mustard stop is likewise a
+     lighter cut (#FFD45C) so the amber step label clears 4.5:1 even at full
+     strength (4.69:1; 5.20:1 at the field's 60%). With the field at 60%
+     (aurora-background.tsx) muted text stays ≥6.78:1 over every stop. */
   --aurora-a: #8fd0ff;
   --aurora-b: #2b9fff;
-  --aurora-c: #fdff00;
+  --aurora-c: #ffd45c;
   --aurora-d: #2a8ee0;
-  --aurora-veil: #faf753;
-  /* AuroraText on the hero word "Align": blue into gold, no outline. Palette
-     yellow measures 1.01:1 here and palette blue 2.97:1, so neither can carry
-     a 72px word on its own; these are the nearest pair that each clear the
-     3:1 large-text floor (3.37:1 and 3.11:1). They sit 0.018 apart in OKLCH
-     lightness (0.626 / 0.644), which is what keeps a near-complementary pair
-     from reading as grey where they meet. The palette yellow still lands in
-     the same headline, on the marker over "passion". */
-  --align-a: #1a88f2;
-  --align-b: rgb(247, 243, 57);
+  --aurora-veil: #ffe28a;
   --stage-assessment: #2192ff;
   --stage-assessment-strong: #005bc4;
   --stage-assessment-soft: #e1efff;
@@ -251,11 +247,11 @@
      Those two are near-complementary, so EVERY direct blend of them is green
      at the midpoint (#8FC980 in sRGB, #96D0BC in oklab: switching color space
      does not help, the green is real). A pale stop between them splits the
-     blend into blue -> pale (#8FC9E9, still blue) and pale -> yellow
-     (#FDFF69, still yellow), so neither leg ever passes through green. Any
+     blend into blue -> pale (#90C2E6, still blue) and pale -> mustard
+     (#FFD966, still mustard), so neither leg ever passes through green. Any
      replacement must keep a blue channel high enough to survive the first
      leg; drop it and the green comes straight back. */
-  --answer-bridge: #fdffd2;
+  --answer-bridge: #fff1cc;
   --stage-results: #38e54d;
   --stage-results-strong: #127a26;
   --stage-results-soft: #ddfbe1;
@@ -314,9 +310,9 @@
      L95.0, which is glare on a dark page, and it stands 13.78:1 clear of the
      card with the ink at 14.21:1. Its text does not flip with the theme, so
      everything on it takes --highlight-soft-foreground, never --foreground. */
-  --highlight-soft: #e9ee82;
+  --highlight-soft: #f3d97f;
   --highlight-soft-foreground: #0d192f;
-  --highlight-foreground: #fcf1aa;
+  --highlight-foreground: #ffd966;
   --tag: #262d38;
   --tag-foreground: #e4e9f0;
   --muted: #1c293c;
@@ -338,29 +334,23 @@
   --chart-4: #bfddff;
   --chart-5: #a3cbf9;
   --brand: #275a96;
-  --accent-strong: #fbefa8;
-  --stage-profile: #fbefa8;
-  --stage-profile-strong: #fcf1aa;
+  --accent-strong: #ffc933;
+  --stage-profile: #ffc933;
+  --stage-profile-strong: #ffd966;
   --stage-profile-soft: #251f06;
   --stage-profile-foreground: #3d3310;
   --aurora-a: #7cafe8;
   --aurora-b: #a3cbf9;
-  --aurora-c: #fcf1aa;
+  --aurora-c: #ffd966;
   --aurora-d: #b59be6;
   --aurora-veil: transparent;
-  /* Unchanged from primary-strong/stage-profile-strong: dark mode's tones are
-     already pale pastels (10.10:1 and 16.32:1 against the dark background),
-     so lightening further would wash the two stops into each other and blur
-     the gradient's shape rather than reading as "lighter". */
-  --align-a: #a3cbf9;
-  --align-b: #fcf1aa;
   --stage-assessment: #7cafe8;
   --stage-assessment-strong: #a3cbf9;
   --stage-assessment-soft: #121d33;
   --stage-assessment-foreground: #0d192f;
   /* Dark's two stops are already pastels, so the bridge only has to stay out
      of their way: pale and barely chromatic, keeping both legs blue (#AECCEC)
-     and cream (#EDECCC). It is not --stage-profile-soft, which is a near-black
+     and a soft mustard. It is not --stage-profile-soft, which is a near-black
      brown here and would read as a gap in the glow rather than a bridge. */
   --answer-bridge: #dfe9ef;
   --stage-results: #cbe7b6;
@@ -463,29 +453,36 @@
   }
 }
 
-/* Aurora Text (components/magic/aurora-text.tsx): the gradient drifts across
-   the word; the text itself never moves. Instances set --aurora-duration. */
-@keyframes aurora {
+/* Hero word "Align": the headline's own ink with a brand-blue halo. The halo
+   breathes slowly (motion-safe only); the letters never move or change color,
+   so the word reads exactly like the rest of the headline. --primary flips per
+   theme, so one definition glows on both grounds. */
+@utility text-glow {
+  text-shadow:
+    0 0 12px color-mix(in oklab, var(--primary) 50%, transparent),
+    0 0 36px color-mix(in oklab, var(--primary) 30%, transparent);
+}
+
+@keyframes glow-breathe {
   0%,
   100% {
-    background-position: 0% 50%;
+    text-shadow:
+      0 0 8px color-mix(in oklab, var(--primary) 35%, transparent),
+      0 0 24px color-mix(in oklab, var(--primary) 18%, transparent);
   }
   50% {
-    background-position: 100% 50%;
+    text-shadow:
+      0 0 16px color-mix(in oklab, var(--primary) 65%, transparent),
+      0 0 44px color-mix(in oklab, var(--primary) 40%, transparent);
   }
 }
 
-@utility animate-aurora {
-  animation-name: aurora;
-  animation-duration: var(--aurora-duration, 10s);
-  animation-timing-function: ease-in-out;
-  animation-iteration-count: infinite;
+@utility animate-glow-breathe {
+  animation: glow-breathe 4s ease-in-out infinite;
 }
 
 /* Aurora Background (components/aceternity/aurora-background.tsx): a soft
-   pastel field drifts behind the Profile Setup form. Named -drift because
-   `aurora` above already belongs to AuroraText, which pans a text gradient.
-   One blurred layer rather than upstream's two blended ones: half the paint
+   pastel field drifts behind the Profile Setup form. One blurred layer rather than upstream's two blended ones: half the paint
    cost, and the second layer was invisible under this palette anyway. */
 @keyframes aurora-drift {
   from {

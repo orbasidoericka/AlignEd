@@ -5,12 +5,13 @@ import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 // The brand wordmark, shared by the header and the footer so the two can
-// never drift. One file for both themes: the mark is palette blue and palette
-// yellow, and both read on either ground (5.90:1 and 17.37:1 on the dark page;
-// the blue carries the light one). It used to be two files because the
-// original navy sat at ~1.7:1 on dark, which no filter fixes honestly; the
-// recolour removed that reason, so the second file went with it. No shadow:
-// the header sits the mark on a white glass surface instead.
+// never drift. One file for both themes: the mark is palette blue and a mustard
+// yellow (#FFC000, the "ED" and the cap). The neon palette yellow measured
+// 1.08:1 on the white header glass and vanished; the mustard is ~1.6:1 there
+// and reads strongly on the dark page, with the blue carrying the rest. It used to
+// be two files because the original navy sat at ~1.7:1 on dark, which no
+// filter fixes honestly; the recolour removed that reason, so the second file
+// went with it. No shadow: the header sits the mark on a white glass surface.
 const WORDMARK_WIDTH = 1200;
 const WORDMARK_HEIGHT = 274;
 

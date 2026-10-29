@@ -3,7 +3,8 @@
 import type { Metadata } from "next";
 import { ClipboardPen, Compass, PartyPopper } from "lucide-react";
 
-import { AuroraText } from "@/components/magic/aurora-text";
+import { EncryptedText } from "@/components/aceternity/encrypted-text";
+import { FloatingDock } from "@/components/aceternity/floating-dock";
 import { BlurFade } from "@/components/magic/blur-fade";
 import { Highlighter } from "@/components/magic/highlighter";
 import {
@@ -13,6 +14,7 @@ import {
 import { ShineBorder } from "@/components/magic/shine-border";
 import { HeroCta } from "@/components/journey/hero-cta";
 import { RIASEC_PATHWAYS } from "@/lib/riasec/career-pathways";
+import { letterHoverWash } from "@/lib/riasec/letter-chip-styles";
 import { TraitEmblem } from "@/components/riasec/trait-emblem";
 import { cn } from "@/lib/utils";
 
@@ -46,33 +48,36 @@ const traitPreview = (["R", "I", "A", "S", "E", "C"] as const).map((letter) => {
   };
 });
 
+const traitAnchor = (letter: string) => `trait-${letter.toLowerCase()}`;
+
+const traitDockItems = traitPreview.map((trait) => ({
+  title: trait.name,
+  href: `#${traitAnchor(trait.letter)}`,
+  icon: <TraitEmblem letter={trait.letter} className="size-full" />,
+}));
+
+const HERO_SUBTITLE =
+  "Answer 42 quick yes-or-no statements to discover your Holland Code, and the careers and college programs that match you. About 5 minutes, free, no sign-up.";
+
+// One shared accent (not a per-stage color) — this strip previews the whole
+// journey as a single path rather than wayfinding between stages, so it
+// deliberately steps outside the stage-accent system that colors the actual
+// screens. See DESIGN.md "How it works".
 const journeySteps = [
   {
-    step: "Step 1",
     title: "Tell us where you are",
     body: "Your grade level. One tap, no name, no sign-up.",
     icon: ClipboardPen,
-    wash: "bg-stage-profile-soft",
-    chip: "bg-stage-profile text-stage-profile-foreground",
-    heading: "text-stage-profile-strong",
   },
   {
-    step: "Step 2",
     title: "Discover yourself",
     body: "Answer yes or no to 42 quick statements. About 5 minutes, saved as you go.",
     icon: Compass,
-    wash: "bg-stage-assessment-soft",
-    chip: "bg-stage-assessment text-stage-assessment-foreground",
-    heading: "text-stage-assessment-strong",
   },
   {
-    step: "Step 3",
     title: "See your alignment",
     body: "Your Holland Code, and the careers and programs that match you.",
     icon: PartyPopper,
-    wash: "bg-stage-results-soft",
-    chip: "bg-stage-results text-stage-results-foreground",
-    heading: "text-stage-results-strong",
   },
 ] as const;
 
@@ -117,12 +122,16 @@ export default function HomePage() {
 
         <div className="mx-auto flex min-h-[min(72svh,40rem)] w-full max-w-4xl flex-col items-center justify-center px-4 pt-14 pb-24 text-center sm:pt-20">
           <BlurFade delay={0.08}>
-            {/* Two hand-drawn marks, drawn one after the other: the marker
-                sweeps "passion", then the line underscores "profession". */}
+            {/* "Align" glows in the headline's own ink; then two hand-drawn
+                marks, one after the other: the marker sweeps "passion", then
+                the line underscores "profession". */}
             <h1 className="text-5xl leading-[1.22] font-extrabold tracking-tight text-foreground sm:text-6xl md:text-7xl">
-              <AuroraText speed={0.8}>Align</AuroraText> your{" "}
+              <span className="text-glow motion-safe:animate-glow-breathe">
+                Align
+              </span>{" "}
+              your{" "}
               <Highlighter
-                color="#fdff00"
+                color="#ffc000"
                 darkColor="#8a6a12"
                 padding={10}
                 strokeWidth={3}
@@ -149,32 +158,26 @@ export default function HomePage() {
           </BlurFade>
 
           <BlurFade delay={0.16}>
+            {/* ~20ms a character: the source's 50ms would take ~8s on a
+                sentence this long. */}
             <p className="mx-auto mt-6 max-w-xl text-lg text-balance text-muted-foreground sm:text-xl">
-              Answer 42 quick yes-or-no statements to discover your Holland
-              Code, and the careers and college programs that match you. About
-              5 minutes, free, no sign-up.
+              <EncryptedText
+                text={HERO_SUBTITLE}
+                revealDelayMs={20}
+                flipDelayMs={50}
+                encryptedClassName="text-primary-strong/70"
+              />
             </p>
           </BlurFade>
 
           {/* The six traits as the hero's image: the code the student is
-              about to find, previewed in the same emblems the results page
-              uses. Decorative; the section below names each one. The
-              journey's call to action lives in the navbar directly above. */}
-          <ul
-            className="mt-12 flex justify-center gap-2 sm:gap-5"
-            aria-hidden
-          >
-            {traitPreview.map((trait, index) => (
-              <li key={trait.letter}>
-                <BlurFade delay={0.32 + index * 0.06}>
-                  <TraitEmblem
-                    letter={trait.letter}
-                    className="size-10 sm:size-16"
-                  />
-                </BlurFade>
-              </li>
-            ))}
-          </ul>
+              about to find, in the same emblems the results page uses. A
+              dock: each emblem magnifies under the pointer and jumps to its
+              row in "Six traits, one code". The journey's call to action
+              lives in the navbar directly above. */}
+          <BlurFade delay={0.32} className="mt-12 md:mt-4">
+            <FloatingDock label="The six traits" items={traitDockItems} />
+          </BlurFade>
         </div>
       </section>
 
@@ -189,7 +192,7 @@ export default function HomePage() {
           </h2>
         </BlurFade>
 
-        <ol className="relative mt-12 flex flex-col gap-6 md:flex-row md:items-stretch">
+        <ol className="relative mt-14 flex flex-col gap-6 md:flex-row md:items-stretch">
           {journeySteps.map((item, index) => (
             <BlurFade
               key={item.title}
@@ -197,26 +200,26 @@ export default function HomePage() {
               delay={index * 0.1}
               className="flex-1"
             >
-              <li
-                className={cn(
-                  "flex h-full flex-col gap-4 rounded-3xl p-7",
-                  item.wash,
-                )}
-              >
-                <div className="flex items-center justify-between">
-                  <span
-                    className={cn(
-                      "flex size-12 items-center justify-center rounded-2xl",
-                      item.chip,
-                    )}
-                  >
-                    <item.icon className="size-6" aria-hidden />
-                  </span>
-                  <span className="font-heading text-sm font-bold text-muted-foreground">
-                    {item.step}
-                  </span>
-                </div>
-                <h3 className={cn("text-xl font-bold", item.heading)}>
+              <li className="relative isolate flex h-full flex-col gap-4 overflow-hidden rounded-3xl border border-stage-assessment/15 bg-stage-assessment-soft p-7 shadow-bento transition-[transform,box-shadow] duration-300 ease-out hover:-translate-y-1.5 hover:shadow-bento-lifted motion-reduce:transition-none motion-reduce:hover:translate-y-0">
+                {/* Ghost numeral: a real 3-step sequence earns a number, so
+                    it's graphic here rather than a tiny muted label. Purely
+                    decorative — the step is already named in words below. */}
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute top-3 right-6 -z-10 font-heading text-[6rem] leading-none font-extrabold text-stage-assessment/15 select-none"
+                >
+                  {index + 1}
+                </span>
+                <span
+                  aria-hidden
+                  className="flex size-14 items-center justify-center bg-stage-assessment text-stage-assessment-foreground [clip-path:polygon(50%_0%,100%_25%,100%_75%,50%_100%,0%_75%,0%_25%)]"
+                >
+                  <item.icon className="size-6" />
+                </span>
+                <span className="font-heading text-sm font-bold tracking-wide text-stage-assessment-strong">
+                  Step {index + 1}
+                </span>
+                <h3 className="text-xl font-bold text-foreground">
                   {item.title}
                 </h3>
                 <p className="text-base text-foreground/80">{item.body}</p>
@@ -238,15 +241,22 @@ export default function HomePage() {
         </BlurFade>
 
         <BlurFade inView delay={0.08} className="mt-8">
-          <dl className="grid overflow-hidden rounded-3xl border border-border bg-card sm:grid-cols-2">
+          <dl className="grid overflow-hidden rounded-3xl border border-border bg-card shadow-bento sm:grid-cols-2">
             {traitPreview.map((trait, index) => (
               <div
                 key={trait.letter}
+                id={traitAnchor(trait.letter)}
                 className={cn(
+                  // Target of the hero dock; clears the sticky header.
+                  "scroll-mt-28 outline-none",
                   // Name above its details rather than beside them: the
                   // majors run long enough that a fixed name column would
                   // both crowd them and leave a tall void under the name.
-                  "flex flex-col gap-3 border-border p-6",
+                  // Each row warms to its own trait color on hover/focus —
+                  // the same six tokens the emblem already carries, so the
+                  // legend feels alive without turning into six more cards.
+                  "group flex flex-col gap-3 border-border p-6 transition-colors duration-300",
+                  letterHoverWash(trait.letter),
                   index < traitPreview.length - 1 && "border-b",
                   // Two columns: the left one keeps a divider, and the last
                   // row of each column drops its bottom border.
@@ -255,7 +265,10 @@ export default function HomePage() {
                 )}
               >
                 <dt className="flex items-center gap-3">
-                  <TraitEmblem letter={trait.letter} className="size-10" />
+                  <TraitEmblem
+                    letter={trait.letter}
+                    className="size-10 transition-transform duration-300 group-hover:scale-110"
+                  />
                   <span className="font-heading text-lg font-bold text-foreground">
                     {trait.name}
                   </span>

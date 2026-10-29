@@ -63,6 +63,8 @@ export function SiteHeader() {
   const ctaLabel = resultsUnlocked ? "View My Results" : "Take Assessment";
 
   const items: NavItem[] = [
+    { name: "How it works", link: "/#how-it-works" },
+    { name: "Six Traits", link: "/#six-traits" },
     {
       name: "About Us",
       link: "/about",
@@ -70,19 +72,19 @@ export function SiteHeader() {
       activeClassName: "text-stage-assessment-strong",
       indicatorClassName: "bg-stage-assessment",
     },
-    { name: "How it works", link: "/#how-it-works" },
-    { name: "Six Traits", link: "/#six-traits" },
   ];
 
   return (
     <TooltipProvider>
       <Navbar>
-        <NavBody>
-          <NavbarLogo>
-            <Wordmark className="h-9" priority />
+        <NavBody className="px-5">
+          <NavbarLogo className="px-0">
+            {/* The cap lifts the image's visual weight; the letters sit low in
+                the frame, so nudge up to line them up with the link text. */}
+            <Wordmark className="h-9 -translate-y-1" priority />
           </NavbarLogo>
           <NavItems items={items} />
-          <div className="relative z-20 flex items-center gap-2">
+          <div className="relative z-20 flex shrink-0 items-center gap-2">
             <SoundToggle />
             <ThemeToggle />
             {showCta && (
