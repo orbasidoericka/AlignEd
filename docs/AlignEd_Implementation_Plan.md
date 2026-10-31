@@ -9,13 +9,13 @@
 
 ### Technical approach in one paragraph
 
-AlignEd ships as a **mostly-static, anonymous-first** Next.js 16 application. Reference content — degree programs and careers — is public-read data rendered on the server and edge-cached, so the pages Filipino students hit on low-end phones over variable connections are cached HTML. The profile capture and RIASEC assessment run **entirely client-side** (the existing Zustand + localStorage store), which means the platform's only write paths are (a) one anonymous `assessments` insert per completed assessment and (b) the `send-results` email Edge Function. That architecture makes the PRD's 5,000-concurrent-sessions requirement land on the edge cache rather than on Postgres.
+AlignEd ships as a **mostly-static, anonymous-first** Next.js 16 application. Majors and pathways are static TypeScript data (`lib/riasec/career-pathways.ts`), so the pages Filipino students hit on low-end phones over variable connections are static HTML. The profile capture and RIASEC assessment run **entirely client-side** (Zustand + localStorage store), which means the platform's only server paths are three Next.js route handlers: (a) `POST /api/results`, one nameless `saved_results` row per session, (b) `GET`/`DELETE /api/results/[id]` to compare against or delete a saved copy, and (c) `POST /api/send-results`, which emails the encrypted results PDF over Gmail SMTP and keeps nothing. Plus the server-rendered `/admin/[token]` stats page. That architecture makes the PRD's 5,000-concurrent-sessions requirement land on static pages rather than on Postgres. Current server detail lives in `docs/BACKEND.md`.
 
 ### System layers (Input–Process–Output, mapped to real components)
 
-- **Input:** static TypeScript question bank → client-side profile + answers in `useAssessmentStore` (already implemented with localStorage persistence at `apps/web/src/store/useAssessmentStore.ts`); programs/careers seeded into Supabase Postgres from `data/courses.csv` and `data/careers.csv`.
-- **Process:** pure-TS scoring library (`src/lib/riasec/scoring.ts`) derives the 3-letter Holland code with deterministic R→I→A→S→E→C tie-breaking (PRD FR-4); the existing `match_courses(p_code)` SQL RPC (migration `0001_init.sql`) ranks programs by shared Holland letters (exact = 3 shared, partial = 2).
-- **Output:** client-computed results dashboard (code, radar, careers, programs); client-side print-to-PDF export; emailed results via Resend.
+- **Input:** static TypeScript question bank → client-side profile + answers in `useAssessmentStore` (`apps/web/src/store/useAssessmentStore.ts`, localStorage, 30-minute session TTL); official results-sheet data in `lib/riasec/career-pathways.ts`.
+- **Process:** pure-TS scoring library (`src/lib/riasec/scoring.ts`) derives the 3-letter Holland code with deterministic R→I→A→S→E→C tie-breaking (PRD FR-4); server routes validate input with `lib/riasec/validate-results.ts` and write through `lib/saved-results/repository.ts` with the service-role client.
+- **Output:** client-computed results dashboard (code, radar, majors and pathways per letter); encrypted pdfmake PDF built in the browser; the same PDF rendered on the server and emailed via nodemailer/Gmail; a results ID for later comparison; aggregate stats on the admin page.
 
 ### Tech stack
 
@@ -25,19 +25,25 @@ AlignEd ships as a **mostly-static, anonymous-first** Next.js 16 application. Re
 | Styling | **Tailwind v4** (`@tailwindcss/postcss`) + `tw-animate-css` | Design tokens live in `@theme` inside `globals.css`; vendored MagicUI/Aceternity keyframes ported there once. No `tailwind.config.ts`. |
 | Components | **shadcn/ui (Base UI) + MagicUI + Aceternity + Efferd**, all vendored via the `shadcn` CLI registry system into `src/components/{ui,magic,aceternity,blocks}` | Copy-paste ownership: every animated component can be performance-tuned, reduced-motion-gated, and themed locally. |
 | Motion | framer-motion 12 (`motion/react`) behind a single `LazyMotion` provider | One orchestration layer; tree-shaken features; global `useReducedMotion` gate. |
-| Backend | **Supabase** — Postgres, RLS, Edge Functions; **Auth product deliberately unused** (PRD §3 Non-Goals) | RLS: public-read on reference tables, insert-only on `assessments`, zero read-back. |
-| Email | **Resend** called from the `send-results` Supabase Edge Function | DKIM/SPF for deliverability; raw email addresses never persisted (PRD FR-8). |
-| Infra | Vercel (web) + Supabase Cloud (data); GitHub Actions CI; Sentry + PostHog + Vercel Analytics | Staging and production are separate Vercel + Supabase environments. |
+| Backend | **Next.js route handlers** (`src/app/api`) + **Supabase Postgres** with RLS, reached only with the service-role key on the server; **no Edge Functions, Auth deliberately unused** (PRD §3 Non-Goals) | `saved_results`: RLS on, no policies, so the anon key cannot read or write. |
+| Email | **nodemailer over Gmail SMTP** from `POST /api/send-results` (`GMAIL_USER` + App Password) | Attaches the encrypted results PDF + optional career-look photo; raw address never persisted; in-memory salted-hash rate limits (PRD FR-8). |
+| PDF | **pdfmake** | Browser build for Download PDF (lazy-loaded); server twin for the email attachment (`serverExternalPackages`). Password = nickname + code. |
+| Infra | Vercel (web) + Supabase Cloud (data); GitHub Actions CI (lint, typecheck, Vitest, seed determinism, build); PostHog optional | Sentry, Vercel Analytics and the Lighthouse gate are not wired yet. |
 
 ### Database plan
 
-Migration `0001_init.sql` already provides `careers`, `courses`, `course_careers`, anonymous `assessments`, indexes on `riasec_tag`, RLS policies, and the `match_courses` RPC.
+Current migrations:
 
-**Changes required to match the PRD:**
+| Migration | State |
+| :--- | :--- |
+| `0001_init.sql` | `careers`, `courses`, `course_careers`, `assessments`, `match_courses` RPC. Reference tables kept as backend data; `assessments` and `match_courses` are unused. |
+| `0002_universities.sql` | Out of scope per the PRD; still to remove (task 1.2). |
+| `0003_saved_results.sql` | `saved_results`: the live write table (results ID, six scores, `max_score`, code, `grade_level` `11`/`12`, date; one-year expiry; RLS on with no policies). |
+| `0004_saved_results_age.sql` | Adds nullable `age` (10–30). |
 
-1. **New migration `0002_assessment_profile.sql`:** add `grade_level` (check-constrained to `7`–`12`) and `school` (nullable text, length ≤ 120) to `assessments`. Insert-only RLS unchanged.
-2. **Descope universities:** migration `0002_universities.sql` and the `data/universities.csv` / `data/university_courses.csv` inputs are out of scope per the PRD (no directory, no university mapping). Cleanup task 1.2 removes them so the schema and seed pipeline contain nothing the product does not use.
-3. `supabase/seed.sql` is generated by the schema-validated CSV pipeline (`scripts/build-seed.mjs`) from `data/courses.csv`, `data/careers.csv`, `data/course_careers.csv` only.
+`supabase/seed.sql` is generated by the schema-validated CSV pipeline (`scripts/build-seed.mjs`), checked for determinism in CI.
+
+**Remaining cleanup:** drop `0002_universities.sql` and its CSV inputs; decide whether to drop the unused `assessments` table and `match_courses` RPC in a new migration.
 
 ---
 
@@ -48,12 +54,15 @@ Design language and page-level wireframes live in `docs/AlignEd_Design_Vision.md
 | Feature (PRD ref) | Component mapping |
 |---|---|
 | **Landing page** (FR-1) | **Efferd**: Hero block + Header/Nav + Footer + FAQ skeleton. **Aceternity**: *Hero Highlight* behind the headline; *Bento Grid* for the four journey steps; *Infinite Moving Cards* testimonials. **MagicUI**: *Animated Shiny Text* eyebrow; *Shimmer Button* on the journey-aware CTA; *Number Ticker* stats. **shadcn**: `Sheet` mobile nav, `Button`. |
-| **Profile Setup** (FR-2) | **shadcn**: `RadioGroup` (grade level — six cards, Grade 7–12), `Input` with counter (school, optional), `Button` (disabled until valid). Runs inside the same Focus Mode shell as the quiz. |
+| **Profile Setup** (FR-2) | **shadcn**: `RadioGroup` (grade level — two cards, Grade 11–12; strand cards), `Input` (age, required, 10–30), `Input` with counter (school, optional), privacy-notice `Checkbox` (required), `Button` (unavailable until valid). Runs inside the same Focus Mode shell as the quiz. |
 | **RIASEC assessment** (FR-3) | **shadcn**: `Progress`, `Card`, `RadioGroup` (Yes/No as two tappable cards, auto-advancing; `Back` button only — no Next), `AlertDialog` on exit attempts. **MagicUI**: *Animated Circular Progress Bar* step counter; *Blur Fade* question entrance; *Confetti* on completion. **Framer Motion**: `AnimatePresence` slide transitions. **State**: existing `useAssessmentStore` (kept — it already handles re-answer score correction and localStorage resume), extended with profile fields. |
 | **Results — code reveal** (FR-4) | **MagicUI**: *Sparkles Text* Holland-code reveal; *Animated Gradient Text* trait name. **shadcn**: `Chart` (Recharts `RadarChart`) six-trait radar wrapped in Aceternity *Card Spotlight*. |
-| **Results — careers & programs** (FR-5, FR-6) | **Aceternity**: *3D Card Effect* for the #1 program match; *Card Hover Effect* grid for the rest and for careers. **shadcn**: `Badge` match strength ("Exact match" / "Strong match") derived from the RPC's `match_score`. No university links anywhere. |
-| **PDF export** (FR-7) | Print-optimized results view (dedicated print stylesheet; interactive chrome hidden via `print:` variants) triggered through `window.print()`. A4 single column, grayscale-legible. |
-| **Email-my-results** (FR-8) | **shadcn**: `Dialog` + `Form` (zod validation) + `Input` + consent `Checkbox` (Data Privacy Act copy) + `Sonner` toasts. **MagicUI**: *Pulsating Button* send CTA. Honeypot field included. |
+| **Results — majors & pathways** (FR-5) | `riasec/pathway-results.tsx`: one card per code letter (mascot cover, description, all majors, all pathways as equal-weight tags). No ranking, badges or university links anywhere. |
+| **PDF export** (FR-7) | pdfmake document built in the browser (`lib/results-pdf/build-results-pdf.ts` + `download-results-pdf.ts`), encrypted with nickname + code. A4, grayscale-legible. |
+| **Email-my-results** (FR-8) | `Dialog` + `Input` + consent `Checkbox` (Data Privacy Act copy) + `Sonner` toasts, posting to `/api/send-results`. Honeypot `website` field included. |
+| **Saved results** (FR-9) | `journey/saved-results-panel.tsx`: auto-save once per session, results ID display, compare by ID, delete, retry on failure. |
+| **Admin** (FR-10) | `app/admin/[token]/page.tsx`: server-rendered stats, token-gated. |
+| **Career look** (FR-11) | `components/career-look` + `lib/career-look`: MediaPipe face landmarks, memory-only photo. |
 
 **State management strategy:** Server Components own all reference data — no client-side global state mirrors server data. Zustand is scoped to the profile + assessment session store. There is no other client state.
 
@@ -74,10 +83,10 @@ Design language and page-level wireframes live in `docs/AlignEd_Design_Vision.md
 | 1.3 | Verify/extend `@theme` design tokens: teal/blue + orange/yellow palettes, radii, typography, dark mode | 1 d |
 | 1.4 | Vendor remaining components via the shadcn CLI registries; verify Tailwind v4 + Base UI compatibility; port keyframes to `@theme` | 2 d |
 | 1.5 | App shell: Efferd header/footer, root layout, `LazyMotion` provider, `useReducedMotion` gate | 1.5 d |
-| 1.6 | Migration `0002_assessment_profile.sql`: `grade_level`, `school` columns + check constraints on `assessments` | 0.5 d |
+| 1.6 | ~~Migration `0002_assessment_profile.sql` on `assessments`~~ **Superseded:** `saved_results` (`0003`, `0004`) carries grade and age; school is never stored. | — |
 | 1.7 | **Content track (parallel, schedule-critical):** finalize programs/careers datasets, RIASEC-tag everything, validate through `scripts/build-seed.mjs` (runs Wk 1–4) | — |
 | 1.8 | CI: GitHub Actions running lint, typecheck, Vitest, and build on every PR; Conventional Commits enforced | 1 d |
-| 1.9 | Sentry + PostHog + Vercel Analytics wiring; staging/production environment split | 1 d |
+| 1.9 | PostHog wiring (done, env-guarded); Sentry + Vercel Analytics still open; staging/production environment split | 1 d |
 
 ### Phase 2 — Profile Setup & Assessment Engine (Weeks 3–4)
 
@@ -90,7 +99,7 @@ Design language and page-level wireframes live in `docs/AlignEd_Design_Vision.md
 | 2.3 | Pure scoring library `src/lib/riasec/scoring.ts`: tally → deterministic R→I→A→S→E→C tie-breaking → 3-letter code; **exhaustive unit tests incl. property-based determinism and the flat-profile edge case (PRD E1–E2)** | 2 d |
 | 2.4 | Quiz UI per §2 mapping; keyboard-completable; route guards (no profile → redirect to profile; incomplete → no results) | 3 d |
 | 2.5 | Refresh-resume flow ("Welcome back — continue where you left off?") from persisted state; in-memory fallback + warning when localStorage is unavailable (PRD E12) | 1 d |
-| 2.6 | Completion flow: anonymous `assessments` insert (scores + profile, no identifiers; background retry per PRD E10), PostHog funnel events, Confetti → results redirect | 1.5 d |
+| 2.6 | Completion flow: finish screen → results; Results saves one `saved_results` row per session via `POST /api/results` and shows the results ID (retry on failure, PRD E11); PostHog funnel events | 1.5 d |
 
 ### Phase 3 — Results Dashboard (Weeks 5–6)
 
@@ -99,8 +108,9 @@ Design language and page-level wireframes live in `docs/AlignEd_Design_Vision.md
 | # | Task | Effort |
 |---|---|---|
 | 3.1 | Results page: Holland-code reveal, radar chart, top-3 trait explanations | 2 d |
-| 3.2 | Wire `match_courses` RPC; program cards with match-strength badges, top 3–5 curation (PRD FR-6) | 1.5 d |
-| 3.3 | Career suggestions: overlap ranking (exact-first), top 6–10 cards with Holland tags | 1.5 d |
+| 3.2 | ~~`match_courses` program cards~~ **Superseded by FR-5:** one card per code letter with all majors and pathways from `career-pathways.ts`, unranked | 1.5 d |
+| 3.3 | ~~Career suggestion ranking~~ **Superseded by FR-5** (pathways shown in sheet order) | — |
+| 3.5 | Saved results + compare (`/api/results`, `/api/results/[id]`, `saved-results-panel.tsx`) and admin page (`/admin/[token]`) (PRD FR-9, FR-10) | 2 d |
 | 3.4 | Journey-aware navigation states + landing CTA swap; retake flow (reset answers, retain profile) | 1.5 d |
 
 ### Phase 4 — Export & Email Delivery (Weeks 7–8)
@@ -109,9 +119,10 @@ Design language and page-level wireframes live in `docs/AlignEd_Design_Vision.md
 
 | # | Task | Effort |
 |---|---|---|
-| 4.1 | Print-optimized results view + print stylesheet; "Download PDF" via browser print pipeline; A4/grayscale verification (PRD FR-7) | 2 d |
-| 4.2 | **`send-results` Supabase Edge Function**: Resend integration; per-IP + hashed-email rate limiting; consent enforcement; honeypot; **raw email never stored — send and discard**; branded HTML results template | 2.5 d |
-| 4.3 | Email dialog UI: zod validation, consent checkbox with DPA copy, success/failure toasts with retry, PDF fallback prompt on failure (PRD E7–E9) | 1.5 d |
+| 4.1 | Encrypted pdfmake results PDF built in the browser, lazy-loaded; A4/grayscale verification (PRD FR-7) | 2 d |
+| 4.2 | **`POST /api/send-results` route**: server-rendered PDF attachment + optional career-look photo via nodemailer/Gmail SMTP; per-address (3/day) + per-network (20/hour) salted-hash limits in memory; honeypot; **raw email never stored — send and discard**; branded HTML body | 2.5 d |
+| 4.3 | Email dialog UI: client validation, consent checkbox with DPA copy, success/failure toasts with retry, PDF fallback prompt on failure (PRD E8–E10) | 1.5 d |
+| 4.5 | Career look: camera, MediaPipe face anchoring, career props, memory-only photo for the email (PRD FR-11) | 3 d |
 | 4.4 | Landing page final polish per §2 mapping; privacy notice page; OG images and metadata | 1.5 d |
 
 ### Phase 5 — Hardening & Launch (Weeks 9–10)
@@ -123,9 +134,10 @@ Design language and page-level wireframes live in `docs/AlignEd_Design_Vision.md
 | 5.1 | Playwright E2E journeys + visual-regression snapshots (protocol in §4) | 3 d |
 | 5.2 | Lighthouse CI gate (≥ 90 Perf/A11y/SEO, mobile emulation) wired into Actions; fix regressions | 2 d |
 | 5.3 | Accessibility audit: axe automated pass + manual keyboard/screen-reader pass; contrast verification in both themes | 1.5 d |
-| 5.4 | Load sanity check: k6 against the anonymous-insert and RPC paths | 1 d |
-| 5.5 | UAT with Philippine students (Grade 7–12); iterate on findings | 2 d |
-| 5.6 | Production promotion: custom domain, Resend DKIM/SPF verification, monitoring dashboards | 1 d |
+| 5.4 | Load sanity check: k6 against `/api/results` and `/api/send-results`; move in-memory rate limiters to a shared store if running more than one instance | 1 d |
+| 5.5 | UAT with Philippine SHS students (Grade 11–12); iterate on findings | 2 d |
+| 5.6 | Production promotion: custom domain, Gmail sending account + App Password, `ADMIN_TOKEN` issued, monitoring dashboards | 1 d |
+| 5.7 | Strict nonce-based CSP in `proxy.ts` (headers today live in `next.config.ts`) | 1 d |
 
 ---
 
@@ -133,15 +145,15 @@ Design language and page-level wireframes live in `docs/AlignEd_Design_Vision.md
 
 **Unit (Vitest — already configured).** Highest-value targets: the scoring library (property-based tests — every possible answer set yields a valid 3-letter code; ties resolve by R→I→A→S→E→C; re-answering never corrupts totals — the store's subtraction logic in `setAnswer` gets explicit coverage) and profile validation. Coverage target ~90% on `src/lib/riasec/`.
 
-**Integration.** React Testing Library with a mocked Supabase client for component behavior; plus **RPC contract tests** that run `supabase start` in CI against real migrations + seed and assert `match_courses` ranking semantics (exact-before-partial, alphabetical tiebreak) — so the SQL and the TypeScript expectations can never silently drift.
+**Integration.** React Testing Library for component behavior; route-handler tests (`src/app/api/**/route.test.ts`) with the repository/Supabase client and `nodemailer` mocked, covering validation, honeypot, rate limits and `not_configured`. Still open: a contract test that runs `supabase start` in CI against the real migrations and asserts the `saved_results` constraints match `validate-results.ts`.
 
-**E2E (Playwright — already installed).** Four journeys: (1) land → profile → complete full assessment → results (code, verdict, careers, programs all present) → email dialog with Resend mocked; (2) mid-quiz refresh → resume; (3) guard rails — `/results` without completion redirects, `/assessment` without profile redirects, invalid email blocked inline, consent unchecked blocks send; (4) print view — the PDF route renders all four result sections with chrome hidden.
+**E2E (Playwright — installed, specs not written yet, `apps/web/tests/e2e`).** Four journeys: (1) land → profile → complete full assessment → results (code, majors, pathways, results ID present) → email dialog with the mailer mocked; (2) mid-quiz refresh → resume; (3) guard rails — `/results` without completion redirects, `/assessment` without profile redirects, invalid email blocked inline, consent unchecked blocks send; (4) Download PDF produces an encrypted file.
 
 **Visual regression.** Playwright `toHaveScreenshot` per key page (landing, profile, quiz, results, print view) in **light and dark themes**, captured under `reducedMotion: 'reduce'` emulation so the global motion gate freezes every animation deterministically. Snapshots generated and compared on Linux CI only. A separate "animation smoke" spec runs with motion enabled and asserts every animated component mounts without console errors.
 
 **Performance budgeting.** Lighthouse CI asserts ≥ 90 on every PR (mobile emulation, throttled CPU). Route-level JS budgets from `next build` output: landing ≤ ~180 KB gzipped. LCP < 2.5 s on throttled mid-tier mobile. Canvas-based background effects measured under CPU throttling — if any blows the budget, it is swapped for its CSS-gradient variant. Images through `next/image`; fonts subset and self-hosted.
 
-**UAT.** Scripted sessions with Grade 7–12 students, validating the "Empathetic Guidance" thesis and the clarity of career/program match results, paired with PostHog funnels (per-question drop-off, results → export conversion) as the quantitative companion.
+**UAT.** Scripted sessions with Grade 11–12 students, validating the "Empathetic Guidance" thesis and the clarity of the majors and pathways shown, paired with PostHog funnels (per-question drop-off, results → export conversion) as the quantitative companion.
 
 ---
 
@@ -153,7 +165,14 @@ Design language and page-level wireframes live in `docs/AlignEd_Design_Vision.md
 | **Registry components assume Tailwind v3 + Radix** while the repo is Tailwind v4 + Base UI | Vendored components break or double-bundle | Vendor the full set in Phase 1 (task 1.4) to surface incompatibilities immediately; keep all fixes local to `components/{magic,aceternity}`. |
 | **Animation weight degrades low-end mobile** (the primary audience) | Lighthouse < 90; students bounce | Global reduced-motion gate, `LazyMotion`, viewport-triggered animation only, CSS fallbacks for canvas effects, throttled-CPU perf tests in CI. |
 | **Misaligned verdicts land badly** with students or educators | Trust damage, negative word of mouth | Insight copy reviewed in UAT (task 5.5); matrix versioned in one module with documented rationale; verdicts framed as guidance, never judgment. |
-| **Email abuse / Data Privacy Act exposure** (psychometric results + email = sensitive personal information) | Legal and trust damage | No accounts; raw email never stored (hash only, for rate limiting); explicit consent checkbox with DPA copy; public privacy notice; honeypot + per-IP rate limits; DKIM/SPF via Resend. |
+| **Email abuse / Data Privacy Act exposure** (psychometric results + email = sensitive personal information) | Legal and trust damage | No accounts; raw email never stored (salted hash in memory only, for rate limiting); explicit consent checkbox with DPA copy; versioned privacy notice accepted at Profile Setup; honeypot + per-address/per-network limits; encrypted PDF; Gmail App Password server-side only. |
+| **In-memory rate limiters** reset on restart and count per instance | Limits weaker than they look when scaled out | Fine for one school's traffic; shared store before multi-instance deploys (task 5.4). |
 | **Static program/career data goes stale** | Loss of user trust | Data edits via versioned CSV → seed pipeline shipped as reviewed PRs. |
 | **Seed-data research slips** | Phase 3 blocked | Content track starts day one as a parallel workstream with a schema-validated CSV pipeline; Phase 3 can proceed on partial data. |
-| **5,000 concurrent assessment sessions** | Degraded response times | Assessment is fully client-side; reference pages are edge-cached; the only write is an anonymous insert. k6 sanity test in Phase 5. |
+| **5,000 concurrent assessment sessions** | Degraded response times | Assessment is fully client-side; pages are static; the only write is one small `saved_results` insert per session. k6 sanity test in Phase 5. |
+
+## Changelog
+
+Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
+
+- 2026-10-27 · backend · Architecture, stack, database plan and component map rewritten to the shipped code (Next route handlers, `saved_results`, Gmail SMTP, pdfmake, admin page, career look). Tasks 1.6, 3.2, 3.3 marked superseded; 2.6, 4.1–4.3, 5.4–5.6 rewritten; 3.5, 4.5, 5.7 added; QA protocol updated. · The codebase is the plan of record.
