@@ -30,6 +30,12 @@
   --color-tag: var(--tag);
   --color-tag-foreground: var(--tag-foreground);
   --color-success-strong: var(--success-strong);
+  --color-answer-yes: var(--answer-yes);
+  --color-answer-yes-soft: var(--answer-yes-soft);
+  --color-answer-yes-soft-foreground: var(--answer-yes-soft-foreground);
+  --color-answer-no: var(--answer-no);
+  --color-answer-no-soft: var(--answer-no-soft);
+  --color-answer-no-soft-foreground: var(--answer-no-soft-foreground);
   /* Chrome surface for the site header and footer: tinted toward the brand
      blue so they read as distinct bands against the near-white page. */
   --color-chrome: var(--chrome);
@@ -188,6 +194,15 @@
   --secondary: #38e54d;
   --secondary-foreground: #06310f;
   --success-strong: #127a26;
+  /* Quiz Yes / No cards: a calm green and a muted brick red, not the neon
+     stage fills. Measured: text on card 5.47:1 / 6.54:1; ink on the chosen
+     soft fill 13.04:1 / 11.44:1. */
+  --answer-yes: #127a26;
+  --answer-yes-soft: #ddfbe1;
+  --answer-yes-soft-foreground: #06310f;
+  --answer-no: #b3261e;
+  --answer-no-soft: #fde3e1;
+  --answer-no-soft-foreground: #5a0f0a;
   --highlight: #ffc000;
   /* Pastel cut of the mustard, for fills too big to carry it: the selected
      answer card and the "College majors" chips. Pitched at 1.19:1 against a
@@ -302,6 +317,14 @@
   --secondary: #283c1d;
   --secondary-foreground: #cde8b7;
   --success-strong: #abd58e;
+  /* Dark cut: pastel text on a deep tinted fill. Text on card 10.45:1 /
+     9.02:1; ink on the chosen fill 9.02:1 / 10.41:1. */
+  --answer-yes: #abd58e;
+  --answer-yes-soft: #283c1d;
+  --answer-yes-soft-foreground: #cde8b7;
+  --answer-no: #f0a9a2;
+  --answer-no-soft: #3d1f1d;
+  --answer-no-soft-foreground: #f6cfcb;
   --highlight: #362d0a;
   /* The one fill that does NOT darken for this theme. It marks the chosen quiz
      answer, and a dim olive made that card read as switched off against its

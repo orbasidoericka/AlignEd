@@ -268,11 +268,11 @@ export function QuestionNavigator({
                         "border border-border bg-card text-muted-foreground hover:bg-accent hover:text-accent-foreground",
                       state === "answered" &&
                         "border-2 border-success-strong bg-secondary/60 text-secondary-foreground hover:bg-secondary",
-                      // Current fills in the stage blue on top of whichever
-                      // border its answer state gives it.
+                      // Current: soft mustard tint, not a bright fill, so the
+                      // marker reads as a calm highlight next to Answered's own
+                      // soft-green treatment (5.9:1 light, 12:1 dark).
                       current &&
-                        "bg-stage-assessment text-stage-assessment-foreground hover:bg-stage-assessment/85",
-                      current && state === "open" && "border-2 border-stage-assessment-strong",
+                        "border-2 border-stage-profile-strong bg-stage-profile-soft text-stage-profile-strong hover:bg-stage-profile-soft/70",
                     )}
                   >
                     {i + 1}
@@ -297,7 +297,7 @@ export function QuestionNavigator({
           <li className="flex items-center gap-1.5">
             <span
               aria-hidden
-              className="size-4 rounded-[5px] border-2 border-stage-assessment-strong bg-stage-assessment"
+              className="size-4 rounded-[5px] border-2 border-stage-profile-strong bg-stage-profile-soft"
             />
             Current
           </li>

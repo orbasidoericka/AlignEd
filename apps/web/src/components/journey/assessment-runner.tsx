@@ -25,8 +25,11 @@ import { useRapidAnswerGuard } from "@/hooks/use-rapid-answer-guard";
 import { playSound } from "@/lib/sound/sound-manager";
 import {
   ANSWER_OPTIONS,
+  answerLabel,
   orderQuestions,
   QUESTIONS,
+  questionText,
+  type QuestionLanguage,
 } from "@/lib/riasec/questions";
 import { useAssessmentStore } from "@/store/useAssessmentStore";
 import { cn } from "@/lib/utils";
@@ -40,20 +43,52 @@ const LAST_INDEX = QUESTIONS.length - 1;
 const statementId = (questionId: string) => `statement-${questionId}`;
 const FINISH_HEADING_ID = "assessment-finish-heading";
 
-// Keyboard shortcuts: first letter of each answer label (Y / N).
+// Keyboard shortcuts: first letter of each answer label in either language
+// (Y / N, O / H), so a shortcut works whichever language is showing.
 const SHORTCUTS = new Map(
-  ANSWER_OPTIONS.map((option) => [option.label[0]!.toLowerCase(), option.value]),
-);
-
-// Each answer has its own sound, keyed off the same options the cards render
-// from, so relabelling them can never leave the audio pointing at the wrong
-// choice.
-const ANSWER_SOUNDS = new Map<number, "yes" | "no">(
-  ANSWER_OPTIONS.map((option) => [
-    option.value,
-    option.label[0]!.toLowerCase() === "y" ? "yes" : "no",
+  ANSWER_OPTIONS.flatMap((option) => [
+    [option.label[0]!.toLowerCase(), option.value] as const,
+    [option.labelFil[0]!.toLowerCase(), option.value] as const,
   ]),
 );
+
+// Each answer has its own sound, keyed off the answer's value (1 = agree), so
+// relabelling or translating the cards can never leave the audio pointing at
+// the wrong choice.
+const ANSWER_SOUNDS = new Map<number, "yes" | "no">(
+  ANSWER_OPTIONS.map((option) => [option.value, option.value === 1 ? "yes" : "no"]),
+);
+
+// Yes is green and No is red on hover and when chosen. The card's own ink
+// (text-answer-*) drives its currentColor border and hover wash; the chosen
+// fill is a soft tint, and the glow is a single quiet tone, so neither shouts.
+const ANSWER_TONE = {
+  1: {
+    card: "text-answer-yes data-checked:bg-answer-yes-soft data-checked:text-answer-yes-soft-foreground",
+    label:
+      "group-hover:text-answer-yes in-data-checked:text-answer-yes-soft-foreground",
+    hint: "in-data-checked:text-answer-yes-soft-foreground/75",
+    kbd: "in-data-checked:border-answer-yes-soft-foreground/30 in-data-checked:bg-answer-yes-soft-foreground/10 in-data-checked:text-answer-yes-soft-foreground",
+    glow: "bg-answer-yes/30",
+  },
+  0: {
+    card: "text-answer-no data-checked:bg-answer-no-soft data-checked:text-answer-no-soft-foreground",
+    label:
+      "group-hover:text-answer-no in-data-checked:text-answer-no-soft-foreground",
+    hint: "in-data-checked:text-answer-no-soft-foreground/75",
+    kbd: "in-data-checked:border-answer-no-soft-foreground/30 in-data-checked:bg-answer-no-soft-foreground/10 in-data-checked:text-answer-no-soft-foreground",
+    glow: "bg-answer-no/30",
+  },
+} as const;
+
+const LANGUAGE_CHOICES: readonly {
+  value: QuestionLanguage;
+  label: string;
+  lang: string;
+}[] = [
+  { value: "en", label: "English", lang: "en" },
+  { value: "fil", label: "Filipino", lang: "fil" },
+];
 
 function playAnswerSound(value: number) {
   const name = ANSWER_SOUNDS.get(value);
@@ -98,6 +133,8 @@ export function AssessmentRunner() {
   const ensureQuestionOrder = useAssessmentStore(
     (state) => state.ensureQuestionOrder,
   );
+  const language = useAssessmentStore((state) => state.language);
+  const setLanguage = useAssessmentStore((state) => state.setLanguage);
 
   // The statements in this session's random order (printed order until the
   // store seeds one, which happens in the effect below). Index-based
@@ -536,10 +573,36 @@ export function AssessmentRunner() {
                 <h1
                   id={statementId(question.id)}
                   tabIndex={-1}
+                  lang={language === "fil" ? "fil" : undefined}
                   className="min-h-20 text-2xl font-bold text-foreground outline-none sm:text-3xl"
                 >
-                  {question.text}
+                  {questionText(question, language)}
                 </h1>
+
+                <div
+                  role="group"
+                  aria-label="Statement language"
+                  className="-mt-2 flex w-fit items-center gap-1 rounded-full bg-card p-1"
+                >
+                  {LANGUAGE_CHOICES.map((choice) => (
+                    <Button
+                      key={choice.value}
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      lang={choice.lang}
+                      aria-pressed={language === choice.value}
+                      onClick={() => setLanguage(choice.value)}
+                      className={cn(
+                        "h-9 rounded-full px-4 font-semibold",
+                        language === choice.value &&
+                          "bg-highlight-soft text-highlight-soft-foreground hover:bg-highlight-soft",
+                      )}
+                    >
+                      {choice.label}
+                    </Button>
+                  ))}
+                </div>
 
                 {/* Arrow keys move the selection inside the group; flag them so
                     the resulting value change selects without advancing. */}
@@ -566,6 +629,7 @@ export function AssessmentRunner() {
                       // hides the gradient except for the 3px ring.
                       <BackgroundGradient
                         key={option.value}
+                        glowClassName={ANSWER_TONE[option.value].glow}
                         // The lift rides on the container so the 3px frame,
                         // the glow and the card travel as one piece; lifting
                         // the card alone would slide it inside its own frame.
@@ -587,7 +651,10 @@ export function AssessmentRunner() {
           // outline to fight, so rest/hover/checked borders come from one
           // place. --highlight-soft is a pale fill in BOTH themes, so the
           // checked card sets its own ink and everything inside follows it.
-                          className="relative h-full min-h-28 w-full flex-col justify-center gap-2 rounded-3xl bg-card text-stage-assessment-strong data-checked:bg-highlight-soft data-checked:text-highlight-soft-foreground"
+                          className={cn(
+                            "relative h-full min-h-28 w-full flex-col justify-center gap-2 rounded-3xl bg-card",
+                            ANSWER_TONE[option.value].card,
+                          )}
                         >
                           <RadioCardIndicator className="sr-only" />
                           {/* Non-color cue for the selected card. */}
@@ -598,8 +665,13 @@ export function AssessmentRunner() {
                           {/* The word carries the card: body face at display
                               size, tight tracking, with the shortcut shown
                               quietly beneath it on pointer-sized screens. */}
-                          <span className="font-sans text-4xl leading-none font-extrabold tracking-tight text-foreground in-data-checked:text-highlight-soft-foreground sm:text-5xl">
-                            {option.label}
+                          <span
+                            className={cn(
+                              "font-sans text-4xl leading-none font-extrabold tracking-tight text-foreground transition-colors duration-150 sm:text-5xl",
+                              ANSWER_TONE[option.value].label,
+                            )}
+                          >
+                            {answerLabel(option, language)}
                           </span>
                           {/* The hint darkens with the card, so the hover
                               carries a text-contrast change too and is not
@@ -609,10 +681,20 @@ export function AssessmentRunner() {
                               are mixed for the page, not for a yellow fill,
                               and a transparency of the ink stays on the fill's
                               own hue (7.03:1). */}
-                          <span className="hidden items-center gap-1.5 text-sm text-muted-foreground transition-colors duration-150 group-hover:text-foreground in-data-checked:text-highlight-soft-foreground/75 sm:flex">
+                          <span
+                            className={cn(
+                              "hidden items-center gap-1.5 text-sm text-muted-foreground transition-colors duration-150 group-hover:text-foreground sm:flex",
+                              ANSWER_TONE[option.value].hint,
+                            )}
+                          >
                             press
-                            <kbd className="rounded-md border border-border bg-muted px-1.5 py-0.5 font-sans text-xs font-bold text-foreground transition-colors duration-150 group-hover:border-current in-data-checked:border-highlight-soft-foreground/30 in-data-checked:bg-highlight-soft-foreground/10 in-data-checked:text-highlight-soft-foreground">
-                              {option.label[0]!.toUpperCase()}
+                            <kbd
+                              className={cn(
+                                "rounded-md border border-border bg-muted px-1.5 py-0.5 font-sans text-xs font-bold text-foreground transition-colors duration-150 group-hover:border-current",
+                                ANSWER_TONE[option.value].kbd,
+                              )}
+                            >
+                              {answerLabel(option, language)[0]!.toUpperCase()}
                             </kbd>
                           </span>
                         </RadioCard>
@@ -663,7 +745,9 @@ export function AssessmentRunner() {
             ) : shownControl === "hint" ? (
               <p className="text-right text-sm text-muted-foreground">
                 Tap an answer to continue
-                <span className="hidden sm:inline">, or press Y or N</span>
+                <span className="hidden sm:inline">
+                  {language === "fil" ? ", or press O or H" : ", or press Y or N"}
+                </span>
               </p>
             ) : null}
           </div>

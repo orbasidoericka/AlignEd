@@ -7,6 +7,7 @@ import {
   isValidQuestionOrder,
   QUESTIONS,
   shuffleQuestionIds,
+  type QuestionLanguage,
 } from "@/lib/riasec/questions";
 import type { GradeLevel, ShsStrand } from "@/lib/riasec/types";
 
@@ -47,6 +48,10 @@ interface AssessmentState {
   // reshuffle never loses or misattributes one. Empty until the first visit
   // seeds it via ensureQuestionOrder.
   questionOrder: string[];
+  // Language the statements are shown in. Presentation only: answers and
+  // scoring are keyed by question id, so switching mid-quiz changes nothing
+  // already recorded.
+  language: QuestionLanguage;
   profile: ProfileState;
   lastUpdated: string | null;
   // When the last question was first answered (ISO). Unlike lastUpdated it
@@ -67,6 +72,7 @@ interface AssessmentActions {
   // Seeds a random order on first use (or when the persisted one is stale),
   // and leaves a valid one untouched so a resumed session keeps its order.
   ensureQuestionOrder: () => void;
+  setLanguage: (language: QuestionLanguage) => void;
   setProfile: (patch: Partial<ProfileState>) => void;
   setResultsId: (resultsId: string | null) => void;
   markResultsDeleted: () => void;
@@ -144,6 +150,7 @@ export const useAssessmentStore = create<AssessmentStore>()(
       answers: {},
       scores: { ...emptyScores },
       questionOrder: [],
+      language: "en",
       profile: { ...emptyProfile },
       lastUpdated: null,
       completedAt: null,
@@ -212,6 +219,8 @@ export const useAssessmentStore = create<AssessmentStore>()(
             lastUpdated: new Date().toISOString(),
           };
         }),
+      setLanguage: (language) =>
+        set({ language, lastUpdated: new Date().toISOString() }),
       setProfile: (patch) =>
         set((state) => ({
           profile: { ...state.profile, ...patch },
@@ -239,6 +248,7 @@ export const useAssessmentStore = create<AssessmentStore>()(
           answers: {},
           scores: { ...emptyScores },
           questionOrder: [],
+          language: "en",
           profile: { ...emptyProfile },
           lastUpdated: null,
           completedAt: null,
@@ -248,7 +258,7 @@ export const useAssessmentStore = create<AssessmentStore>()(
     }),
     {
       name: STORAGE_KEY,
-      version: 8,
+      version: 9,
       storage: createJSONStorage(() => ssrSafeStorage()),
       // 30-minute TTL. zustand calls this after `merge` has set the rehydrated state
       // but *before* it flips `hasHydrated`, so JourneyGuard — which gates on
@@ -282,6 +292,7 @@ export const useAssessmentStore = create<AssessmentStore>()(
         answers: state.answers,
         scores: state.scores,
         questionOrder: state.questionOrder,
+        language: state.language,
         profile: state.profile,
         lastUpdated: state.lastUpdated,
         completedAt: state.completedAt,
@@ -327,6 +338,7 @@ export const useAssessmentStore = create<AssessmentStore>()(
         // v6 added age, v7 the privacy consent, and v8 the SHS strand.
         // merge's spread over emptyProfile fills these for older blobs, so
         // an older session simply has to complete the new profile choice.
+        // v9 added the statement language; merge keeps the "en" default.
         return withNickname;
       },
     },

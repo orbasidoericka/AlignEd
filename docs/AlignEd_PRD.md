@@ -108,6 +108,7 @@ Captured before the assessment begins; stored client-side only (localStorage via
 - FR-3.5. **Session handling:** answers persist to localStorage on every change. On refresh or return, the student resumes at their first unanswered question ("Welcome back — continue where you left off?"). Sessions have no server component and expire 30 minutes after the last change: on the next visit an older session is wiped from localStorage — profile, answers, scores, and the saved results alike — and the student starts fresh, so an abandoned quiz is never left on a shared or school device for the next student to resume.
 - FR-3.6. **Completion:** requires all 42 questions answered (Yes or No). On completion the student goes to Results, which saves exactly one nameless record per session (FR-9).
 - FR-3.7. **Retake:** an explicit "Retake assessment" action on Results resets answers and scores (profile is retained and re-confirmable).
+- FR-3.8. **Filipino statements:** an English / Filipino toggle on the assessment screen switches the 42 statements to the supplied Filipino translation (`lib/riasec/questions-fil.ts`, keyed by question id) and the answer pair to **Oo / Hindi**. Presentation only: ids, trait assignment, scoring, order and the English text are unchanged, answers already given are kept when the language is switched, and Y/N and O/H both work as keyboard shortcuts. The choice persists with the session (default English) and is cleared with it. The translation is reproduced as supplied, not editorially rewritten. The rest of the interface stays in English.
 
 ### FR-4 Holland Code Computation
 - FR-4.1. The 3-letter Holland Code is the three highest-scoring traits, ordered by score descending.
@@ -289,4 +290,5 @@ AlignEd ships as a mostly-static, anonymous-first Next.js application.
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 
+- 2026-10-31 · assessment · Added FR-3.8: English / Filipino toggle for the 42 statements and Oo / Hindi answers; scoring unchanged. · Students can take the assessment in Filipino.
 - 2026-10-27 · backend · Aligned with the shipped code (`docs/BACKEND.md`): SHS-only grades 11–12, required age and privacy acceptance; `saved_results` + results ID replace the `assessments` insert (FR-9); admin page (FR-10); career look (FR-11, AR non-goal narrowed); encrypted pdfmake PDF (FR-7); email via Next route + Gmail SMTP with concrete limits (FR-8); headers in `next.config.ts`; database, env, CI and testing sections rewritten; acceptance criteria for majors/pathways replace the ranked careers/programs ones. · The codebase is the plan of record.

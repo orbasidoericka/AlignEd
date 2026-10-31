@@ -26,11 +26,15 @@ export function BackgroundGradient({
   children,
   className,
   containerClassName,
+  glowClassName = "bg-answer-glow",
   animate = "interactive",
 }: {
   children?: React.ReactNode;
   className?: string;
   containerClassName?: string;
+  // Fill of the glow layer. Defaults to the blue/mustard stage gradient; a
+  // card with its own meaning (the quiz's Yes / No) passes a single tone.
+  glowClassName?: string;
   animate?: GradientAnimation;
 }) {
   const motion = animate !== "never" && "motion-safe:animate-gradient-pan";
@@ -43,7 +47,8 @@ export function BackgroundGradient({
       <div
         aria-hidden
         className={cn(
-          "absolute -inset-1 z-[1] rounded-[1.75rem] bg-answer-glow blur-2xl transition-opacity duration-500",
+          "absolute -inset-1 z-[1] rounded-[1.75rem] blur-2xl transition-opacity duration-500",
+          glowClassName,
           animate === "always" ? "opacity-70" : "opacity-0",
           "group-hover:opacity-100 group-has-[:focus-visible]:opacity-100 group-has-[[data-checked]]:opacity-100",
           motion,

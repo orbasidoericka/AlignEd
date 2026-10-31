@@ -1,5 +1,6 @@
 // Copyright (c) 2026 EdTech. All rights reserved.
 
+import { QUESTION_TEXT_FIL } from "./questions-fil";
 import type { RiasecTrait } from "./types";
 
 export interface RiasecQuestion {
@@ -165,14 +166,34 @@ export function shuffleQuestionIds(): string[] {
   return ids;
 }
 
+export type QuestionLanguage = "en" | "fil";
+
+// The statement as shown in the chosen language. English is the instrument's
+// verbatim text; Filipino falls back to it if an id has no translation.
+export function questionText(
+  question: RiasecQuestion,
+  language: QuestionLanguage,
+): string {
+  if (language === "fil") return QUESTION_TEXT_FIL[question.id] ?? question.text;
+  return question.text;
+}
+
 export interface AnswerOption {
   value: 0 | 1;
   label: string;
+  labelFil: string;
 }
 
 // Binary answers (PRD FR-3.2): agreeing scores a point, the printed test's
 // filled-in circle. "No" is stored as 0 so it still counts as answered.
 export const ANSWER_OPTIONS: readonly AnswerOption[] = [
-  { value: 1, label: "Yes" },
-  { value: 0, label: "No" },
+  { value: 1, label: "Yes", labelFil: "Oo" },
+  { value: 0, label: "No", labelFil: "Hindi" },
 ];
+
+export function answerLabel(
+  option: AnswerOption,
+  language: QuestionLanguage,
+): string {
+  return language === "fil" ? option.labelFil : option.label;
+}

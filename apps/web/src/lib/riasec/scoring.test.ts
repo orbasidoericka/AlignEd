@@ -2,7 +2,8 @@
 
 import { describe, expect, it } from "vitest";
 
-import { QUESTIONS } from "./questions";
+import { QUESTIONS, questionText } from "./questions";
+import { QUESTION_TEXT_FIL } from "./questions-fil";
 import {
   computeHollandCode,
   formatHollandCode,
@@ -174,5 +175,16 @@ describe("question bank", () => {
 
   it("has unique question ids", () => {
     expect(new Set(QUESTIONS.map((q) => q.id)).size).toBe(QUESTIONS.length);
+  });
+
+  it("has a Filipino translation for every statement and no extras", () => {
+    expect(Object.keys(QUESTION_TEXT_FIL).sort()).toEqual(
+      QUESTIONS.map((q) => q.id).sort(),
+    );
+    for (const q of QUESTIONS) {
+      expect(questionText(q, "fil")).toBe(QUESTION_TEXT_FIL[q.id]);
+      expect(questionText(q, "fil").trim()).not.toBe("");
+      expect(questionText(q, "en")).toBe(q.text);
+    }
   });
 });

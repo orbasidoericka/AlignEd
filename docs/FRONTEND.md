@@ -23,7 +23,7 @@ Next.js 16.2.5 App Router, React 19, TypeScript, Tailwind v4 (tokens in `apps/we
 
 ## State
 
-- `store/useAssessmentStore.ts`: Zustand + `persist` (localStorage). Holds profile (nickname, grade, strand, age, school), answers keyed by question id, scores, `questionOrder` (per-session shuffle). Re-answer replaces the old contribution. Stored data from an older bank/scale is discarded on load (PRD E7).
+- `store/useAssessmentStore.ts`: Zustand + `persist` (localStorage). Holds profile (nickname, grade, strand, age, school), answers keyed by question id, scores, `questionOrder` (per-session shuffle), `language` (`en` | `fil`, set by the toggle in `assessment-runner`; persist version 9). Re-answer replaces the old contribution. Stored data from an older bank/scale is discarded on load (PRD E7).
 - Session TTL: 30 min after last change. Wiped on rehydrate by the store and live by `components/session-expiry-guard.tsx`.
 - `lib/career-look/photo-store.ts`: last career-look photo, memory only, never persisted.
 - `hooks/use-hydrated.ts`: gate anything that reads persisted state, so the server render never depends on it.
@@ -31,7 +31,8 @@ Next.js 16.2.5 App Router, React 19, TypeScript, Tailwind v4 (tokens in `apps/we
 
 ## Logic (`lib/riasec`)
 
-- `questions.ts`: 42 verbatim statements + `shuffleQuestionIds` / `orderQuestions`.
+- `questions.ts`: 42 verbatim statements + `shuffleQuestionIds` / `orderQuestions`; `questionText` / `answerLabel` pick English or Filipino.
+- `questions-fil.ts`: supplied Filipino translation keyed by question id. A test requires one entry per id.
 - `scoring.ts`: pure, order-independent; top 3 with R→I→A→S→E→C tie-break.
 - `career-pathways.ts`: official sheet data (descriptions, majors, pathways). Landing trait strip reads from it too.
 - `validate-results.ts`: shared shape checks used by the API routes.
@@ -55,6 +56,9 @@ Next.js 16.2.5 App Router, React 19, TypeScript, Tailwind v4 (tokens in `apps/we
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 
+- 2026-10-31 · frontend · `BackgroundGradient` takes `glowClassName`; `assessment-runner` tones Yes/No per option (`ANSWER_TONE`) and moves the language toggle under the statement · see DESIGN.md.
+
+- 2026-10-31 · frontend · Assessment gets an English / Filipino toggle: statements from `questions-fil.ts`, answers Oo / Hindi, O / H shortcuts beside Y / N, `language` added to the store (persist v9) · Filipino-speaking students can answer in their own language; scoring is keyed by id so it is unaffected.
 - 2026-10-27 · frontend · `QuestionNavigator` renders `ui/Progress` bar with milestone notches plus a collapsible grid (closed by default, auto-opens on failed finish); `assessment-runner` is single-column at all breakpoints; `AnimatedCircularProgressBar` deleted · lighter quiz chrome
 
 - 2026-10-27 · docs · Created this file from the current code. · Split frontend notes out of the PRD and Implementation Plan.

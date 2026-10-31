@@ -229,6 +229,8 @@ Current uses: landing hero (16 scattered cells in stage colors), Profile Setup (
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 
+- 2026-10-31 · design · Quiz: current question cell is a soft mustard tint (`stage-profile-soft` fill, `-strong` border/number) in the grid and legend, not a solid fill; Yes cards go green and No cards red on hover and when chosen, via new `--answer-yes|no(-soft|-soft-foreground)` tokens (muted, AA in both themes) and a single-tone glow; English / Filipino toggle sits under the statement · calmer, meaning-coded answers and a clearer "you are here" marker without a harsh bright-yellow fill. Deliberate exception to one-accent-per-screen (Assessment = blue) for these controls.
+
 - 2026-10-27 · design · Assessment progress is a slim linear bar with 7-statement milestone notches; question grid hidden behind "All questions" at every breakpoint; circular gauge removed · reduce how overwhelming the quiz screen feels
 
 - 2026-10-27 · docs · Moved to `docs/` and added this changelog. · Every area doc logs its own changes (see `CLAUDE.md` Doc map).

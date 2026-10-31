@@ -79,6 +79,44 @@ describe("AssessmentRunner hardening", () => {
     ).toBeInTheDocument();
   });
 
+  it("shows statements and answers in Filipino without touching scoring", () => {
+    render(<AssessmentRunner />);
+    expect(statement(0)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "English" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Filipino" }));
+    expect(useAssessmentStore.getState().language).toBe("fil");
+    expect(
+      screen.getByRole("heading", {
+        level: 1,
+        name: "Gusto kong magkumpuni o mag-ayos ng mga sasakyan.",
+      }),
+    ).toHaveAttribute("lang", "fil");
+    expect(screen.getByRole("radio", { name: /Oo/ })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: /Hindi/ })).toBeInTheDocument();
+
+    // Answering in Filipino records the same value on the same question id.
+    wait(RAPID_ANSWER_THRESHOLD_MS + 10);
+    fireEvent.click(screen.getByRole("radio", { name: /Oo/ }));
+    expect(useAssessmentStore.getState().answers[QUESTIONS[0]!.id]).toEqual({
+      trait: QUESTIONS[0]!.trait,
+      value: 1,
+    });
+  });
+
+  it("keeps the Filipino answer shortcuts (O / H) working", () => {
+    useAssessmentStore.getState().setLanguage("fil");
+    render(<AssessmentRunner />);
+    wait(RAPID_ANSWER_THRESHOLD_MS + 10);
+    fireEvent.keyDown(document, { key: "h" });
+    expect(useAssessmentStore.getState().answers[QUESTIONS[0]!.id]?.value).toBe(
+      0,
+    );
+  });
+
   it("lets a revisited statement move forward by re-tapping or Next", () => {
     answerFirst(3);
     render(<AssessmentRunner />);
