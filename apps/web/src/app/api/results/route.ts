@@ -1,5 +1,8 @@
 // Copyright (c) 2026 EdTech. All rights reserved.
 
+import { revalidateTag } from "next/cache";
+import type { SupabaseClient } from "@supabase/supabase-js";
+
 import {
   isRecord,
   parseAge,
@@ -8,6 +11,8 @@ import {
 } from "@/lib/riasec/validate-results";
 import { callerKey, createWindowLimiter } from "@/lib/saved-results/ip-limiter";
 import { saveResult } from "@/lib/saved-results/repository";
+import { bumpCounter, TESTS_TAKEN } from "@/lib/site-counters/repository";
+import { TESTS_TAKEN_TAG } from "@/lib/site-counters/tests-taken";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 // POST /api/results: saves a finished assessment (scores, code, grade,
@@ -61,10 +66,29 @@ export async function POST(request: Request) {
 
   try {
     const resultsId = await saveResult(db, { ...checked.value, age, strand });
+    await countTestTaken(db);
     return Response.json({ resultsId });
   } catch (error) {
     console.error("results: could not save:", errorCode(error));
     return Response.json({ error: "failed" }, { status: 502 });
+  }
+}
+
+// The landing page's lifetime tally. One bump per saved result (the panel on
+// the results page saves exactly once per completion), and the landing page's
+// cached count is marked stale so it picks the new figure up without waiting
+// out its five minutes. "max" is stale-while-revalidate: the next visitor may
+// still see the previous number while the fresh one loads behind them, which
+// is the right trade for a number nobody is watching to the second.
+//
+// Swallows its own failures: the student's result is already stored, and a
+// counter must never be able to turn a successful save into an error.
+async function countTestTaken(db: SupabaseClient): Promise<void> {
+  try {
+    await bumpCounter(db, TESTS_TAKEN);
+    revalidateTag(TESTS_TAKEN_TAG, "max");
+  } catch (error) {
+    console.error("results: could not count the test taken:", errorCode(error));
   }
 }
 

@@ -78,6 +78,7 @@ Navigation rules:
 - FR-1.2. One primary CTA ("Start the assessment") initiating the journey at Profile Setup.
 - FR-1.3. Explains the 4-step journey and expected duration (~5 minutes).
 - FR-1.4. Journey-aware CTA: if a completed assessment exists in local storage, the primary CTA becomes "View your results".
+- FR-1.5. Shows the lifetime number of assessments taken, read from an aggregate counter (`site_counters`, key `tests_taken`) incremented once per completion. The figure is cumulative and never decreases: deleting a saved result or purging an expired one does not un-take the test. It is a count only — no identifiers, nothing per student — so it stays inside the anonymous-by-design commitment. When the count cannot be read, nothing is shown; a placeholder or estimate is never substituted.
 
 ### FR-2 Student Profile Setup
 Captured before the assessment begins; stored client-side only (localStorage via the persisted store). Only grade level and age ever reach the server, inside the nameless saved-results record (FR-9).
@@ -254,8 +255,10 @@ AlignEd ships as a mostly-static, anonymous-first Next.js application.
 | `courses`, `careers`, `course_careers` | `0001` | Reference data seeded from `data/*.csv` (`npm run seed:build`). Not displayed (FR-6). | Public read. |
 | `assessments` | `0001` | Former anonymous completion log. Superseded by `saved_results`; nothing writes to it. | Insert-only. |
 | `universities`, `university_courses` | `0002` | Out of scope (§3); slated for removal. | — |
+| `site_counters` | `0006` | Aggregate tallies for the public site (today: `tests_taken`, FR-1.5). Key, value, updated_at. | RLS on, no policies: anon key can neither read nor write; landing page figure is read server-side. |
 
 - The `match_courses(p_code)` RPC in `0001` is unused since FR-6 was superseded.
+- `increment_site_counter(p_key)` is the only writer of `site_counters`: one atomic statement, `security definer`, execute granted to the service role alone. Called from the save route after a completion is stored; a failure there is logged and swallowed so it can never fail a student's save.
 - There are **no** `users` or `student_profiles` tables.
 
 ### Testing strategy (summary — full protocol in the Implementation Plan)

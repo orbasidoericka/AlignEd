@@ -3,8 +3,8 @@
 import type { Metadata } from "next";
 import { ClipboardPen, Compass, PartyPopper } from "lucide-react";
 
-import { EncryptedText } from "@/components/aceternity/encrypted-text";
 import { FloatingDock } from "@/components/aceternity/floating-dock";
+import { TextGenerateEffect } from "@/components/aceternity/text-generate-effect";
 import { BlurFade } from "@/components/magic/blur-fade";
 import { Highlighter } from "@/components/magic/highlighter";
 import {
@@ -13,6 +13,7 @@ import {
 } from "@/components/magic/hexagon-pattern";
 import { ShineBorder } from "@/components/magic/shine-border";
 import { HeroCta } from "@/components/journey/hero-cta";
+import { TestsTaken } from "@/components/blocks/tests-taken";
 import { RIASEC_PATHWAYS } from "@/lib/riasec/career-pathways";
 import { letterHoverWash } from "@/lib/riasec/letter-chip-styles";
 import { TraitEmblem } from "@/components/riasec/trait-emblem";
@@ -58,6 +59,12 @@ const traitDockItems = traitPreview.map((trait) => ({
 
 const HERO_SUBTITLE =
   "Answer 42 quick yes-or-no statements to discover your Holland Code, and the careers and college programs that match you. About 5 minutes, free, no sign-up.";
+
+// First word starting to last word resolved. The words start once the page
+// has hydrated (about half a second in), so 1.4s keeps the whole sentence
+// inside two seconds of load: the subtitle is what a student reads first, and
+// it must not make them wait.
+const SUBTITLE_REVEAL_SECONDS = 1.4;
 
 // One shared accent (not a per-stage color) — this strip previews the whole
 // journey as a single path rather than wayfinding between stages, so it
@@ -157,17 +164,20 @@ export default function HomePage() {
             </h1>
           </BlurFade>
 
-          <BlurFade delay={0.16}>
-            {/* ~20ms a character: the source's 50ms would take ~8s on a
-                sentence this long. */}
-            <p className="mx-auto mt-6 max-w-xl text-lg text-balance text-muted-foreground sm:text-xl">
-              <EncryptedText
-                text={HERO_SUBTITLE}
-                revealDelayMs={20}
-                flipDelayMs={50}
-                encryptedClassName="text-primary-strong/70"
-              />
-            </p>
+          {/* Words resolve from blur, first to last inside 1.4s (the source's
+              0.2s a word would take over five on a sentence this long). No
+              BlurFade around it: the reveal is the entrance. */}
+          <TextGenerateEffect
+            words={HERO_SUBTITLE}
+            totalDuration={SUBTITLE_REVEAL_SECONDS}
+            className="mx-auto mt-6 max-w-xl text-lg leading-7 font-normal tracking-normal text-balance text-muted-foreground sm:text-xl"
+          />
+
+          {/* The one number a visiting student cares about: how many people
+              have actually done this. It renders nothing when the count is
+              unavailable. */}
+          <BlurFade delay={0.24} className="mt-7">
+            <TestsTaken />
           </BlurFade>
 
           {/* The six traits as the hero's image: the code the student is
@@ -175,7 +185,7 @@ export default function HomePage() {
               dock: each emblem magnifies under the pointer and jumps to its
               row in "Six traits, one code". The journey's call to action
               lives in the navbar directly above. */}
-          <BlurFade delay={0.32} className="mt-12 md:mt-4">
+          <BlurFade delay={0.4} className="mt-9 md:mt-6">
             <FloatingDock label="The six traits" items={traitDockItems} />
           </BlurFade>
         </div>

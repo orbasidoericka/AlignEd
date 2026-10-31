@@ -35,10 +35,11 @@ const ctaClasses =
   "rounded-full bg-stage-profile px-5 font-heading font-semibold text-stage-profile-foreground hover:bg-stage-profile/85";
 
 // Journey-aware site header on Aceternity's Resizable Navbar: full-width at
-// the top, a floating pill once scrolled. About Us carries the assessment
-// stage color; the assessment itself is reached through the CTA. No separate
-// My Results link anywhere: the CTA already says "View My Results" once it
-// unlocks, and a link to the same page would just repeat it.
+// the top, a floating pill once scrolled. The nav carries the two landing
+// sections only; the assessment itself is reached through the CTA, and About
+// Us lives in the footer. No separate My Results link anywhere: the CTA
+// already says "View My Results" once it unlocks, and a link to the same page
+// would just repeat it.
 export function SiteHeader() {
   const pathname = usePathname();
   const hydrated = useHydrated();
@@ -65,13 +66,6 @@ export function SiteHeader() {
   const items: NavItem[] = [
     { name: "How it works", link: "/#how-it-works" },
     { name: "Six Traits", link: "/#six-traits" },
-    {
-      name: "About Us",
-      link: "/about",
-      active: isActive("/about"),
-      activeClassName: "text-stage-assessment-strong",
-      indicatorClassName: "bg-stage-assessment",
-    },
   ];
 
   return (

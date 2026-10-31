@@ -43,69 +43,59 @@ const pillars = [
   },
 ] as const;
 
-// One accent per kind of work, from the stage palette (already AA-checked in
-// both themes): the frame takes the base fill, the role chip the -strong
-// text on the -soft wash.
-const roleAccent = {
-  lead: {
-    frame: "bg-stage-profile",
-    chip: "bg-stage-profile-soft text-stage-profile-strong",
-  },
-  research: {
-    frame: "bg-stage-results",
-    chip: "bg-stage-results-soft text-stage-results-strong",
-  },
-  build: {
-    frame: "bg-stage-assessment",
-    chip: "bg-stage-assessment-soft text-stage-assessment-strong",
-  },
-} as const;
+// One frame for everyone: the team is shown as peers, so no role gets its
+// own color. Blue is the brand's primary (the stage-assessment accent, as on
+// the "What AlignEd is" badges above); the frame takes the base fill, the
+// role chip the -strong text on the -soft wash.
+const frameClass = "bg-stage-assessment";
+const chipClass = "bg-stage-assessment-soft text-stage-assessment-strong";
 
 type TeamMember = {
   name: string;
   role: string;
-  accent: keyof typeof roleAccent;
   photo: string;
-  bio: string;
+  /**
+   * Where the member sits in the four-column grid from `sm` up. Every card
+   * spans two columns, so a pair fills a row (columns 1 and 3) and a lone
+   * member sits between them (column 2), which is what centres the project
+   * manager under the researchers and over the developers.
+   */
+  placement: string;
   /** Per-photo framing, so every face sits at the same height in its hex. */
   imageClassName?: string;
 };
 
+// Reading order is the visual order: researchers, project manager, developers.
 const team: readonly TeamMember[] = [
-  {
-    name: "Stephanie O. Dulay",
-    role: "Project Manager",
-    accent: "lead",
-    photo: "/about us/stephanie.jpg",
-    bio: "Led AlignEd from proposal to launch, keeping the schedule on track and the scope tied to what students actually need.",
-  },
   {
     name: "Patricia Mariz P. Bantog",
     role: "Researcher",
-    accent: "research",
     photo: "/about us/patricia.jpg",
-    bio: "Studied the Holland Code (RIASEC) model and how Filipino students choose careers, grounding the assessment in research.",
+    placement: "sm:col-start-1",
   },
   {
     name: "Yvonne Denise D. Penamante",
     role: "Researcher",
-    accent: "research",
     photo: "/about us/yvonne.jpg",
-    bio: "Gathered and checked the career and college-program information behind each trait, so every result points to a real path.",
+    placement: "sm:col-start-3",
+  },
+  {
+    name: "Stephanie O. Dulay",
+    role: "Project Manager",
+    photo: "/about us/stephanie.jpg",
+    placement: "sm:col-start-2",
   },
   {
     name: "Ericka A. Orbasido",
-    role: "Frontend Developer",
-    accent: "build",
+    role: "Full Stack Developer",
     photo: "/about us/ericka.png",
-    bio: "Designed and built the interface students use, from the landing page to the results dashboard, with budget phones in mind.",
+    placement: "sm:col-start-1",
   },
   {
     name: "Winn Jashmir M. Sandiko",
-    role: "Backend Developer",
-    accent: "build",
+    role: "Full Stack Developer",
     photo: "/about us/winn.jpg",
-    bio: "Built the services behind the scenes: saving results without names, the emailed results and the admin records, all within the Data Privacy Act.",
+    placement: "sm:col-start-3",
     // His photo has extra white above the head; lift and tighten it.
     imageClassName: "scale-112 -translate-y-[5%]",
   },
@@ -215,59 +205,56 @@ export default function AboutPage() {
           </div>
         </BlurFade>
 
-        <ul className="mt-14 flex flex-wrap justify-center gap-x-8 gap-y-14">
-          {team.map((member, index) => {
-            const accent = roleAccent[member.accent];
-            return (
-              <li key={member.name} className="w-full max-w-72 sm:w-72">
-                <BlurFade inView delay={index * 0.08}>
-                  <div className="group flex flex-col items-center text-center">
-                    {/* Double hex: clip-path drops borders, so the frame is
-                        an accent hex with the photo inset inside it. */}
+        <ul className="mx-auto mt-14 grid max-w-2xl grid-cols-1 justify-items-center gap-y-12 sm:grid-cols-4">
+          {team.map((member, index) => (
+            <li
+              key={member.name}
+              className={cn("w-full max-w-80 sm:col-span-2", member.placement)}
+            >
+              <BlurFade inView delay={index * 0.08}>
+                <div className="group flex flex-col items-center text-center">
+                  {/* Double hex: clip-path drops borders, so the frame is
+                      an accent hex with the photo inset inside it. */}
+                  <div
+                    className={cn(
+                      "relative size-44 p-1.5 transition-[translate,filter] duration-300 ease-out motion-safe:group-hover:-translate-y-1 group-hover:brightness-105",
+                      HEX,
+                      frameClass,
+                    )}
+                  >
                     <div
                       className={cn(
-                        "relative size-44 p-1.5 transition-[translate,filter] duration-300 ease-out motion-safe:group-hover:-translate-y-1 group-hover:brightness-105",
+                        "relative size-full overflow-hidden bg-card",
                         HEX,
-                        accent.frame,
                       )}
                     >
-                      <div
+                      <Image
+                        src={member.photo}
+                        alt={`Portrait of ${member.name}`}
+                        fill
+                        sizes="176px"
                         className={cn(
-                          "relative size-full overflow-hidden bg-card",
-                          HEX,
+                          "object-cover object-top",
+                          member.imageClassName,
                         )}
-                      >
-                        <Image
-                          src={member.photo}
-                          alt={`Portrait of ${member.name}`}
-                          fill
-                          sizes="176px"
-                          className={cn(
-                            "object-cover object-top",
-                            member.imageClassName,
-                          )}
-                        />
-                      </div>
+                      />
                     </div>
-                    <h3 className="mt-6 text-xl font-bold text-balance text-foreground">
-                      {member.name}
-                    </h3>
-                    <p
-                      className={cn(
-                        "mt-2 rounded-full px-3 py-1 font-heading text-sm font-semibold",
-                        accent.chip,
-                      )}
-                    >
-                      {member.role}
-                    </p>
-                    <p className="mt-4 text-base text-pretty text-muted-foreground">
-                      {member.bio}
-                    </p>
                   </div>
-                </BlurFade>
-              </li>
-            );
-          })}
+                  <h3 className="mt-6 text-xl font-bold text-balance text-foreground">
+                    {member.name}
+                  </h3>
+                  <p
+                    className={cn(
+                      "mt-2 rounded-full px-3 py-1 font-heading text-sm font-semibold",
+                      chipClass,
+                    )}
+                  >
+                    {member.role}
+                  </p>
+                </div>
+              </BlurFade>
+            </li>
+          ))}
         </ul>
       </section>
 
