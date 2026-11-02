@@ -34,6 +34,30 @@ const cell = (n: number) =>
   screen.getByRole("button", { name: new RegExp(`^Question ${n},`) });
 
 describe("QuestionNavigator", () => {
+  it("hosts the language pill and reports changes", () => {
+    const onLanguageChange = vi.fn();
+    renderNavigator({ language: "en", onLanguageChange });
+    const region = screen.getByRole("region", {
+      name: "Assessment progress and questions",
+    });
+    const group = within(region).getByRole("group", {
+      name: "Statement language",
+    });
+    expect(within(group).getByRole("button", { name: "English" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    fireEvent.click(within(group).getByRole("button", { name: "Filipino" }));
+    expect(onLanguageChange).toHaveBeenCalledWith("fil");
+  });
+
+  it("omits the language pill when no language props are given", () => {
+    renderNavigator();
+    expect(
+      screen.queryByRole("group", { name: "Statement language" }),
+    ).not.toBeInTheDocument();
+  });
+
   it("renders one numbered cell per statement, in order", () => {
     renderNavigator();
     const nav = screen.getByRole("navigation", { name: "Question navigator" });

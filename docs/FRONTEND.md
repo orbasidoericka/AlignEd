@@ -14,7 +14,7 @@ Next.js 16.2.5 App Router, React 19, TypeScript, Tailwind v4 (tokens in `apps/we
 | :--- | :--- | :--- |
 | `/` | `(site)` | Landing. Journey-aware CTA (`components/journey/hero-cta.tsx`). |
 | `/assessment/profile` | `(focus)` | Profile form (`journey/profile-form.tsx`). Focus Mode shell, no site chrome. |
-| `/assessment` | `(focus)` | Quiz (`journey/assessment-runner.tsx`, `question-navigator.tsx`: progress bar on top, question grid behind an "All questions" toggle). |
+| `/assessment` | `(focus)` | Quiz (`journey/assessment-runner.tsx`, `question-navigator.tsx`: progress bar on top, question grid behind an "All questions" toggle, English / Filipino pill via `language-toggle.tsx`). |
 | `/results` | `(site)` | Dashboard (`journey/results-dashboard.tsx`), exports (`results-actions.tsx`), compare (`saved-results-panel.tsx`). |
 | `/dev/career-looks` | `(site)` | Dev preview of career-look props. |
 | `/admin/[token]` | — | Server-rendered admin stats; see `BACKEND.md`. |
@@ -59,6 +59,7 @@ Next.js 16.2.5 App Router, React 19, TypeScript, Tailwind v4 (tokens in `apps/we
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 
+- 2026-11-02 · frontend · Extracted `journey/language-toggle.tsx`; `QuestionNavigator` takes optional `language` / `onLanguageChange`; the runner no longer renders the pill inside the question block · persistent placement, same store behaviour.
 - 2026-11-02 · components · Dialog, AlertDialog, Sheet, Tooltip, Chart tooltip, navbar, quiz warning, chips and glows use shadow tokens; new `shadow-tokens.test.ts` guard · UI uniformity, see DESIGN.md Elevation
 - 2026-11-02 · store/results · tab-marker wipe of finished sessions, `ResultsExpiryNote` countdown · results gone after tab close and lifetime visible
 - 2026-11-02 · frontend · New `FinishDialog`; `assessment-runner` drops the full-screen finish view and opens the dialog automatically from `advanceToNextOpen` / `goForward` when no statement is open · students no longer hunt for a finish button.

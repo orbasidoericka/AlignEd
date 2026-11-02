@@ -4,9 +4,10 @@
 import { useId, useRef, useState } from "react";
 import { ChevronDown, CircleAlert, LayoutGrid } from "lucide-react";
 
+import { LanguageToggle } from "@/components/journey/language-toggle";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import type { RiasecQuestion } from "@/lib/riasec/questions";
+import type { QuestionLanguage, RiasecQuestion } from "@/lib/riasec/questions";
 import { cn } from "@/lib/utils";
 import type { AssessmentAnswer } from "@/store/useAssessmentStore";
 
@@ -41,6 +42,9 @@ interface QuestionNavigatorProps {
   /** True while the rapid-answer pause is up. */
   disabled?: boolean;
   onJump: (index: number) => void;
+  /** Statement language pill; shown only when both props are given. */
+  language?: QuestionLanguage;
+  onLanguageChange?: (language: QuestionLanguage) => void;
   className?: string;
 }
 
@@ -66,6 +70,8 @@ export function QuestionNavigator({
   flagOpen,
   disabled = false,
   onJump,
+  language,
+  onLanguageChange,
   className,
 }: QuestionNavigatorProps) {
   const [expanded, setExpanded] = useState(false);
@@ -207,9 +213,18 @@ export function QuestionNavigator({
             />
           ))}
         </div>
-        <p className="mt-1.5 text-sm text-muted-foreground">
-          {complete ? "All answered" : `${remaining} to go`}
-        </p>
+        <div className="mt-1.5 flex items-center justify-between gap-3">
+          <p className="text-sm text-muted-foreground">
+            {complete ? "All answered" : `${remaining} to go`}
+          </p>
+          {language && onLanguageChange && (
+            <LanguageToggle
+              value={language}
+              onChange={onLanguageChange}
+              disabled={disabled}
+            />
+          )}
+        </div>
 
         {/* Always mounted so the notice is announced when it appears. */}
         <div role="status">
