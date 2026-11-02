@@ -224,9 +224,25 @@ Current uses: landing hero (16 scattered cells in stage colors), landing closing
 **Profile Setup (`/assessment/profile`)**
 - Magic UI: Hexagon Pattern, static grid with three glowing yellow cells (implemented).
 
+## Elevation
+
+One scale, defined in `globals.css` (`--elev-*` in `:root` and `.dark`, exposed as `--shadow-*` in `@theme inline`). No Tailwind default shadows (`shadow-sm/md/lg/xl`) and no `shadow-[...]`; `src/lib/shadow-tokens.test.ts` enforces it.
+
+| Utility | Use |
+| :--- | :--- |
+| `shadow-chip` / `drop-shadow-chip` | Small pills, score badges, mascot |
+| `shadow-bento` | Resting cards, panels, floating navbar, tooltips |
+| `shadow-bento-lifted` | Hover or "forward" emphasis only, never a resting card |
+| `shadow-overlay` | Dialogs, sheets, dropdown menus, chart tooltip, quiz warning |
+| `shadow-glow-primary` / `shadow-glow-profile` | Tinted button glows (shimmer button, hero CTA) |
+
+Dark values are black-based with no blue tint and a faint inset top highlight, because the light blue-tinted values vanish on the navy page. Print zeroes all shadows.
+
 ## Changelog
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
+
+- 2026-11-02 · tokens · One shadow scale (chip, bento, bento-lifted, overlay, two glows) with dark overrides; Tailwind default and arbitrary shadows removed; floating navbar uses `shadow-bento` via CSS transition instead of a framer-animated raw shadow · shadows differed per page and nearly vanished in dark
 
 - 2026-11-02 · copy/a11y · Results lifetime note under the h1: muted `text-sm`, mm:ss in foreground semibold tabular figures, `aria-hidden` ticking with a `sr-only` per-minute sentence, `print:hidden`, no motion · students see how long results stay
 - 2026-11-02 · design · Finish is now a pop-up that opens by itself after the 42nd answer, replacing the "Finish assessment" button plus full-screen "All done!" view; Background Lines no longer used there · students no longer hunt for a finish control.

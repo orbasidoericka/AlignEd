@@ -121,7 +121,7 @@ export function InterestHexagon({
               }}
             >
               <TraitEmblem letter={row.letter} className="size-10" />
-              <span className="mt-0.5 rounded-full bg-card px-1.5 text-xs font-bold text-foreground tabular-nums shadow-sm">
+              <span className="mt-0.5 rounded-full bg-card px-1.5 text-xs font-bold text-foreground tabular-nums shadow-chip">
                 {row.count}
               </span>
             </div>

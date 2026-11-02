@@ -32,7 +32,7 @@ function CautionMark() {
 
 function RapidAnswerToast() {
   return (
-    <div className="flex w-full items-start gap-3 rounded-2xl border border-notice-border bg-notice-surface px-4 py-3.5 text-notice-foreground shadow-xl">
+    <div className="flex w-full items-start gap-3 rounded-2xl border border-notice-border bg-notice-surface px-4 py-3.5 text-notice-foreground shadow-overlay">
       <CautionMark />
       <p className="text-sm leading-snug font-medium">
         We noticed a few very quick responses. 
