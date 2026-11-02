@@ -45,6 +45,7 @@ Next.js 16.2.5 App Router, React 19, TypeScript, Tailwind v4 (tokens in `apps/we
 - **Career look** (`components/career-look`, `lib/career-look`): camera + MediaPipe face landmarks, props anchored in face widths. Model fetched by `scripts/prepare-face-model.mjs` on `predev`/`prebuild`.
 - **Sound** (`lib/sound`, `components/sound-provider.tsx`): one delegated click listener; preference in `localStorage` `aligned.sound`.
 - **Rapid-answer guard** (`hooks/use-rapid-answer-guard.ts`).
+- **Finish pop-up** (`components/journey/finish-dialog.tsx`, Base UI `Dialog`): `assessment-runner` opens it via `requestFinish` once the store has all 42 answers (after the 280ms advance delay); the runner's "Finish assessment" button remains only to reopen it after Review.
 - **Analytics** (`components/analytics.tsx`): PostHog, no-op unless `NEXT_PUBLIC_POSTHOG_KEY` is set.
 
 ## Testing
@@ -56,6 +57,7 @@ Next.js 16.2.5 App Router, React 19, TypeScript, Tailwind v4 (tokens in `apps/we
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 
+- 2026-11-02 · frontend · New `FinishDialog`; `assessment-runner` drops the full-screen finish view and opens the dialog automatically from `advanceToNextOpen` / `goForward` when no statement is open · students no longer hunt for a finish button.
 - 2026-10-31 · frontend · `BackgroundGradient` takes `glowClassName`; `assessment-runner` tones Yes/No per option (`ANSWER_TONE`) and moves the language toggle under the statement · see DESIGN.md.
 
 - 2026-10-31 · frontend · Assessment gets an English / Filipino toggle: statements from `questions-fil.ts`, answers Oo / Hindi, O / H shortcuts beside Y / N, `language` added to the store (persist v9) · Filipino-speaking students can answer in their own language; scoring is keyed by id so it is unaffected.
