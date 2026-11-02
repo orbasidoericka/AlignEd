@@ -144,7 +144,7 @@ Magic UI Hexagon Pattern (`components/magic/hexagon-pattern.tsx`) is the backgro
 - Visibility: light-mode stroke 20–50% by screen, dark 10–25%. On pale washes and near-white grounds, yellow and green cells use the stage `-strong` tone at 25–35%.
 - Highlighted cells take a per-cell class as the third tuple element (`[col, row, "fill-…"]`), or come from `scatterHexagons({ count, cols, rows, classNames, seed })` for a deterministic random spread. Landing may use all three stage colors; product screens use at most four cells.
 
-Current uses: landing hero (16 scattered cells in stage colors), landing closing CTA (8 cells at 30% on the card, radial mask clears the centre), Profile Setup (three yellow cells), Assessment quiz and finish views (two faint corner cells), Results Holland Code cell (four cells, mirrored with `-scale-x-100` so they hug the right edge).
+Current uses: landing hero (16 scattered cells in stage colors), landing closing CTA (8 cells at 30% on the card, radial mask clears the centre), Profile Setup (three yellow cells), Assessment quiz (two faint corner cells), Results Holland Code cell (four cells, mirrored with `-scale-x-100` so they hug the right edge).
 
 ### Background texture: Aurora Background (Profile Setup only)
 
@@ -225,9 +225,25 @@ Current uses: landing hero (16 scattered cells in stage colors), landing closing
 **Profile Setup (`/assessment/profile`)**
 - Magic UI: Hexagon Pattern, static grid with three glowing yellow cells (implemented).
 
+## Elevation
+
+One scale, defined in `globals.css` (`--elev-*` in `:root` and `.dark`, exposed as `--shadow-*` in `@theme inline`). No Tailwind default shadows (`shadow-sm/md/lg/xl`) and no `shadow-[...]`; `src/lib/shadow-tokens.test.ts` enforces it.
+
+| Utility | Use |
+| :--- | :--- |
+| `shadow-chip` / `drop-shadow-chip` | Small pills, score badges, mascot |
+| `shadow-bento` | Resting cards, panels, floating navbar, tooltips |
+| `shadow-bento-lifted` | Hover or "forward" emphasis only, never a resting card |
+| `shadow-overlay` | Dialogs, sheets, dropdown menus, chart tooltip, quiz warning |
+| `shadow-glow-primary` / `shadow-glow-profile` | Tinted button glows (shimmer button, hero CTA) |
+
+Dark values are black-based with no blue tint and a faint inset top highlight, because the light blue-tinted values vanish on the navy page. Print zeroes all shadows.
+
 ## Changelog
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
+
+- 2026-11-02 · tokens · One shadow scale (chip, bento, bento-lifted, overlay, two glows) with dark overrides; Tailwind default and arbitrary shadows removed; floating navbar uses `shadow-bento` via CSS transition instead of a framer-animated raw shadow · shadows differed per page and nearly vanished in dark
 
 - 2026-11-02 · landing · Closing CTA: dropped the mustard wash for a `card` surface with a radially masked hexagon field (8 cells, centre clear), a six-emblem trait strip above the heading, a supporting line and icon pills; ShineBorder kept; heading now "Not sure what comes after Senior High?" with a plain, reassuring line ("no wrong answers, nobody needs to know your name") · the panel read flat and empty, and the old copy sounded generic
 - 2026-10-31 · design · Quiz: current question cell is a soft mustard tint (`stage-profile-soft` fill, `-strong` border/number) in the grid and legend, not a solid fill; Yes cards go green and No cards red on hover and when chosen, via new `--answer-yes|no(-soft|-soft-foreground)` tokens (muted, AA in both themes) and a single-tone glow; English / Filipino toggle sits under the statement · calmer, meaning-coded answers and a clearer "you are here" marker without a harsh bright-yellow fill. Deliberate exception to one-accent-per-screen (Assessment = blue) for these controls.

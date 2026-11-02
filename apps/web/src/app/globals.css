@@ -57,11 +57,16 @@
   --color-notice-border: rgb(255 255 255 / 0.08);
   --color-notice-foreground: #f8fafc;
   --color-notice-muted: #cbd5e1;
-  --shadow-bento:
-    0 1px 2px rgb(13 25 47 / 0.05), 0 8px 24px -12px rgb(39 90 150 / 0.22);
-  /* Deeper sibling, so the top trait card sits forward of its neighbours. */
-  --shadow-bento-lifted:
-    0 2px 4px rgb(13 25 47 / 0.07), 0 16px 40px -16px rgb(39 90 150 / 0.32);
+  /* Elevation scale. Every surface shadow in the app is one of these; the
+     Tailwind defaults (shadow-sm/md/lg/xl) are not used. Values live in
+     :root and .dark below so they flip with the theme. */
+  --shadow-chip: var(--elev-chip);
+  --shadow-bento: var(--elev-bento);
+  --shadow-bento-lifted: var(--elev-bento-lifted);
+  --shadow-overlay: var(--elev-overlay);
+  --drop-shadow-chip: 0 1px 1px rgb(13 25 47 / 0.18);
+  --shadow-glow-primary: var(--elev-glow-primary);
+  --shadow-glow-profile: var(--elev-glow-profile);
   --font-sans: var(--font-sans);
   --font-heading: var(--font-heading);
 
@@ -170,6 +175,18 @@
    --input clears 3:1 on card (3.78) and page (3.54); --border is a 1.67:1
    hairline. Re-measure whenever any of these moves. */
 :root {
+  /* Elevation values, light. Cool ink-blue shadows on the pale page. */
+  --elev-chip: 0 1px 2px rgb(13 25 47 / 0.1);
+  --elev-bento:
+    0 1px 2px rgb(13 25 47 / 0.05), 0 8px 24px -12px rgb(39 90 150 / 0.22);
+  /* Deeper sibling: hover and "forward" emphasis only, never a resting card. */
+  --elev-bento-lifted:
+    0 2px 4px rgb(13 25 47 / 0.07), 0 16px 40px -16px rgb(39 90 150 / 0.32);
+  --elev-overlay:
+    0 4px 8px rgb(13 25 47 / 0.08), 0 24px 56px -16px rgb(13 25 47 / 0.28);
+  --elev-glow-primary: 0 12px 30px -12px var(--primary);
+  --elev-glow-profile:
+    0 10px 26px -10px color-mix(in srgb, var(--stage-profile) 55%, transparent);
   --background: #f3f8ff;
   --foreground: #0a1a33;
   --chrome: #d6e9ff;
@@ -294,6 +311,18 @@
    comfort for no colour, so the depth steps are untouched and only the hue
    strengthens. */
 .dark {
+  /* Elevation values, dark. Black-based (no blue tint) and stronger, since
+     the light values vanish against the navy page. Cards also gain a faint
+     top highlight so the edge reads without a border. */
+  --elev-chip: 0 1px 2px rgb(0 0 0 / 0.5);
+  --elev-bento:
+    0 1px 0 rgb(255 255 255 / 0.04) inset, 0 1px 2px rgb(0 0 0 / 0.4),
+    0 8px 24px -10px rgb(0 0 0 / 0.6);
+  --elev-bento-lifted:
+    0 1px 0 rgb(255 255 255 / 0.06) inset, 0 2px 4px rgb(0 0 0 / 0.45),
+    0 16px 40px -14px rgb(0 0 0 / 0.75);
+  --elev-overlay:
+    0 4px 8px rgb(0 0 0 / 0.45), 0 24px 56px -14px rgb(0 0 0 / 0.8);
   --background: #0a1221;
   --foreground: #eff5fd;
   --chrome: #14223d;

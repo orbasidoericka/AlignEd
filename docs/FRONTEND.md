@@ -56,6 +56,8 @@ Next.js 16.2.5 App Router, React 19, TypeScript, Tailwind v4 (tokens in `apps/we
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 
+- 2026-11-02 · components · Dialog, AlertDialog, Sheet, Tooltip, Chart tooltip, navbar, quiz warning, chips and glows use shadow tokens; new `shadow-tokens.test.ts` guard · UI uniformity, see DESIGN.md Elevation
+
 - 2026-10-31 · frontend · `BackgroundGradient` takes `glowClassName`; `assessment-runner` tones Yes/No per option (`ANSWER_TONE`) and moves the language toggle under the statement · see DESIGN.md.
 
 - 2026-10-31 · frontend · Assessment gets an English / Filipino toggle: statements from `questions-fil.ts`, answers Oo / Hindi, O / H shortcuts beside Y / N, `language` added to the store (persist v9) · Filipino-speaking students can answer in their own language; scoring is keyed by id so it is unaffected.

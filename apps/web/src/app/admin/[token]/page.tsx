@@ -438,7 +438,7 @@ function GradeFilter({
             className={cn(
               "flex items-center gap-2 rounded-full px-3.5 py-1.5 text-sm font-semibold whitespace-nowrap transition-colors duration-200 outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
               active
-                ? "bg-primary text-primary-foreground shadow-sm"
+                ? "bg-primary text-primary-foreground shadow-chip"
                 : "text-muted-foreground hover:bg-muted hover:text-foreground",
             )}
           >
