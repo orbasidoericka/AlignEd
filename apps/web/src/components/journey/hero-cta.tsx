@@ -38,7 +38,7 @@ export function HeroCta({
       href={done ? "/results" : "/assessment/profile"}
       className={cn(
         buttonVariants({ size: "lg" }),
-        "h-13 rounded-full bg-stage-profile px-7 font-heading text-lg font-semibold text-stage-profile-foreground shadow-lg shadow-stage-profile/30 hover:bg-stage-profile/85",
+        "h-13 rounded-full bg-stage-profile px-7 font-heading text-lg font-semibold text-stage-profile-foreground shadow-glow-profile hover:bg-stage-profile/85",
         className,
       )}
     >

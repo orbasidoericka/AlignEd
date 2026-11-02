@@ -36,9 +36,6 @@ import { cn } from "@/lib/utils";
 //   MotionConfig would not stop them; transitions become instant instead.
 // - NavbarButton not vendored (the app's buttonVariants is the button system).
 
-const FLOATING_SHADOW =
-  "0 0 24px rgba(34, 42, 53, 0.06), 0 1px 1px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(34, 42, 53, 0.04), 0 0 4px rgba(34, 42, 53, 0.08), 0 16px 68px rgba(47, 48, 55, 0.05)";
-
 // Injected by Navbar via cloneElement.
 interface ScrollStateProps {
   visible?: boolean;
@@ -110,13 +107,12 @@ export function NavBody({
       aria-label="Main"
       animate={{
         backdropFilter: visible ? "blur(10px)" : "blur(0px)",
-        boxShadow: visible ? FLOATING_SHADOW : "none",
         width: visible ? "48%" : "100%",
         y: visible ? 16 : 0,
       }}
       transition={transition}
       className={cn(
-        "relative z-60 mx-auto hidden w-full max-w-6xl min-w-4xl flex-row items-center justify-between gap-4 self-start rounded-full px-4 py-2 lg:flex",
+        "relative z-60 mx-auto hidden transition-shadow duration-300 motion-reduce:transition-none w-full max-w-6xl min-w-4xl flex-row items-center justify-between gap-4 self-start rounded-full px-4 py-2 lg:flex",
         visible && "bg-card/85 shadow-bento ring-1 ring-chrome-border",
         className,
       )}
@@ -239,7 +235,6 @@ export function MobileNav({
       aria-label="Main"
       animate={{
         backdropFilter: visible ? "blur(10px)" : "blur(0px)",
-        boxShadow: visible ? FLOATING_SHADOW : "none",
         width: visible ? "92%" : "100%",
         paddingRight: visible ? "12px" : "0px",
         paddingLeft: visible ? "12px" : "0px",
@@ -248,7 +243,7 @@ export function MobileNav({
       }}
       transition={transition}
       className={cn(
-        "relative z-50 mx-auto flex w-full max-w-[calc(100vw-2rem)] flex-col items-center justify-between py-2 lg:hidden",
+        "relative z-50 mx-auto flex w-full max-w-[calc(100vw-2rem)] transition-shadow duration-300 motion-reduce:transition-none flex-col items-center justify-between py-2 lg:hidden",
         visible && "bg-card/85 shadow-bento ring-1 ring-chrome-border",
         className,
       )}
@@ -313,7 +308,7 @@ export function MobileNavMenu({
           exit={{ opacity: 0 }}
           transition={reduceMotion ? { duration: 0 } : { duration: 0.15 }}
           className={cn(
-            "absolute inset-x-0 top-16 z-50 flex w-full flex-col items-stretch gap-2 rounded-2xl bg-popover px-4 py-5 text-popover-foreground shadow-xl ring-1 ring-border",
+            "absolute inset-x-0 top-16 z-50 flex w-full flex-col items-stretch gap-2 rounded-2xl bg-popover px-4 py-5 text-popover-foreground shadow-overlay ring-1 ring-border",
             className,
           )}
         >
