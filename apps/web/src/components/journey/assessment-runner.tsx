@@ -29,7 +29,6 @@ import {
   orderQuestions,
   QUESTIONS,
   questionText,
-  type QuestionLanguage,
 } from "@/lib/riasec/questions";
 import { useAssessmentStore } from "@/store/useAssessmentStore";
 import { cn } from "@/lib/utils";
@@ -79,15 +78,6 @@ const ANSWER_TONE = {
     glow: "bg-answer-no/30",
   },
 } as const;
-
-const LANGUAGE_CHOICES: readonly {
-  value: QuestionLanguage;
-  label: string;
-  lang: string;
-}[] = [
-  { value: "en", label: "English", lang: "en" },
-  { value: "fil", label: "Filipino", lang: "fil" },
-];
 
 function playAnswerSound(value: number) {
   const name = ANSWER_SOUNDS.get(value);
@@ -479,6 +469,8 @@ export function AssessmentRunner() {
           flagOpen={flagOpen}
           disabled={isBlocked}
           onJump={moveTo}
+          language={language}
+          onLanguageChange={setLanguage}
           className="relative z-10"
         />
 
@@ -526,31 +518,6 @@ export function AssessmentRunner() {
                 >
                   {questionText(question, language)}
                 </h1>
-
-                <div
-                  role="group"
-                  aria-label="Statement language"
-                  className="-mt-2 flex w-fit items-center gap-1 rounded-full bg-card p-1"
-                >
-                  {LANGUAGE_CHOICES.map((choice) => (
-                    <Button
-                      key={choice.value}
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      lang={choice.lang}
-                      aria-pressed={language === choice.value}
-                      onClick={() => setLanguage(choice.value)}
-                      className={cn(
-                        "h-9 rounded-full px-4 font-semibold",
-                        language === choice.value &&
-                          "bg-highlight-soft text-highlight-soft-foreground hover:bg-highlight-soft",
-                      )}
-                    >
-                      {choice.label}
-                    </Button>
-                  ))}
-                </div>
 
                 {/* Arrow keys move the selection inside the group; flag them so
                     the resulting value change selects without advancing. */}
