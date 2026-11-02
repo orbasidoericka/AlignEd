@@ -25,6 +25,8 @@ Next.js 16.2.5 App Router, React 19, TypeScript, Tailwind v4 (tokens in `apps/we
 
 - `store/useAssessmentStore.ts`: Zustand + `persist` (localStorage). Holds profile (nickname, grade, strand, age, school), answers keyed by question id, scores, `questionOrder` (per-session shuffle), `language` (`en` | `fil`, set by the toggle in `assessment-runner`; persist version 9). Re-answer replaces the old contribution. Stored data from an older bank/scale is discarded on load (PRD E7).
 - Session TTL: 30 min after last change. Wiped on rehydrate by the store and live by `components/session-expiry-guard.tsx`.
+- Tab-close wipe: every load sets `sessionStorage` `aligned.tab`; a rehydrated session with `completedAt` set and no marker is wiped (`isOrphanedFinishedSession`). Unfinished quizzes keep resuming. Unreadable `sessionStorage` = no wipe (TTL only).
+- `components/journey/results-expiry-note.tsx`: countdown under the Results h1, from `sessionRemainingMs(lastUpdated)`; ticks 1 s, hidden in print, screen readers get a per-minute sentence.
 - `lib/career-look/photo-store.ts`: last career-look photo, memory only, never persisted.
 - `hooks/use-hydrated.ts`: gate anything that reads persisted state, so the server render never depends on it.
 - `components/journey/journey-guard.tsx`: redirects to the correct earlier step and withholds content until rehydration finishes.
@@ -45,6 +47,7 @@ Next.js 16.2.5 App Router, React 19, TypeScript, Tailwind v4 (tokens in `apps/we
 - **Career look** (`components/career-look`, `lib/career-look`): camera + MediaPipe face landmarks, props anchored in face widths. Model fetched by `scripts/prepare-face-model.mjs` on `predev`/`prebuild`.
 - **Sound** (`lib/sound`, `components/sound-provider.tsx`): one delegated click listener; preference in `localStorage` `aligned.sound`.
 - **Rapid-answer guard** (`hooks/use-rapid-answer-guard.ts`).
+- **Finish pop-up** (`components/journey/finish-dialog.tsx`, Base UI `Dialog`): `assessment-runner` opens it via `requestFinish` once the store has all 42 answers (after the 280ms advance delay); the runner's "Finish assessment" button remains only to reopen it after Review.
 - **Analytics** (`components/analytics.tsx`): PostHog, no-op unless `NEXT_PUBLIC_POSTHOG_KEY` is set.
 
 ## Testing
@@ -57,7 +60,8 @@ Next.js 16.2.5 App Router, React 19, TypeScript, Tailwind v4 (tokens in `apps/we
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 
 - 2026-11-02 · components · Dialog, AlertDialog, Sheet, Tooltip, Chart tooltip, navbar, quiz warning, chips and glows use shadow tokens; new `shadow-tokens.test.ts` guard · UI uniformity, see DESIGN.md Elevation
-
+- 2026-11-02 · store/results · tab-marker wipe of finished sessions, `ResultsExpiryNote` countdown · results gone after tab close and lifetime visible
+- 2026-11-02 · frontend · New `FinishDialog`; `assessment-runner` drops the full-screen finish view and opens the dialog automatically from `advanceToNextOpen` / `goForward` when no statement is open · students no longer hunt for a finish button.
 - 2026-10-31 · frontend · `BackgroundGradient` takes `glowClassName`; `assessment-runner` tones Yes/No per option (`ANSWER_TONE`) and moves the language toggle under the statement · see DESIGN.md.
 
 - 2026-10-31 · frontend · Assessment gets an English / Filipino toggle: statements from `questions-fil.ts`, answers Oo / Hindi, O / H shortcuts beside Y / N, `language` added to the store (persist v9) · Filipino-speaking students can answer in their own language; scoring is keyed by id so it is unaffected.

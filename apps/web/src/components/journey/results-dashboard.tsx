@@ -7,6 +7,7 @@ import { Radar as RadarIcon } from "lucide-react";
 import { BentoGrid, BentoGridItem } from "@/components/aceternity/bento-grid";
 import { CareerLookDialog } from "@/components/career-look/career-look-dialog";
 import { ResultsKeepsakeActions } from "@/components/journey/results-actions";
+import { ResultsExpiryNote } from "@/components/journey/results-expiry-note";
 import { BlurFade } from "@/components/magic/blur-fade";
 import { HexagonPattern } from "@/components/magic/hexagon-pattern";
 import { NumberTicker } from "@/components/magic/number-ticker";
@@ -65,6 +66,7 @@ export function ResultsDashboard() {
               ? `Here are your results, ${nickname}!`
               : "Here are your results"}
           </h1>
+          <ResultsExpiryNote />
         </div>
 
         <BentoGrid className="print:grid-cols-1">

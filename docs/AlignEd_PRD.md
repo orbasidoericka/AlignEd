@@ -108,6 +108,7 @@ Captured before the assessment begins; stored client-side only (localStorage via
 - FR-3.5. **Session handling:** answers persist to localStorage on every change. On refresh or return, the student resumes at their first unanswered question ("Welcome back — continue where you left off?"). Sessions have no server component and expire 30 minutes after the last change: on the next visit an older session is wiped from localStorage — profile, answers, scores, and the saved results alike — and the student starts fresh, so an abandoned quiz is never left on a shared or school device for the next student to resume.
 - FR-3.6. **Completion:** requires all 42 questions answered (Yes or No). On completion the student goes to Results, which saves exactly one nameless record per session (FR-9).
 - FR-3.7. **Retake:** an explicit "Retake assessment" action on Results resets answers and scores (profile is retained and re-confirmable).
+- FR-3.9. **Results lifetime:** a finished session (all 42 answered) is visible for as long as the 30-minute session allows and no longer than the tab: when the tab or browser session ends and the student returns, a finished session is wiped like an expired one and they start at Profile. An unfinished quiz still resumes (E4). The tab is detected with a `sessionStorage` marker, so a refresh keeps results while a closed tab does not; where `sessionStorage` is unreadable only the 30-minute limit applies. Results shows a live countdown note ("Your results stay on this device for 24:10 more, or until you close this tab.") with a Results ID reminder once one exists. The saved Results ID (FR-9, one year) is unaffected and is the way back to scores.
 - FR-3.8. **Filipino statements:** an English / Filipino toggle on the assessment screen switches the 42 statements to the supplied Filipino translation (`lib/riasec/questions-fil.ts`, keyed by question id) and the answer pair to **Oo / Hindi**. Presentation only: ids, trait assignment, scoring, order and the English text are unchanged, answers already given are kept when the language is switched, and Y/N and O/H both work as keyboard shortcuts. The choice persists with the session (default English) and is cleared with it. The translation is reproduced as supplied, not editorially rewritten. The rest of the interface stays in English.
 
 ### FR-4 Holland Code Computation
@@ -172,6 +173,7 @@ Captured before the assessment begins; stored client-side only (localStorage via
 | E2 | All six traits equal (flat profile) | Code computed per FR-4.2 (`R-I-A`); dashboard adds an insight note that the profile is balanced and results should be read as exploratory. |
 | E3 | Student answers No to all 42 items | Every trait scores 0 — a valid flat profile, not an error. Handled as E2: deterministic `R-I-A` code plus the exploratory insight note. Results, export, and email all remain available. |
 | E4 | Student refreshes / closes tab mid-quiz | Resume from localStorage at first unanswered question (FR-3.5). |
+| E4a | Student closes the tab after finishing, then reopens the site | Finished session is wiped; the student starts at Profile. A Results ID still opens the saved copy (FR-3.9). |
 | E5 | Student navigates to `/results` without completing | Redirect to the correct earlier step (§5 navigation rules). |
 | E6 | Student uses Back and changes an earlier answer | Prior contribution replaced, never double-counted; a Yes→No change decrements the trait (FR-3.2, FR-3.4). |
 | E7 | Stored answers predate the current question bank or answer scale | Discarded on load: the quiz restarts from question 1 with zeroed scores; the student's profile is preserved. |
@@ -204,6 +206,7 @@ Captured before the assessment begins; stored client-side only (localStorage via
 - **Given** the first question, **then** the Back control is unavailable.
 - **Given** a previously answered question, **when** the student changes Yes to No, **then** that trait's total decreases by exactly 1 and the interface advances forward again.
 - **Given** any complete answer set, **then** each trait's total equals its count of Yes answers and never exceeds 7.
+- **Given** a finished session, **when** the tab is closed and the site reopened, **then** the session is gone; **when** the page is only refreshed, **then** results remain and the countdown keeps running.
 - **Given** a student mid-assessment, **when** they refresh the page, **then** they resume at their first unanswered question with all prior answers intact.
 - **Given** an unanswered question remains, **then** completion is not reachable.
 - **Given** the whole bank, **then** it is completable using the keyboard alone.
@@ -290,5 +293,6 @@ AlignEd ships as a mostly-static, anonymous-first Next.js application.
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 
+- 2026-11-02 · session · FR-3.9 and E4a: finished results wiped when the tab session ends; Results shows a countdown to the 30-minute limit · shared-device privacy and clarity about how long results stay
 - 2026-10-31 · assessment · Added FR-3.8: English / Filipino toggle for the 42 statements and Oo / Hindi answers; scoring unchanged. · Students can take the assessment in Filipino.
 - 2026-10-27 · backend · Aligned with the shipped code (`docs/BACKEND.md`): SHS-only grades 11–12, required age and privacy acceptance; `saved_results` + results ID replace the `assessments` insert (FR-9); admin page (FR-10); career look (FR-11, AR non-goal narrowed); encrypted pdfmake PDF (FR-7); email via Next route + Gmail SMTP with concrete limits (FR-8); headers in `next.config.ts`; database, env, CI and testing sections rewritten; acceptance criteria for majors/pathways replace the ranked careers/programs ones. · The codebase is the plan of record.

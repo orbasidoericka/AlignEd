@@ -5,6 +5,9 @@ import {
   isSessionExpired,
   selectIsAssessmentComplete,
   selectIsProfileComplete,
+  sessionRemainingMs,
+  isOrphanedFinishedSession,
+  TAB_MARKER_KEY,
   SESSION_TTL_MS,
   useAssessmentStore,
 } from "./useAssessmentStore";
@@ -456,6 +459,43 @@ describe("isSessionExpired", () => {
   });
 });
 
+describe("sessionRemainingMs", () => {
+  const now = new Date("2026-10-01T12:00:00Z").getTime();
+  const ago = (ms: number) => new Date(now - ms).toISOString();
+
+  it("has nothing to count for a fresh store", () => {
+    expect(sessionRemainingMs(null, now)).toBeNull();
+  });
+
+  it("counts the full TTL for a just-stamped session", () => {
+    expect(sessionRemainingMs(ago(0), now)).toBe(SESSION_TTL_MS);
+  });
+
+  it("counts what is left mid-session", () => {
+    expect(sessionRemainingMs(ago(10 * 60 * 1000), now)).toBe(20 * 60 * 1000);
+  });
+
+  it("floors at zero past the TTL", () => {
+    expect(sessionRemainingMs(ago(SESSION_TTL_MS + 5000), now)).toBe(0);
+  });
+
+  it("has nothing left for a stamp it cannot read", () => {
+    expect(sessionRemainingMs("not-a-date", now)).toBe(0);
+  });
+});
+
+describe("isOrphanedFinishedSession", () => {
+  it("flags a finished session without a tab marker", () => {
+    expect(isOrphanedFinishedSession("2026-10-01T12:00:00Z", false)).toBe(true);
+  });
+  it("keeps a finished session with a marker", () => {
+    expect(isOrphanedFinishedSession("2026-10-01T12:00:00Z", true)).toBe(false);
+  });
+  it("keeps an unfinished session without a marker", () => {
+    expect(isOrphanedFinishedSession(null, false)).toBe(false);
+  });
+});
+
 // The TTL runs on rehydration, so these drive persist directly rather than
 // calling actions: a stale blob is what a returning student actually arrives
 // with.
@@ -463,7 +503,10 @@ describe("session expiry on rehydration", () => {
   const STORAGE_KEY = "aligned.assessment.v1";
   const NOW = new Date("2026-10-01T12:00:00Z");
 
-  const writeSession = (lastUpdated: string) => {
+  const writeSession = (
+    lastUpdated: string,
+    completedAt: string | null = null,
+  ) => {
     window.localStorage.setItem(
       STORAGE_KEY,
       JSON.stringify({
@@ -486,7 +529,7 @@ describe("session expiry on rehydration", () => {
             school: "San Fernando NHS",
           },
           lastUpdated,
-          completedAt: null,
+          completedAt,
         },
       }),
     );
@@ -495,6 +538,7 @@ describe("session expiry on rehydration", () => {
   beforeEach(() => {
     useAssessmentStore.getState().reset();
     window.localStorage.removeItem(STORAGE_KEY);
+    window.sessionStorage.removeItem(TAB_MARKER_KEY);
   });
 
   it("wipes a session older than 30 minutes and clears its storage key", () => {
@@ -537,5 +581,93 @@ describe("session expiry on rehydration", () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  describe("tab-close wipe of finished results", () => {
+    const fresh = () =>
+      new Date(NOW.getTime() - 5 * 60 * 1000).toISOString();
+
+    it("wipes a finished session that arrives without the tab marker", () => {
+      vi.useFakeTimers();
+      try {
+        vi.setSystemTime(NOW);
+        writeSession(fresh(), fresh());
+
+        useAssessmentStore.persist.rehydrate();
+
+        const state = useAssessmentStore.getState();
+        expect(state.answers).toEqual({});
+        expect(state.completedAt).toBeNull();
+        expect(window.localStorage.getItem(STORAGE_KEY)).toBeNull();
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it("keeps a finished session when the tab marker is present", () => {
+      vi.useFakeTimers();
+      try {
+        vi.setSystemTime(NOW);
+        window.sessionStorage.setItem(TAB_MARKER_KEY, "1");
+        writeSession(fresh(), fresh());
+
+        useAssessmentStore.persist.rehydrate();
+
+        expect(useAssessmentStore.getState().completedAt).not.toBeNull();
+        expect(window.localStorage.getItem(STORAGE_KEY)).not.toBeNull();
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it("still resumes an unfinished quiz without the marker", () => {
+      vi.useFakeTimers();
+      try {
+        vi.setSystemTime(NOW);
+        writeSession(fresh(), null);
+
+        useAssessmentStore.persist.rehydrate();
+
+        expect(useAssessmentStore.getState().currentStep).toBe(7);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it("marks the tab after rehydrating", () => {
+      vi.useFakeTimers();
+      try {
+        vi.setSystemTime(NOW);
+        writeSession(fresh(), null);
+
+        useAssessmentStore.persist.rehydrate();
+
+        expect(window.sessionStorage.getItem(TAB_MARKER_KEY)).not.toBeNull();
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it("does not wipe when sessionStorage cannot be read", () => {
+      vi.useFakeTimers();
+      const original = Storage.prototype.getItem;
+      const spy = vi
+        .spyOn(Storage.prototype, "getItem")
+        .mockImplementation(function (this: Storage, key: string) {
+          if (key === TAB_MARKER_KEY) throw new Error("blocked");
+          return original.call(this, key);
+        });
+      try {
+        vi.setSystemTime(NOW);
+        writeSession(fresh(), fresh());
+
+        useAssessmentStore.persist.rehydrate();
+
+        expect(useAssessmentStore.getState().completedAt).not.toBeNull();
+      } finally {
+        spy.mockRestore();
+        vi.useRealTimers();
+      }
+    });
   });
 });
