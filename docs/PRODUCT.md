@@ -14,7 +14,7 @@ Grade 11 and 12 (Senior High) students in the Philippines, mobile-first on budge
 
 1. **Landing** (`/`) — value proposition, ~5-minute promise, journey-aware CTA.
 2. **Profile Setup** (`/assessment/profile`) — nickname (required, up to 8 uppercase letters/hyphens, never stored server-side; sent only inside an email request), grade level (11 or 12), SHS strand, age (10–30) and privacy-notice acceptance (all required), and optional school (max 120 chars). Client-side only.
-3. **RIASEC Assessment** (`/assessment`) — 42 yes/no statements (English or Filipino, student's choice), one per screen, auto-advancing (no Next button) with Back to revise; localStorage resume, deterministic scoring (tie-break R→I→A→S→E→C).
+3. **RIASEC Assessment** (`/assessment`) — 42 yes/no statements (English or Filipino, student's choice), one per screen, auto-advancing (no Next button) with Back to revise; localStorage resume, deterministic scoring (tie-break R→I→A→S→E→C). Finished results stay on the device 30 minutes at most and vanish when the tab closes; Results shows the countdown.
 4. **Results** (`/results`) — Holland code + trait breakdown, all majors and related pathways per code letter, password-protected PDF + email export (including the selected SHS strand), optional career-look photo, results ID + compare with a past result.
 
 ## Non-goals
@@ -29,5 +29,6 @@ Product app with one brand surface: the landing page is brand register (identity
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 
+- 2026-11-02 · results · Results shows a lifetime countdown; finished results wiped on tab close · shared-device privacy
 - 2026-10-31 · product · Assessment statements can be shown in Filipino (PRD FR-3.8). · Wider reach for Filipino-speaking students.
 - 2026-10-27 · product · Audience narrowed to Grade 11–12; profile adds age + privacy acceptance; results describe majors/pathways, encrypted PDF, career look. · Matches the shipped code and the updated PRD.

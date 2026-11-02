@@ -25,6 +25,8 @@ Next.js 16.2.5 App Router, React 19, TypeScript, Tailwind v4 (tokens in `apps/we
 
 - `store/useAssessmentStore.ts`: Zustand + `persist` (localStorage). Holds profile (nickname, grade, strand, age, school), answers keyed by question id, scores, `questionOrder` (per-session shuffle), `language` (`en` | `fil`, set by the toggle in `assessment-runner`; persist version 9). Re-answer replaces the old contribution. Stored data from an older bank/scale is discarded on load (PRD E7).
 - Session TTL: 30 min after last change. Wiped on rehydrate by the store and live by `components/session-expiry-guard.tsx`.
+- Tab-close wipe: every load sets `sessionStorage` `aligned.tab`; a rehydrated session with `completedAt` set and no marker is wiped (`isOrphanedFinishedSession`). Unfinished quizzes keep resuming. Unreadable `sessionStorage` = no wipe (TTL only).
+- `components/journey/results-expiry-note.tsx`: countdown under the Results h1, from `sessionRemainingMs(lastUpdated)`; ticks 1 s, hidden in print, screen readers get a per-minute sentence.
 - `lib/career-look/photo-store.ts`: last career-look photo, memory only, never persisted.
 - `hooks/use-hydrated.ts`: gate anything that reads persisted state, so the server render never depends on it.
 - `components/journey/journey-guard.tsx`: redirects to the correct earlier step and withholds content until rehydration finishes.
@@ -57,6 +59,7 @@ Next.js 16.2.5 App Router, React 19, TypeScript, Tailwind v4 (tokens in `apps/we
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 
+- 2026-11-02 · store/results · tab-marker wipe of finished sessions, `ResultsExpiryNote` countdown · results gone after tab close and lifetime visible
 - 2026-11-02 · frontend · New `FinishDialog`; `assessment-runner` drops the full-screen finish view and opens the dialog automatically from `advanceToNextOpen` / `goForward` when no statement is open · students no longer hunt for a finish button.
 - 2026-10-31 · frontend · `BackgroundGradient` takes `glowClassName`; `assessment-runner` tones Yes/No per option (`ANSWER_TONE`) and moves the language toggle under the statement · see DESIGN.md.
 

@@ -141,6 +141,55 @@ export function isSessionExpired(
   return now - savedAt > SESSION_TTL_MS;
 }
 
+/**
+ * Milliseconds a saved session has left before the TTL wipes it. `null` when
+ * there is no session to count down. An unreadable stamp has nothing left,
+ * matching isSessionExpired.
+ */
+export function sessionRemainingMs(
+  lastUpdated: string | null,
+  now: number = Date.now(),
+): number | null {
+  if (lastUpdated === null) return null;
+  const savedAt = new Date(lastUpdated).getTime();
+  if (Number.isNaN(savedAt)) return 0;
+  return Math.max(0, SESSION_TTL_MS - (now - savedAt));
+}
+
+// A marker in sessionStorage, which the browser drops when the tab (or the
+// browser session) ends while localStorage lives on. A finished session that
+// arrives without the marker was left behind by a closed tab, so it is wiped:
+// the next student on a shared device must not land on someone's results.
+// An unfinished quiz keeps resuming (PRD E4).
+export const TAB_MARKER_KEY = "aligned.tab";
+
+function readTabMarker(): boolean {
+  // Fail safe: where sessionStorage cannot be read, the 30-minute TTL is the
+  // only wipe, so never wipe on a guess.
+  try {
+    if (typeof window === "undefined") return true;
+    return window.sessionStorage.getItem(TAB_MARKER_KEY) !== null;
+  } catch {
+    return true;
+  }
+}
+
+function setTabMarker(): void {
+  try {
+    if (typeof window === "undefined") return;
+    window.sessionStorage.setItem(TAB_MARKER_KEY, "1");
+  } catch {
+    // Silent: the TTL still applies.
+  }
+}
+
+export function isOrphanedFinishedSession(
+  completedAt: string | null,
+  markerPresent: boolean,
+): boolean {
+  return completedAt !== null && !markerPresent;
+}
+
 // Persist locally so quiz progress survives refresh before syncing.
 export const useAssessmentStore = create<AssessmentStore>()(
   persist(
@@ -265,7 +314,15 @@ export const useAssessmentStore = create<AssessmentStore>()(
       // onFinishHydration — never observes an expired session and no stale
       // results can paint.
       onRehydrateStorage: () => (state) => {
-        if (!state || !isSessionExpired(state.lastUpdated)) return;
+        if (!state) return;
+        const orphaned = isOrphanedFinishedSession(
+          state.completedAt,
+          readTabMarker(),
+        );
+        // Every load marks its tab, so finishing the quiz later in this tab
+        // survives a refresh.
+        setTabMarker();
+        if (!orphaned && !isSessionExpired(state.lastUpdated)) return;
         // `state.reset()` rather than reaching for the exported store: with
         // localStorage every step of rehydration is synchronous, so this runs
         // inside the create() call below, while that const is still in its
