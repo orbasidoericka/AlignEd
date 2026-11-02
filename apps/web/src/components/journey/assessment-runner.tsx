@@ -7,7 +7,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, CheckIcon } from "lucide-react";
 
 import { BackgroundGradient } from "@/components/aceternity/background-gradient";
-import { BackgroundLines } from "@/components/aceternity/background-lines";
+import { FinishDialog } from "@/components/journey/finish-dialog";
 import {
   dismissRapidAnswerToast,
   RapidAnswerDialog,
@@ -41,7 +41,6 @@ export const INPUT_GUARD_MS = 350;
 
 const LAST_INDEX = QUESTIONS.length - 1;
 const statementId = (questionId: string) => `statement-${questionId}`;
-const FINISH_HEADING_ID = "assessment-finish-heading";
 
 // Keyboard shortcuts: first letter of each answer label in either language
 // (Y / N, O / H), so a shortcut works whichever language is showing.
@@ -160,8 +159,10 @@ export function AssessmentRunner() {
 
   const [index, setIndex] = useState(firstUnanswered);
   const [direction, setDirection] = useState(1);
-  // A fully answered quiz (e.g. reopened after finishing) resumes on the
-  // finish view instead of stranding the student on the last statement.
+  // Whether the finish pop-up is open. It opens by itself when the last open
+  // statement is answered, and a fully answered quiz (e.g. reopened after
+  // finishing) resumes with it open instead of stranding the student on the
+  // last statement.
   const [finishing, setFinishing] = useState(() =>
     questions.every((q) => q.id in answers),
   );
@@ -233,12 +234,6 @@ export function AssessmentRunner() {
     }
   }, [question, showFinish]);
 
-  useEffect(() => {
-    if (showFinish) {
-      document.getElementById(FINISH_HEADING_ID)?.focus({ preventScroll: true });
-    }
-  }, [showFinish]);
-
   const cancelAdvance = () => {
     if (advanceTimer.current) clearTimeout(advanceTimer.current);
     advanceTimer.current = null;
@@ -282,11 +277,16 @@ export function AssessmentRunner() {
     moveTo(firstOpen);
   };
 
-  // Next statement in order (Next, re-tap, revisions), or the finish gate
-  // after the last one.
+  // Next statement in order (Next, re-tap, revisions), or the finish pop-up
+  // after the last one when nothing is left open.
   const goForward = () => {
     if (index < LAST_INDEX) {
       moveTo(index + 1);
+      return;
+    }
+    const latest = useAssessmentStore.getState().answers;
+    if (questions.every((q) => q.id in latest)) {
+      requestFinish();
     } else {
       cancelAdvance();
     }
@@ -304,7 +304,8 @@ export function AssessmentRunner() {
     if (target !== -1) {
       moveTo(target);
     } else {
-      cancelAdvance();
+      // That answer completed the quiz: open the finish pop-up.
+      requestFinish();
     }
   };
 
@@ -441,65 +442,6 @@ export function AssessmentRunner() {
     router.push("/results");
   };
 
-  if (showFinish) {
-    return (
-      // Celebration: palette streaks burst from behind the message.
-      <BackgroundLines className="flex flex-1 flex-col items-center justify-center gap-6 overflow-hidden bg-stage-assessment-soft px-4 py-16 text-center">
-        {/* Hexi, celebrating. A plain <img>: the file carries its own CSS
-            animation and its own prefers-reduced-motion rule, and an <img>
-            runs both while keeping the markup out of the accessibility tree.
-            Decorative — the h1 below says "All done!" in words. */}
-        {/* eslint-disable-next-line @next/next/no-img-element -- next/image
-            would have to serve this through the optimizer, which refuses SVG
-            unless dangerouslyAllowSVG is on; that flag is a real XSS surface
-            and buys nothing for a static asset that is already 15 KB. Width
-            and height are set, so there is no layout shift to optimize away. */}
-        <img
-          src="/hexi-celebrate.svg"
-          alt=""
-          aria-hidden
-          width={800}
-          height={600}
-          className="h-auto w-56 shrink-0 sm:w-72"
-        />
-        <h1
-          id={FINISH_HEADING_ID}
-          tabIndex={-1}
-          className="text-3xl font-bold text-foreground outline-none sm:text-4xl"
-        >
-          All done!
-        </h1>
-        <p className="max-w-md text-lg text-muted-foreground">
-          Every answer is in. Your Holland Code is ready.
-        </p>
-        <div className="flex flex-col items-center gap-2">
-          <Button
-            size="lg"
-            onClick={seeResults}
-            disabled={submitting}
-            className="h-13 rounded-full bg-stage-results px-8 font-heading text-lg font-semibold text-stage-results-foreground hover:bg-stage-results/85"
-          >
-            See my results
-          </Button>
-          <Button
-            variant="ghost"
-            size="lg"
-            disabled={submitting}
-            onClick={() => {
-              setFinishing(false);
-              setDirection(-1);
-              setIndex(LAST_INDEX);
-            }}
-            className="rounded-full"
-          >
-            <ArrowLeft className="size-4" />
-            Review my answers
-          </Button>
-        </div>
-      </BackgroundLines>
-    );
-  }
-
   return (
     <div className="relative isolate flex flex-1 flex-col overflow-hidden bg-stage-assessment-soft">
       <FocusBackground />
@@ -520,6 +462,12 @@ export function AssessmentRunner() {
         className="pointer-events-none absolute bottom-0 left-0 -z-10 hidden h-auto w-56 select-none lg:block xl:w-72 print:hidden"
       />
       <RapidAnswerDialog open={isBlocked} onAcknowledge={acknowledge} />
+      <FinishDialog
+        open={showFinish}
+        submitting={submitting}
+        onSeeResults={seeResults}
+        onReview={() => setFinishing(false)}
+      />
       {/* One column at every width, progress strip on top. It is z-10 so the
           question area's widened clip box (below) can never sit over it and
           swallow its clicks. */}
@@ -542,8 +490,8 @@ export function AssessmentRunner() {
           )}
           {allAnswered && !finishing && (
             <p className="rounded-2xl bg-card px-4 py-3 text-sm font-medium text-foreground/80">
-              All {QUESTIONS.length} statements answered! Review your answers
-              if you like, then tap{" "}
+              All {QUESTIONS.length} statements answered! Change any answer you
+              like, then tap{" "}
               <strong className="font-semibold">Finish assessment</strong> below
               when ready.
             </p>
