@@ -1,21 +1,5 @@
 import { render } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
-
-const reduced = vi.hoisted(() => ({ value: false }));
-const animateSpy = vi.hoisted(() =>
-  vi.fn<(...args: unknown[]) => { stop: () => void }>(() => ({
-    stop: vi.fn(),
-  })),
-);
-
-vi.mock("framer-motion", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("framer-motion")>();
-  return {
-    ...actual,
-    useReducedMotion: () => reduced.value,
-    useAnimate: () => [{ current: null }, animateSpy],
-  };
-});
+import { describe, expect, it } from "vitest";
 
 import { staggerStep, TextGenerateEffect } from "./text-generate-effect";
 
@@ -50,12 +34,6 @@ describe("staggerStep", () => {
 });
 
 describe("TextGenerateEffect", () => {
-  afterEach(() => {
-    reduced.value = false;
-    animateSpy.mockClear();
-  });
-
-  // Opacity-0 text is still in the accessibility tree and still real text.
   it("renders the whole sentence as real text", () => {
     const { container } = render(<TextGenerateEffect words={TEXT} />);
     expect(container.textContent?.trim()).toBe(TEXT);
@@ -77,27 +55,28 @@ describe("TextGenerateEffect", () => {
     expect(cls).not.toContain("font-bold");
   });
 
-  it("animates every word span to fully visible", () => {
-    render(<TextGenerateEffect words={TEXT} totalDuration={1.8} />);
-    expect(animateSpy).toHaveBeenCalledTimes(1);
-    const [selector, target, options] = animateSpy.mock.calls[0] as [
-      string,
-      { opacity: number },
-      { duration: number },
-    ];
-    expect(selector).toBe("span");
-    expect(target.opacity).toBe(1);
-    expect(options.duration).toBe(0.5);
+  // Visible without JavaScript: no word starts hidden in the markup, the
+  // fade is a CSS animation behind motion-safe: (reduced motion skips it).
+  it("never hides a word in the markup, and fades it only behind motion-safe", () => {
+    const { container } = render(<TextGenerateEffect words={TEXT} />);
+    const spans = container.querySelectorAll("span");
+    expect(spans).toHaveLength(TEXT.split(" ").length);
+    for (const span of spans) {
+      expect(span.className).toBe("motion-safe:animate-word-in");
+      expect(span.getAttribute("style")).not.toMatch(/opacity|blur/);
+    }
   });
 
-  it("shows every word at once under reduced motion", () => {
-    reduced.value = true;
-    render(<TextGenerateEffect words={TEXT} totalDuration={1.8} />);
-    const options = animateSpy.mock.calls[0]?.[2] as {
-      duration: number;
-      delay?: unknown;
-    };
-    expect(options.duration).toBe(0);
-    expect(options.delay).toBeUndefined();
+  it("staggers the words to finish inside the budget", () => {
+    const { container } = render(
+      <TextGenerateEffect words={TEXT} totalDuration={1.8} />,
+    );
+    const spans = [...container.querySelectorAll("span")];
+    const delays = spans.map((s) =>
+      parseInt(s.style.getPropertyValue("--word-delay"), 10),
+    );
+    expect(delays[0]).toBe(0);
+    expect(delays.at(-1)).toBe(1300); // 1.8s budget minus the 0.5s fade
+    expect(spans[0]!.style.getPropertyValue("--word-duration")).toBe("500ms");
   });
 });

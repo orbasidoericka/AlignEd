@@ -3,49 +3,57 @@ import { describe, expect, it } from "vitest";
 
 import { AuroraBackground } from "./aurora-background";
 
-function field(container: HTMLElement) {
-  const el = container.querySelector(".aurora-field");
-  if (!(el instanceof HTMLElement)) throw new Error("aurora field not found");
-  return el;
+// The moving field, the wrapper that masks it, and the decorative layer that
+// holds both, in that order outward.
+function parts(container: HTMLElement) {
+  const field = container.querySelector(".aurora-field");
+  if (!(field instanceof HTMLElement)) throw new Error("aurora field not found");
+  const mask = field.parentElement!;
+  const layer = mask.parentElement!;
+  return { field, mask, layer };
 }
 
 describe("AuroraBackground", () => {
   it("renders its content, with the field behind and hidden from screen readers", () => {
     const { container } = render(
       <AuroraBackground>
-        <p>Tell us where you are</p>
+        <p>Tell us about yourself</p>
       </AuroraBackground>,
     );
 
-    expect(screen.getByText("Tell us where you are")).toBeInTheDocument();
+    expect(screen.getByText("Tell us about yourself")).toBeInTheDocument();
     // The decorative layer is announced to nobody and never takes a click.
-    const layer = field(container).parentElement!;
+    const { layer } = parts(container);
     expect(layer).toHaveAttribute("aria-hidden", "true");
     expect(layer.className).toContain("pointer-events-none");
     expect(layer.className).toContain("-z-10");
   });
 
-  it("drifts only when motion is welcome", () => {
+  // Phones and reduced motion get the field painted once; only mouse devices
+  // get the drift, and it moves the layer by transform (a double-width field
+  // the GPU slides), never by repainting its background.
+  it("drifts only on mouse devices that welcome motion", () => {
     const { container } = render(<AuroraBackground>content</AuroraBackground>);
-    expect(field(container).className).toContain(
-      "motion-safe:animate-aurora-drift",
-    );
+    const { field } = parts(container);
+    expect(field.className).toContain("fancy:animate-aurora-drift");
+    expect(field.className).not.toContain("motion-safe:animate-aurora-drift");
+    expect(field.className).toContain("w-[200%]");
   });
 
   it("fades out before the content by default, and can be told not to", () => {
     const { container: masked } = render(
       <AuroraBackground>content</AuroraBackground>,
     );
-    expect(field(masked).className).toContain("mask-");
+    expect(parts(masked).mask.className).toContain("mask-");
 
     const { container: plain } = render(
       <AuroraBackground showRadialGradient={false}>content</AuroraBackground>,
     );
-    expect(field(plain).className).not.toContain("mask-");
+    expect(parts(plain).mask.className).not.toContain("mask-");
   });
 
   it("keeps the field off printed pages", () => {
     const { container } = render(<AuroraBackground>content</AuroraBackground>);
-    expect(field(container).parentElement!.className).toContain("print:hidden");
+    expect(parts(container).layer.className).toContain("print:hidden");
   });
 });

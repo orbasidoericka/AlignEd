@@ -60,7 +60,7 @@ state ("Saved ✓"). One decision per screen. Exit attempts get a shadcn
 ### Landing (evolve, don't rebuild)
 Keep: Hero Highlight, bento, testimonial marquee, CTA banner.
 Add: **Aceternity Sticky Scroll Reveal** "How it works" (4 chapters:
-Tell us where you are → Discover yourself → See your alignment → Walk out
+Tell us about yourself → Discover yourself → See your alignment → Walk out
 with a plan); journey-aware hero CTA (2.1); duration promise ("~5 minutes")
 under the CTA.
 

@@ -52,7 +52,7 @@ export function FocusBar() {
   };
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-sm">
+    <header className="sticky top-0 z-40 border-b border-border bg-background">
       <div className="mx-auto flex h-14 w-full max-w-3xl items-center justify-between px-4">
         <Link
           href="/"

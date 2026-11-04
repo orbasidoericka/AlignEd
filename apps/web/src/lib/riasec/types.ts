@@ -25,9 +25,25 @@ export const SHS_STRANDS = [
   "Home Economics (HE)",
   "Industrial Arts (IA)",
   "Information and Communications Technology (ICT)",
+  "Others",
 ] as const;
 
 export type ShsStrand = (typeof SHS_STRANDS)[number];
+
+// "Others" lets a student type a strand the list lacks. That text stays on the
+// device and in the student's own PDF; the server only ever sees "Others".
+export const STRAND_OTHER = "Others" satisfies ShsStrand;
+export const STRAND_OTHER_MAX_LENGTH = 60;
+
+// What to print for the student's strand: the typed text for "Others", the
+// picked strand otherwise, null when none is chosen.
+export function strandLabel(
+  strand: ShsStrand | null,
+  strandOther: string,
+): string | null {
+  if (strand === null) return null;
+  return strand === STRAND_OTHER ? strandOther.trim() || null : strand;
+}
 
 // The abbreviation in brackets ("STEM"), or the whole name when it has none
 // ("Sports"), for tight spaces like table cells.

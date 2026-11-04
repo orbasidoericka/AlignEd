@@ -20,9 +20,10 @@ const footerLinks = [
 
 export function SiteFooter() {
   return (
-    // Glass chrome, matching the header, so the page ends on a distinct
-    // surface instead of blending into the body background.
-    <footer className="mt-auto w-full border-t border-chrome-border bg-chrome/85 backdrop-blur-md">
+    // Solid chrome so the page ends on a distinct surface instead of blending
+    // into the body background. No backdrop blur: it had nothing to blur here
+    // and still cost GPU work on every frame it was on screen.
+    <footer className="mt-auto w-full border-t border-chrome-border bg-chrome">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-6 py-10 md:flex-row md:items-start md:justify-between">
         <div className="max-w-sm space-y-2">
           <Wordmark className="h-8" />
@@ -54,7 +55,7 @@ export function SiteFooter() {
               <button type="button" className={cn(linkClassName, "text-left")} />
             }
           >
-            Privacy Policy
+            Terms and Privacy
           </PrivacyPolicyDialog>
         </nav>
       </div>

@@ -3,6 +3,16 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Looping decoration (hex glow, aurora drift, shine, glows) runs only on
+   devices with a mouse and no reduced-motion request. Phones get the first
+   frame, painted once: endless repaints are what made low-end Android lag.
+   One-shot entrances keep using motion-safe:. */
+@custom-variant fancy {
+  @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+    @slot;
+  }
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -506,13 +516,16 @@
 
 /* Aurora Background (components/aceternity/aurora-background.tsx): a soft
    pastel field drifts behind the Profile Setup form. One blurred layer rather than upstream's two blended ones: half the paint
-   cost, and the second layer was invisible under this palette anyway. */
+   cost, and the second layer was invisible under this palette anyway.
+   The drift moves the layer with transform, not background-position: the
+   blurred field is painted once and the GPU slides it, instead of
+   re-painting and re-blurring the whole screen every frame. */
 @keyframes aurora-drift {
   from {
-    background-position: 50% 50%, 50% 50%;
+    transform: translateX(0);
   }
   to {
-    background-position: 350% 50%, 350% 50%;
+    transform: translateX(-50%);
   }
 }
 
@@ -539,9 +552,11 @@
       var(--aurora-d) 26%,
       var(--aurora-a) 32%
     );
+  /* Half the old sizes: the layer is twice as wide, so bands keep their
+     on-screen width. */
   background-size:
-    260%,
-    170%;
+    130%,
+    85%;
   background-position:
     50% 50%,
     50% 50%;
@@ -552,8 +567,44 @@
 @utility animate-aurora-drift {
   animation-name: aurora-drift;
   animation-duration: 60s;
-  animation-timing-function: linear;
+  animation-timing-function: ease-in-out;
   animation-iteration-count: infinite;
+  /* Back and forth, so the end of the stripes never shows as a seam. */
+  animation-direction: alternate;
+  will-change: transform;
+}
+
+/* One-shot entrance in pure CSS, for content above the fold: it paints with
+   the HTML instead of waiting for JavaScript to load. Opacity and transform
+   only, so the GPU runs it. Used behind motion-safe:. */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@utility animate-fade-up {
+  animation: fade-up 0.5s ease-out both;
+  animation-delay: var(--fade-delay, 0s);
+}
+
+/* Hero subtitle words (components/aceternity/text-generate-effect.tsx): each
+   fades in on its own delay. Opacity only, since inline words cannot take a
+   transform. Used behind motion-safe:. */
+@keyframes word-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@utility animate-word-in {
+  animation: word-in var(--word-duration, 0.5s) ease-out both;
+  animation-delay: var(--word-delay, 0s);
 }
 
 /* Shine Border (components/magic/shine-border.tsx): a highlight sweeps the

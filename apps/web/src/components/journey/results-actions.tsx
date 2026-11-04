@@ -52,6 +52,7 @@ import { downloadResultsPdf } from "@/lib/results-pdf/download-results-pdf";
 import { resultsPdfPassword, resultsTakenOn } from "@/lib/results-pdf/password";
 import { QUESTIONS } from "@/lib/riasec/questions";
 import { computeHollandCode, maxScorePerTrait } from "@/lib/riasec/scoring";
+import { strandLabel } from "@/lib/riasec/types";
 import { useAssessmentStore } from "@/store/useAssessmentStore";
 
 // Every keepsake trigger is the same round outline button: 44px for touch,
@@ -60,7 +61,7 @@ const iconTrigger = (
   <Button
     variant="outline"
     size="icon-lg"
-    className="size-11 rounded-full bg-card/90 backdrop-blur-sm"
+    className="size-11 rounded-full bg-card"
   />
 );
 
@@ -174,7 +175,7 @@ function DownloadPdfDialog() {
       await downloadResultsPdf({
         nickname: profile.nickname,
         gradeLevel: profile.gradeLevel,
-        strand: profile.strand,
+        strand: strandLabel(profile.strand, profile.strandOther),
         age: profile.age,
         school: profile.school,
         scores,

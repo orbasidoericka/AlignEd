@@ -14,7 +14,7 @@ Next.js 16.2.5 App Router, React 19, TypeScript, Tailwind v4 (tokens in `apps/we
 | :--- | :--- | :--- |
 | `/` | `(site)` | Landing. Journey-aware CTA (`components/journey/hero-cta.tsx`). |
 | `/assessment/profile` | `(focus)` | Profile form (`journey/profile-form.tsx`). Focus Mode shell, no site chrome. |
-| `/assessment` | `(focus)` | Quiz (`journey/assessment-runner.tsx`, `question-navigator.tsx`: progress bar on top, question grid behind an "All questions" toggle). |
+| `/assessment` | `(focus)` | Quiz (`journey/assessment-runner.tsx`, `question-navigator.tsx`: progress strip across the top; question numbers in a sticky right panel from `lg`, shown or hidden with the icon `QuestionGridToggle` beside the language switch). |
 | `/results` | `(site)` | Dashboard (`journey/results-dashboard.tsx`), exports (`results-actions.tsx`), compare (`saved-results-panel.tsx`). |
 | `/dev/career-looks` | `(site)` | Dev preview of career-look props. |
 | `/admin/[token]` | — | Server-rendered admin stats; see `BACKEND.md`. |
@@ -23,10 +23,12 @@ Next.js 16.2.5 App Router, React 19, TypeScript, Tailwind v4 (tokens in `apps/we
 
 ## State
 
-- `store/useAssessmentStore.ts`: Zustand + `persist` (localStorage). Holds profile (nickname, grade, strand, age, school), answers keyed by question id, scores, `questionOrder` (per-session shuffle), `language` (`en` | `fil`, set by the toggle in `assessment-runner`; persist version 9). Re-answer replaces the old contribution. Stored data from an older bank/scale is discarded on load (PRD E7).
+- `store/useAssessmentStore.ts`: Zustand + `persist` (localStorage). Holds profile (nickname, grade, strand, `strandOther` for the typed "Others" strand, age, school), answers keyed by question id, scores, `questionOrder` (per-session shuffle), `language` (`en` | `fil`, set by the toggle in `assessment-runner`; persist version 9). Re-answer replaces the old contribution. Stored data from an older bank/scale is discarded on load (PRD E7).
 - Session TTL: 30 min after last change. Wiped on rehydrate by the store and live by `components/session-expiry-guard.tsx`.
 - `lib/career-look/photo-store.ts`: last career-look photo, memory only, never persisted.
 - `hooks/use-hydrated.ts`: gate anything that reads persisted state, so the server render never depends on it.
+- Persist writes are coalesced (`coalescedStorage` in the store, `STORAGE_WRITE_DELAY_MS` = 250): the latest state lands after a short pause, at once on `pagehide` / tab hidden; `removeItem` (Start over, expiry) is never delayed and cancels any pending write. Reads see the pending value.
+- `hooks/use-fancy-motion.ts`: JS twin of the `fancy:` CSS variant (mouse device, no reduced motion). `GlowingEffect` attaches its scroll/pointer listeners only when true.
 - `components/journey/journey-guard.tsx`: redirects to the correct earlier step and withholds content until rehydration finishes.
 
 ## Logic (`lib/riasec`)
@@ -46,6 +48,7 @@ Next.js 16.2.5 App Router, React 19, TypeScript, Tailwind v4 (tokens in `apps/we
 - **Sound** (`lib/sound`, `components/sound-provider.tsx`): one delegated click listener; preference in `localStorage` `aligned.sound`.
 - **Rapid-answer guard** (`hooks/use-rapid-answer-guard.ts`).
 - **Analytics** (`components/analytics.tsx`): PostHog, no-op unless `NEXT_PUBLIC_POSTHOG_KEY` is set.
+- **Terms and privacy** (`components/journey/privacy-consent.tsx`): one `POLICY_SECTIONS` array feeds the profile consent dialog and the footer's read-only `PrivacyPolicyDialog`. Text wrapped in `**...**` renders bold via `renderInline`. `PRIVACY_POLICY_VERSION` (`v2.0`) and `PRIVACY_CONTACT_EMAIL` are exported. The data list must match what the code collects; change one, change the other.
 
 ## Testing
 
@@ -56,6 +59,11 @@ Next.js 16.2.5 App Router, React 19, TypeScript, Tailwind v4 (tokens in `apps/we
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 
+- 2026-11-04 · frontend · Show/hide of the question numbers moved up into `assessment-runner` (`gridChoice`: null until chosen, then true/false; `useMediaQuery("(min-width: 64rem)")` for the toggle's aria state and the phone-only fold after a jump; a failed finish sets it true). `QuestionNavigator` is now controlled (`gridOpen`, `panelId`, `onHide`) and no longer owns a toggle; new exported `QuestionGridToggle` (icon only) renders in the runner's language row; new `hooks/use-media-query.ts` · the toggle had to sit beside the language switch and work at every width, so its state could no longer live inside the navigator.
+- 2026-11-04 · frontend · `QuestionNavigator` now renders two sections (progress strip, "All questions" panel) and takes `progressClassName` / `panelClassName` instead of `className`; `assessment-runner` is two columns from `lg` (strip spans both, panel `lg:col-start-2` sticky) and its root is `overflow-clip`; "Step 2 of 3" and "n to go" removed · grid beside the question instead of above it, see DESIGN.md.
+- 2026-11-04 · perf · Store writes coalesced; `useFancyMotion` hook gates `GlowingEffect`; `RiasecRadar` loads its Recharts half (`riasec-radar-chart.tsx`) via `next/dynamic` with a same-size placeholder (sr-only table stays eager); `Highlighter` imports rough-notation on draw and redraws without replaying on resize; `TextGenerateEffect` is a server component with CSS word delays; `BlurFade` drops blur and `AnimatePresence`; wordmark gets `sizes`; `next.config` adds `framer-motion` to `optimizePackageImports` (AVIF was tried and dropped the same day: a stuck AVIF encode left the logo blank in dev, for a few KB saved); About photo `ericka.png` (8.1 MB) replaced by `ericka.jpg` (31 KB, 600px). · Site lagged on low-end phones; see DESIGN.md Motion for measurements.
+- 2026-11-04 · frontend · `SHS_STRANDS` gains "Others"; profile gets `strandOther` (no persist bump) and the form shows a "Type your strand" input when Others is picked, required by `selectIsProfileComplete`; `strandLabel()` prints the typed text in the PDF; saved record still sends only "Others". Profile heading is "Tell us about yourself" (landing journey card too), "Step 1 of 3" and placeholders removed, consent blurb shortened, policy v2.1. · Students with an unlisted strand can continue; typed text never reaches the server.
+- 2026-11-04 · frontend · `privacy-consent.tsx`: policy rewritten in plain words (v2.0) with a full data-collected list, a Terms section, and `**bold**` key points via `renderInline`; consent checkbox and error hint now say "Terms and Conditions"; footer link reads "Terms and Privacy" · students see what is collected and agree to one document.
 - 2026-10-31 · frontend · `BackgroundGradient` takes `glowClassName`; `assessment-runner` tones Yes/No per option (`ANSWER_TONE`) and moves the language toggle under the statement · see DESIGN.md.
 
 - 2026-10-31 · frontend · Assessment gets an English / Filipino toggle: statements from `questions-fil.ts`, answers Oo / Hindi, O / H shortcuts beside Y / N, `language` added to the store (persist v9) · Filipino-speaking students can answer in their own language; scoring is keyed by id so it is unaffected.

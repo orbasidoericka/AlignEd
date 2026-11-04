@@ -1,7 +1,11 @@
 "use client";
 
 import { create } from "zustand";
-import { createJSONStorage, persist } from "zustand/middleware";
+import {
+  createJSONStorage,
+  persist,
+  type StateStorage,
+} from "zustand/middleware";
 
 import {
   isValidQuestionOrder,
@@ -9,6 +13,7 @@ import {
   shuffleQuestionIds,
   type QuestionLanguage,
 } from "@/lib/riasec/questions";
+import { STRAND_OTHER } from "@/lib/riasec/types";
 import type { GradeLevel, ShsStrand } from "@/lib/riasec/types";
 
 export type RiasecTrait =
@@ -30,6 +35,9 @@ export interface ProfileState {
   nickname: string;
   gradeLevel: GradeLevel | null;
   strand: ShsStrand | null;
+  // The strand a student types when they pick "Others". Device only: the
+  // server is only ever told "Others".
+  strandOther: string;
   age: string;
   school: string;
   // Data Privacy Act consent, given on the profile step. Part of the profile
@@ -95,6 +103,7 @@ const emptyProfile: ProfileState = {
   nickname: "",
   gradeLevel: null,
   strand: null,
+  strandOther: "",
   age: "",
   school: "",
   privacyAccepted: false,
@@ -104,17 +113,70 @@ const emptyProfile: ProfileState = {
 // storage makes it skip attaching its api — leaving store.persist undefined
 // and crashing anything that reads it while rendering (the journey guard).
 // An inert storage keeps that api present; the client rehydrates for real.
-const noopStorage: Storage = {
-  length: 0,
-  clear: () => {},
+const noopStorage: StateStorage = {
   getItem: () => null,
-  key: () => null,
   removeItem: () => {},
   setItem: () => {},
 };
 
-function ssrSafeStorage(): Storage {
-  return typeof window === "undefined" ? noopStorage : window.localStorage;
+// persist serializes the whole state and writes it synchronously on every
+// set: each keystroke on the profile and each answer tap paid for a full
+// JSON.stringify plus a blocking localStorage write. Writes are coalesced
+// instead: the latest value lands after a short pause, and at once when the
+// tab is hidden or closed. Removal is never delayed, so "Start over" and the
+// 30-minute expiry still leave nothing behind immediately. Reads see the
+// pending value, so nothing in this tab can observe a stale save.
+export const STORAGE_WRITE_DELAY_MS = 250;
+
+function coalescedStorage(target: Storage): StateStorage {
+  const pending = new Map<string, string>();
+  let timer: ReturnType<typeof setTimeout> | null = null;
+
+  const flush = () => {
+    if (timer !== null) clearTimeout(timer);
+    timer = null;
+    for (const [key, value] of pending) {
+      try {
+        target.setItem(key, value);
+      } catch (error) {
+        // Quota or private-mode failure: the in-memory store stays correct
+        // for this tab, as it did when persist wrote synchronously.
+        console.warn("Could not save the session to this device:", error);
+      }
+    }
+    pending.clear();
+  };
+
+  window.addEventListener("pagehide", flush);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") flush();
+  });
+
+  return {
+    getItem: (key) => pending.get(key) ?? target.getItem(key),
+    setItem: (key, value) => {
+      pending.set(key, value);
+      timer ??= setTimeout(flush, STORAGE_WRITE_DELAY_MS);
+    },
+    removeItem: (key) => {
+      pending.delete(key);
+      // Nothing left to save: drop the timer too, so the next write starts
+      // its own pause instead of riding the cleared one's.
+      if (pending.size === 0 && timer !== null) {
+        clearTimeout(timer);
+        timer = null;
+      }
+      target.removeItem(key);
+    },
+  };
+}
+
+let clientStorage: StateStorage | null = null;
+
+function ssrSafeStorage(): StateStorage {
+  if (typeof window === "undefined") return noopStorage;
+  clientStorage ??= coalescedStorage(window.localStorage);
+  return clientStorage;
 }
 
 const STORAGE_KEY = "aligned.assessment.v1";
@@ -339,6 +401,8 @@ export const useAssessmentStore = create<AssessmentStore>()(
         // merge's spread over emptyProfile fills these for older blobs, so
         // an older session simply has to complete the new profile choice.
         // v9 added the statement language; merge keeps the "en" default.
+        // strandOther (the typed "Others" strand) needed no bump: merge's
+        // spread over emptyProfile gives older blobs an empty string.
         return withNickname;
       },
     },
@@ -353,6 +417,8 @@ export const selectIsProfileComplete = (state: {
   state.profile.nickname.length > 0 &&
   state.profile.gradeLevel !== null &&
   state.profile.strand !== null &&
+  (state.profile.strand !== STRAND_OTHER ||
+    state.profile.strandOther.trim() !== "") &&
   state.profile.age !== "" &&
   state.profile.privacyAccepted;
 

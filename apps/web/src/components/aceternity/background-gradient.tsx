@@ -37,7 +37,9 @@ export function BackgroundGradient({
   glowClassName?: string;
   animate?: GradientAnimation;
 }) {
-  const motion = animate !== "never" && "motion-safe:animate-gradient-pan";
+  // The pan re-blurs the glow every frame, so it runs only on mouse devices.
+  // Phones still get the glow, held still.
+  const motion = animate !== "never" && "fancy:animate-gradient-pan";
 
   return (
     <div className={cn("group relative", containerClassName)}>

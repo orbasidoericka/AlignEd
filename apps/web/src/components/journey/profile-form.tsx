@@ -20,6 +20,8 @@ import {
   GRADE_LEVELS,
   SHS_STRANDS,
   SCHOOL_MAX_LENGTH,
+  STRAND_OTHER,
+  STRAND_OTHER_MAX_LENGTH,
   sanitizeNickname,
 } from "@/lib/riasec/types";
 import type { GradeLevel, ShsStrand } from "@/lib/riasec/types";
@@ -50,15 +52,11 @@ export function ProfileForm() {
     <AuroraBackground>
       <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-4 py-10">
         <header className="flex flex-col gap-2">
-          <p className="font-heading text-sm font-bold text-stage-profile-strong">
-            Step 1 of 3
-          </p>
           <h1 className="text-3xl font-bold text-foreground sm:text-4xl">
-            Tell us where you are
+            Tell us about yourself
           </h1>
           <p className="text-base text-muted-foreground">
-            A nickname and your grade level so we can match you to careers and
-            college programs. No real name needed.
+            A few quick details to get you started. No real name needed.
           </p>
         </header>
 
@@ -76,7 +74,6 @@ export function ProfileForm() {
             onChange={(event) =>
               setProfile({ nickname: sanitizeNickname(event.target.value) })
             }
-            placeholder="YOUR NICKNAME"
             autoCapitalize="characters"
             autoComplete="off"
             spellCheck={false}
@@ -135,7 +132,12 @@ export function ProfileForm() {
             aria-label="SHS strand"
             value={profile.strand}
             onValueChange={(value) =>
-              setProfile({ strand: value as ShsStrand })
+              // Typed "Others" text is dropped when another strand is picked,
+              // so a stale entry is never kept.
+              setProfile({
+                strand: value as ShsStrand,
+                ...(value !== STRAND_OTHER && { strandOther: "" }),
+              })
             }
             className="grid gap-3 sm:grid-cols-2"
           >
@@ -150,11 +152,36 @@ export function ProfileForm() {
               </RadioCard>
             ))}
           </RadioGroup>
+          {profile.strand === STRAND_OTHER && (
+            <Input
+              aria-label="Type your strand"
+              value={profile.strandOther}
+              maxLength={STRAND_OTHER_MAX_LENGTH}
+              onChange={(event) =>
+                setProfile({
+                  strandOther: event.target.value.slice(
+                    0,
+                    STRAND_OTHER_MAX_LENGTH,
+                  ),
+                })
+              }
+              autoComplete="off"
+              aria-invalid={showHints && profile.strandOther.trim() === ""}
+              className="h-12 rounded-xl bg-card text-base"
+            />
+          )}
           {showHints && profile.strand === null && (
             <p className="text-sm font-semibold text-destructive" role="alert">
               Choose your SHS strand to continue.
             </p>
           )}
+          {showHints &&
+            profile.strand === STRAND_OTHER &&
+            profile.strandOther.trim() === "" && (
+              <p className="text-sm font-semibold text-destructive" role="alert">
+                Type your strand to continue.
+              </p>
+            )}
         </fieldset>
 
         {/* Age */}
@@ -176,7 +203,6 @@ export function ProfileForm() {
               const raw = event.target.value.replace(/\D/g, "").slice(0, 2);
               setProfile({ age: raw });
             }}
-            placeholder="YOUR AGE"
             aria-invalid={showHints && profile.age === ""}
             className="h-12 rounded-xl bg-card text-base"
           />
@@ -207,7 +233,6 @@ export function ProfileForm() {
                 school: event.target.value.slice(0, SCHOOL_MAX_LENGTH),
               })
             }
-            placeholder="YOUR SCHOOL"
             className="h-11 rounded-xl bg-card text-base"
           />
           <p

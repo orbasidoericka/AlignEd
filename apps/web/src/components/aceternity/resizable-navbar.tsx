@@ -32,12 +32,16 @@ import { cn } from "@/lib/utils";
 //   items with a tooltip.
 // - MobileNavToggle is a real button with aria-expanded/controls; the menu
 //   closes on Escape. Mobile radius now grows when floating (was inverted).
-// - Reduced motion: size/radius/padding springs are not transforms, so
-//   MotionConfig would not stop them; transitions become instant instead.
+// - Reduced motion: the desktop width spring is not a transform, so
+//   MotionConfig would not stop it; transitions become instant instead.
+// - No glass: backdrop blur re-blurred the page behind the bar on every
+//   scroll frame, the main source of scroll lag on low-end phones. Surfaces
+//   are solid card instead: any translucency without the blur lets the text
+//   scrolling underneath show through the bar.
+// - Mobile pill animates only `y` (a transform the GPU runs). Its width,
+//   padding, radius, and shadow switch once at the threshold instead of being
+//   sprung, because springing them re-ran layout and paint every frame.
 // - NavbarButton not vendored (the app's buttonVariants is the button system).
-
-const FLOATING_SHADOW =
-  "0 0 24px rgba(34, 42, 53, 0.06), 0 1px 1px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(34, 42, 53, 0.04), 0 0 4px rgba(34, 42, 53, 0.08), 0 16px 68px rgba(47, 48, 55, 0.05)";
 
 // Injected by Navbar via cloneElement.
 interface ScrollStateProps {
@@ -73,12 +77,12 @@ export function Navbar({ children, className }: NavbarProps) {
     <header
       className={cn(
         "sticky inset-x-0 top-0 z-50 w-full py-2 transition-colors duration-300",
-        // White glass at rest: the blue-and-yellow wordmark needs a pale
+        // Solid white at rest: the blue-and-yellow wordmark needs a pale
         // ground to stand up, and the tint-free card color gives it one in
         // both themes. The floating pill carries its own surface.
         visible
           ? "border-b border-transparent bg-transparent"
-          : "border-b border-chrome-border bg-card/80 backdrop-blur-md",
+          : "border-b border-chrome-border bg-card",
         className,
       )}
     >
@@ -109,15 +113,13 @@ export function NavBody({
     <motion.nav
       aria-label="Main"
       animate={{
-        backdropFilter: visible ? "blur(10px)" : "blur(0px)",
-        boxShadow: visible ? FLOATING_SHADOW : "none",
         width: visible ? "48%" : "100%",
         y: visible ? 16 : 0,
       }}
       transition={transition}
       className={cn(
         "relative z-60 mx-auto hidden w-full max-w-6xl min-w-4xl flex-row items-center justify-between gap-4 self-start rounded-full px-4 py-2 lg:flex",
-        visible && "bg-card/85 shadow-bento ring-1 ring-chrome-border",
+        visible && "bg-card shadow-bento ring-1 ring-chrome-border",
         className,
       )}
     >
@@ -237,19 +239,12 @@ export function MobileNav({
   return (
     <motion.nav
       aria-label="Main"
-      animate={{
-        backdropFilter: visible ? "blur(10px)" : "blur(0px)",
-        boxShadow: visible ? FLOATING_SHADOW : "none",
-        width: visible ? "92%" : "100%",
-        paddingRight: visible ? "12px" : "0px",
-        paddingLeft: visible ? "12px" : "0px",
-        borderRadius: visible ? "1.5rem" : "0.75rem",
-        y: visible ? 8 : 0,
-      }}
+      animate={{ y: visible ? 8 : 0 }}
       transition={transition}
       className={cn(
-        "relative z-50 mx-auto flex w-full max-w-[calc(100vw-2rem)] flex-col items-center justify-between py-2 lg:hidden",
-        visible && "bg-card/85 shadow-bento ring-1 ring-chrome-border",
+        "relative z-50 mx-auto flex w-full max-w-[calc(100vw-2rem)] flex-col items-center justify-between rounded-xl py-2 lg:hidden",
+        visible &&
+          "rounded-3xl bg-card px-3 shadow-bento ring-1 ring-chrome-border",
         className,
       )}
     >

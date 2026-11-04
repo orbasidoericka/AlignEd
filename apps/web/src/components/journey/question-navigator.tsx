@@ -1,11 +1,17 @@
 // Copyright (c) 2026 EdTech. All rights reserved.
 "use client";
 
-import { useId, useRef, useState } from "react";
-import { ChevronDown, CircleAlert, LayoutGrid } from "lucide-react";
+import { useRef } from "react";
+import { CircleAlert, LayoutGrid, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import type { RiasecQuestion } from "@/lib/riasec/questions";
 import { cn } from "@/lib/utils";
 import type { AssessmentAnswer } from "@/store/useAssessmentStore";
@@ -41,7 +47,70 @@ interface QuestionNavigatorProps {
   /** True while the rapid-answer pause is up. */
   disabled?: boolean;
   onJump: (index: number) => void;
+  /** id of the numbers panel, so the toggle can name it in aria-controls. */
+  panelId: string;
+  /** Closes the panel from inside it (the toggle can be a screen away). */
+  onHide: () => void;
+  /**
+   * Whether the student has chosen to show (true) or hide (false) the
+   * numbers; null while they have not chosen, which shows the panel from lg
+   * and hides it below (the toggle's own default).
+   */
+  gridOpen: boolean | null;
+  /** Placement of the progress strip in the runner's grid. */
+  progressClassName?: string;
+  /** Placement of the question-grid panel in the runner's grid. */
+  panelClassName?: string;
+}
+
+interface QuestionGridToggleProps {
+  /** Whether the numbers are showing right now. */
+  open: boolean;
+  onToggle: () => void;
+  /** id of the panel it shows and hides. */
+  controls: string;
+  disabled?: boolean;
   className?: string;
+}
+
+// Show or hide the question numbers. Icon only: the label is the accessible
+// name and the tooltip. It sits in the runner beside the language switch, and
+// hides only the numbers, never the language switch.
+export function QuestionGridToggle({
+  open,
+  onToggle,
+  controls,
+  disabled = false,
+  className,
+}: QuestionGridToggleProps) {
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <Button
+              type="button"
+              variant="outline"
+              size="icon-lg"
+              disabled={disabled}
+              aria-label="All questions"
+              aria-expanded={open}
+              aria-controls={controls}
+              onClick={onToggle}
+              className={cn(
+                "size-11 shrink-0 rounded-full bg-card",
+                "aria-expanded:border-highlight-soft-foreground/40 aria-expanded:bg-highlight-soft aria-expanded:text-highlight-soft-foreground aria-expanded:hover:bg-highlight-soft",
+                className,
+              )}
+            />
+          }
+        >
+          <LayoutGrid className="size-5" aria-hidden />
+        </TooltipTrigger>
+        <TooltipContent>{open ? "Hide question numbers" : "All questions"}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
 }
 
 // Reads the live column count so Up/Down move by one visual row at every
@@ -55,10 +124,15 @@ function columnCount(list: HTMLElement | null): number {
   return tracks || FALLBACK_COLUMNS;
 }
 
-// Assessment progress and question map in one card (Focus Mode). A slim
-// milestone bar heads it; the numbered grid (one cell per statement, answered
-// or not, jump to any) is folded away behind an "All questions" toggle at every
-// width so the statement keeps the screen. A failed finish opens it on its own.
+// Assessment progress and question map (Focus Mode), as two pieces the runner
+// places on its own grid:
+// - The progress strip: the question count, percent and a milestone bar,
+//   straight on the page ground across the top. No card, and no "Step 2 of 3"
+//   or "n to go": one count and one percent are enough numbers to read.
+// - The question panel: the numbered grid (one cell per statement, jump to
+//   any) and its legend, beside the statement so it never pushes it down. The
+//   runner owns whether it shows (`gridOpen`, driven by QuestionGridToggle):
+//   by default it is shown from lg and hidden below.
 export function QuestionNavigator({
   questions,
   answers,
@@ -66,12 +140,14 @@ export function QuestionNavigator({
   flagOpen,
   disabled = false,
   onJump,
-  className,
+  panelId,
+  onHide,
+  gridOpen,
+  progressClassName,
+  panelClassName,
 }: QuestionNavigatorProps) {
-  const [expanded, setExpanded] = useState(false);
   const listRef = useRef<HTMLOListElement>(null);
   const cells = useRef<(HTMLButtonElement | null)[]>([]);
-  const regionId = useId();
 
   const total = questions.length;
   const openNumbers = questions.flatMap((question, i) =>
@@ -86,21 +162,6 @@ export function QuestionNavigator({
     { length: Math.max(0, Math.ceil(total / MILESTONE_EVERY) - 1) },
     (_, k) => (k + 1) * MILESTONE_EVERY,
   );
-
-  // A failed finish names the open statements; show them in the grid too.
-  // Adjusted during render, on the notice's rising edge only, so the student
-  // can still fold the grid away while the notice stays up.
-  const [noticeShown, setNoticeShown] = useState(false);
-  if (showNotice !== noticeShown) {
-    setNoticeShown(showNotice);
-    if (showNotice) setExpanded(true);
-  }
-
-  const jump = (index: number) => {
-    // Fold the grid away on small screens so the chosen statement is in view.
-    setExpanded(false);
-    onJump(index);
-  };
 
   const handleGridKeyDown = (event: React.KeyboardEvent<HTMLOListElement>) => {
     const target = event.target;
@@ -143,59 +204,36 @@ export function QuestionNavigator({
       : `${remaining} are still open, starting with number ${firstOpen}.`;
 
   return (
-    <section
-      aria-label="Assessment progress and questions"
-      className={cn(
-        "flex flex-col gap-4 rounded-3xl bg-card p-3 shadow-bento ring-1 ring-border lg:p-4",
-        className,
-      )}
-    >
-      <div>
-        {/* Progress (PRD FR-3.3): count and percent stay in view; the bar is
-            the tracker. Value is answers recorded, so Back never lowers it. */}
+    <>
+      {/* Progress (PRD FR-3.3): count and percent stay in view; the bar is
+          the tracker. Value is answers recorded, so Back never lowers it. */}
+      <section
+        aria-label="Assessment progress"
+        className={cn("flex flex-col gap-2.5", progressClassName)}
+      >
         <div className="flex items-center gap-3">
-          <div className="flex min-w-0 flex-1 flex-col">
-            <p className="font-heading text-sm font-bold text-stage-assessment-strong">
-              Step 2 of 3
-            </p>
-            <p
-              className="font-heading text-base font-bold whitespace-nowrap text-foreground sm:text-lg"
-              aria-live="polite"
-            >
-              Question {currentIndex + 1} of {total}
-            </p>
-          </div>
-          <p className="font-heading text-xl font-bold text-stage-assessment-strong tabular-nums">
+          <p
+            className="min-w-0 flex-1 font-heading text-base font-bold whitespace-nowrap text-foreground sm:text-lg"
+            aria-live="polite"
+          >
+            Question {currentIndex + 1} of {total}
+          </p>
+          <p className="font-heading text-lg font-bold text-stage-assessment-strong tabular-nums sm:text-xl">
             {percent}%
           </p>
-          <Button
-            variant="outline"
-            size="lg"
-            disabled={disabled}
-            aria-expanded={expanded}
-            aria-controls={regionId}
-            onClick={() => setExpanded((open) => !open)}
-            className="h-11 min-w-11 shrink-0 self-center rounded-full bg-card px-0 sm:px-3"
-          >
-            <LayoutGrid className="size-4" aria-hidden />
-            <span className="sr-only sm:not-sr-only">All questions</span>
-            <ChevronDown
-              className="hidden size-4 transition-transform duration-200 group-aria-expanded/button:rotate-180 motion-reduce:transition-none sm:block"
-              aria-hidden
-            />
-          </Button>
         </div>
 
-        <div className="relative mt-3">
+        <div className="relative">
           <Progress
             value={answeredCount}
             max={total}
             aria-label="Assessment progress"
             aria-valuetext={`${answeredCount} of ${total} statements answered`}
-            className="h-2 bg-stage-assessment/30"
+            className="h-2.5 bg-stage-assessment/30"
             indicatorClassName="bg-stage-assessment-strong motion-reduce:transition-none"
           />
-          {/* Decorative: gaps cut the bar into chunks of seven. */}
+          {/* Decorative: gaps cut the bar into chunks of seven. The gap is
+              the page's own ground, since the bar sits on it, not on a card. */}
           {milestones.map((at) => (
             <span
               key={at}
@@ -203,18 +241,15 @@ export function QuestionNavigator({
               data-milestone={at}
               data-passed={answeredCount >= at || undefined}
               style={{ left: `${(at / total) * 100}%` }}
-              className="pointer-events-none absolute inset-y-0 w-0.5 -translate-x-1/2 bg-card"
+              className="pointer-events-none absolute inset-y-0 w-0.5 -translate-x-1/2 bg-stage-assessment-soft"
             />
           ))}
         </div>
-        <p className="mt-1.5 text-sm text-muted-foreground">
-          {complete ? "All answered" : `${remaining} to go`}
-        </p>
 
         {/* Always mounted so the notice is announced when it appears. */}
         <div role="status">
           {showNotice && (
-            <div className="mt-3 flex gap-2.5 rounded-2xl border border-stage-profile-strong/40 bg-highlight px-3.5 py-3 text-sm text-highlight-foreground">
+            <div className="mt-1 flex gap-2.5 rounded-2xl border border-stage-profile-strong/40 bg-highlight px-3.5 py-3 text-sm text-highlight-foreground">
               <CircleAlert className="mt-0.5 size-4.5 shrink-0" aria-hidden />
               <p>
                 <strong className="font-bold">
@@ -225,20 +260,41 @@ export function QuestionNavigator({
             </div>
           )}
         </div>
-      </div>
+      </section>
 
-      <div
-        id={regionId}
+      <section
+        id={panelId}
+        aria-label="All questions"
+        data-grid={gridOpen === null ? "auto" : gridOpen ? "open" : "closed"}
         className={cn(
-          "flex-col gap-4 border-t border-border pt-4",
-          expanded ? "flex" : "hidden",
+          "flex-col gap-4 rounded-3xl bg-card p-4 shadow-bento ring-1 ring-border",
+          // Not chosen yet: shown from lg, hidden below. Chosen: that wins.
+          gridOpen === null ? "hidden lg:flex" : gridOpen ? "flex" : "hidden",
+          panelClassName,
         )}
       >
+        <div className="-my-2 flex items-center justify-between gap-2">
+          <h2 className="font-heading text-sm font-bold text-foreground">
+            All questions
+          </h2>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-lg"
+            disabled={disabled}
+            aria-label="Hide question numbers"
+            aria-controls={panelId}
+            onClick={onHide}
+            className="-mr-2 size-11 rounded-full text-muted-foreground hover:text-foreground"
+          >
+            <X className="size-5" aria-hidden />
+          </Button>
+        </div>
         <nav aria-label="Question navigator">
           <ol
             ref={listRef}
             onKeyDown={handleGridKeyDown}
-            className="grid grid-cols-7 gap-1.5 sm:grid-cols-14"
+            className="grid grid-cols-7 gap-1.5 sm:grid-cols-14 lg:grid-cols-6"
           >
             {questions.map((question, i) => {
               const answered = question.id in answers;
@@ -259,7 +315,7 @@ export function QuestionNavigator({
                     aria-current={current ? "step" : undefined}
                     aria-label={`Question ${i + 1}, ${CELL_LABEL[state]}`}
                     disabled={disabled}
-                    onClick={() => jump(i)}
+                    onClick={() => onJump(i)}
                     className={cn(
                       "relative flex aspect-square w-full min-w-0 items-center justify-center rounded-[10px] font-sans text-sm font-bold tabular-nums transition-colors duration-150 outline-none",
                       "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
@@ -309,7 +365,7 @@ export function QuestionNavigator({
             Not answered
           </li>
         </ul>
-      </div>
-    </section>
+      </section>
+    </>
   );
 }

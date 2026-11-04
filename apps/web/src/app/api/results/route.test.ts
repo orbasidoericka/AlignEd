@@ -72,6 +72,19 @@ describe("/api/results", () => {
     );
   });
 
+  it("saves the word Others as a strand, never typed text", async () => {
+    const { collection } = await load();
+    const response = await collection.POST(
+      request("POST", "/api/results", { ...results, strand: "Others" }),
+    );
+    expect(response.status).toBe(200);
+    expect(saveResult.mock.calls[0]![1].strand).toBe("Others");
+    const typed = await collection.POST(
+      request("POST", "/api/results", { ...results, strand: "Cookery" }),
+    );
+    expect(typed.status).toBe(400);
+  });
+
   it("saves without a strand when none is given, and rejects any other text", async () => {
     const { collection } = await load();
     await collection.POST(request("POST", "/api/results", results));

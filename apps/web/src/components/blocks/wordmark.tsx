@@ -30,6 +30,9 @@ export function Wordmark({
       width={WORDMARK_WIDTH}
       height={WORDMARK_HEIGHT}
       priority={priority}
+      // Shown at most ~160px wide (h-9). Without `sizes` the browser assumes
+      // full viewport width and fetches a file many times larger than needed.
+      sizes="160px"
       className={cn("w-auto object-contain", className)}
     />
   );

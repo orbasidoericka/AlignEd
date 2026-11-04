@@ -35,7 +35,7 @@ Anonymous RIASEC career guidance for PH Senior High (Grade 11–12) students. Mo
 - Journey strictly linear: Landing → Profile → Assessment → Results. Guards redirect to earlier step.
 - No accounts/auth. No PII at rest. Nickname, school, photo never stored server-side. Email send-and-discard; salted hash in memory only. RA 10173.
 - Only server write: one nameless `saved_results` row per session (scores, code, grade, age, date) via `/api/results`, service-role key only.
-- Profile: nickname 1–8 `A–Z`/`-`, normalized per keystroke; grade `11`/`12`; SHS strand enum; age 10–30; privacy notice accepted — all required. School optional ≤120.
+- Profile: nickname 1–8 `A–Z`/`-`, normalized per keystroke; grade `11`/`12`; SHS strand enum, or "Others" with a typed strand kept on device and in the student's own PDF only (server stores just "Others"); age 10–30; privacy notice accepted — all required. School optional ≤120.
 - 42 verbatim statements, 7/trait, binary Yes=1/No=0. One question per screen, auto-advance, Back (absent on Q1). Re-answer replaces, never double-counts.
 - Code = top 3 by score, tie-break R→I→A→S→E→C. Deterministic. Flat profile → R-I-A + exploratory note.
 - Results show ALL majors + pathways per letter, sheet order. No ranking, match %, or "best match" labels (test-enforced).
@@ -54,6 +54,7 @@ Anonymous RIASEC career guidance for PH Senior High (Grade 11–12) students. Mo
 
 ## Motion & sound
 - Animate on viewport entry, not mount (only exceptions: hex glow, aurora drift). `motion-safe:` + root `MotionConfig reducedMotion="user"`. Reduced motion loses zero content.
+- Perf: infinite/looping decoration uses `fancy:` (mouse devices only, `hooks/use-fancy-motion.ts` in JS), never `motion-safe:`. No `backdrop-blur` on chrome. Animate only transform/opacity; never loop `filter`/`background-position`/`text-shadow`/size. Above-the-fold entrances are CSS, never framer `initial` hidden.
 - Sound is decoration: click only, never hover, every failure silent. `celebration` only on the completing answer.
 
 ## Code rules

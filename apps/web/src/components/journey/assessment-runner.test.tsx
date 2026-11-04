@@ -107,6 +107,71 @@ describe("AssessmentRunner hardening", () => {
     });
   });
 
+  // jsdom has no matchMedia, so the runner reads as a phone: the numbers start
+  // hidden, and a choice made with the toggle wins at every width.
+  it("shows and hides only the numbers with the toggle, never the language switch", () => {
+    render(<AssessmentRunner />);
+    const panel = () => screen.getByRole("region", { name: "All questions" });
+    const toggle = () => screen.getByRole("button", { name: "All questions" });
+    const languageSwitch = () =>
+      screen.getByRole("group", { name: "Statement language" });
+
+    expect(toggle()).toHaveAttribute("aria-expanded", "false");
+    expect(panel()).toHaveClass("hidden");
+    expect(languageSwitch()).toBeInTheDocument();
+
+    fireEvent.click(toggle());
+    expect(toggle()).toHaveAttribute("aria-expanded", "true");
+    expect(panel()).toHaveClass("flex");
+    expect(panel()).not.toHaveClass("hidden");
+
+    fireEvent.click(toggle());
+    expect(toggle()).toHaveAttribute("aria-expanded", "false");
+    expect(panel()).toHaveClass("hidden");
+    expect(panel()).not.toHaveClass("lg:flex"); // chosen: hidden at every width
+    // The language switch is untouched by hiding the numbers.
+    expect(languageSwitch()).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Filipino" })).toBeInTheDocument();
+  });
+
+  it("hides the numbers from the Hide button inside the panel too", () => {
+    render(<AssessmentRunner />);
+    fireEvent.click(screen.getByRole("button", { name: "All questions" }));
+    const panel = screen.getByRole("region", { name: "All questions" });
+    expect(panel).toHaveClass("flex");
+
+    fireEvent.click(screen.getByRole("button", { name: "Hide question numbers" }));
+    expect(panel).toHaveClass("hidden");
+    expect(screen.getByRole("button", { name: "All questions" })).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
+  });
+
+  it("puts the numbers toggle just before the language switch", () => {
+    render(<AssessmentRunner />);
+    const toggle = screen.getByRole("button", { name: "All questions" });
+    const languageSwitch = screen.getByRole("group", {
+      name: "Statement language",
+    });
+    expect(toggle.parentElement).toBe(languageSwitch.parentElement);
+    expect(
+      toggle.compareDocumentPosition(languageSwitch) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  it("folds the numbers away after a jump on a phone, so the statement is in view", () => {
+    render(<AssessmentRunner />);
+    fireEvent.click(screen.getByRole("button", { name: "All questions" }));
+    fireEvent.click(cell(10));
+    expect(statement(9)).toBeInTheDocument();
+    // The leaving statement's row can linger, frozen, while it slides out
+    // (jsdom never finishes the slide); the live toggle is the last one.
+    const toggles = screen.getAllByRole("button", { name: "All questions" });
+    expect(toggles.at(-1)).toHaveAttribute("aria-expanded", "false");
+  });
+
   it("keeps the Filipino answer shortcuts (O / H) working", () => {
     useAssessmentStore.getState().setLanguage("fil");
     render(<AssessmentRunner />);

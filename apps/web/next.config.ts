@@ -20,8 +20,11 @@ const nextConfig: NextConfig = {
   // The emailed results PDF is built server-side; PDFKit (under pdfmake)
   // reads its own data files at runtime, so it must not be bundled.
   serverExternalPackages: ["pdfmake"],
+  // Default image formats (WebP). AVIF was tried: a few KB smaller on these
+  // small images, but slower to encode, and a stuck AVIF job left the header
+  // logo blank in dev. Not worth it at this size.
   experimental: {
-    optimizePackageImports: ["lucide-react"],
+    optimizePackageImports: ["lucide-react", "framer-motion"],
   },
   async headers() {
     return [

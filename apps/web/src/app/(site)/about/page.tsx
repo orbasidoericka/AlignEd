@@ -38,7 +38,7 @@ const pillars = [
   },
   {
     title: "How we treat your data",
-    body: "No accounts and no real names. Your nickname never leaves your device. If you save a result, it is stored without your name, nickname or school, for one year, so you can compare after a retake. We follow the Data Privacy Act of 2012 (RA 10173).",
+    body: "No accounts and no real names. Your nickname never leaves your device. If you save a result, it is stored without your name, nickname or school. We follow the Data Privacy Act of 2012 (RA 10173).",
     icon: ShieldCheck,
   },
 ] as const;
@@ -88,7 +88,7 @@ const team: readonly TeamMember[] = [
   {
     name: "Ericka A. Orbasido",
     role: "Full Stack Developer",
-    photo: "/about us/ericka.png",
+    photo: "/about us/ericka.jpg",
     placement: "sm:col-start-1",
   },
   {

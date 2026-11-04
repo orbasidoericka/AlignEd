@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { AssessmentAnswer } from "@/store/useAssessmentStore";
 
-import { QuestionNavigator } from "./question-navigator";
+import { QuestionGridToggle, QuestionNavigator } from "./question-navigator";
 
 const QUESTIONS = Array.from({ length: 12 }, (_, i) => ({ id: `q${i + 1}` }));
 
@@ -24,6 +24,9 @@ function renderNavigator(
       currentIndex={0}
       flagOpen={false}
       onJump={onJump}
+      panelId="grid-panel"
+      onHide={vi.fn()}
+      gridOpen={null}
       {...props}
     />,
   );
@@ -58,7 +61,9 @@ describe("QuestionNavigator", () => {
     expect(
       screen.getByText(`Question 3 of ${QUESTIONS.length}`),
     ).toBeInTheDocument();
-    expect(screen.getByText("9 to go")).toBeInTheDocument();
+    // One count and one percent: no step label, no "n to go".
+    expect(screen.queryByText(/Step \d of \d/)).toBeNull();
+    expect(screen.queryByText(/to go|All answered/)).toBeNull();
     const nav = screen.getByRole("navigation", { name: "Question navigator" });
     expect(
       bar.compareDocumentPosition(nav) & Node.DOCUMENT_POSITION_FOLLOWING,
@@ -73,6 +78,9 @@ describe("QuestionNavigator", () => {
         currentIndex={3}
         flagOpen={false}
         onJump={vi.fn()}
+        panelId="grid-panel"
+        onHide={vi.fn()}
+        gridOpen={null}
       />,
     );
     rerender(
@@ -82,6 +90,9 @@ describe("QuestionNavigator", () => {
         currentIndex={0}
         flagOpen={false}
         onJump={vi.fn()}
+        panelId="grid-panel"
+        onHide={vi.fn()}
+        gridOpen={null}
       />,
     );
     expect(
@@ -199,39 +210,92 @@ describe("QuestionNavigator", () => {
     expect(onJump).not.toHaveBeenCalled();
   });
 
-  it("folds the grid behind a toggle, closed by default at every width", () => {
-    renderNavigator();
-    const toggle = screen.getByRole("button", { name: "All questions" });
-    const region = document.getElementById(
-      toggle.getAttribute("aria-controls") ?? "",
-    );
-    expect(region).toContainElement(
+  // The runner owns show/hide. Until the student chooses (null) the panel is
+  // shown from lg and hidden below; a choice wins at every width.
+  it("shows the numbers from lg by default, and follows the student's choice", () => {
+    const panel = () => screen.getByRole("region", { name: "All questions" });
+    const mount = (gridOpen: boolean | null) =>
+      render(
+        <QuestionNavigator
+          questions={QUESTIONS}
+          answers={{}}
+          currentIndex={0}
+          flagOpen={false}
+          onJump={vi.fn()}
+          panelId="grid-panel"
+      onHide={vi.fn()}
+          gridOpen={gridOpen}
+        />,
+      );
+
+    const unchosen = mount(null);
+    expect(panel()).toHaveAttribute("id", "grid-panel");
+    expect(panel()).toHaveClass("hidden", "lg:flex");
+    expect(panel()).toContainElement(
       screen.getByRole("navigation", { name: "Question navigator" }),
     );
-    expect(toggle).toHaveAttribute("aria-expanded", "false");
-    expect(region).toHaveClass("hidden");
-    expect(region).not.toHaveClass("lg:flex");
+    unchosen.unmount();
 
-    fireEvent.click(toggle);
-    expect(toggle).toHaveAttribute("aria-expanded", "true");
-    expect(region).toHaveClass("flex");
-    expect(region).not.toHaveClass("hidden");
+    const shown = mount(true);
+    expect(panel()).toHaveClass("flex");
+    expect(panel()).not.toHaveClass("hidden");
+    shown.unmount();
 
-    // Choosing a statement folds it away again so the question is in view.
-    fireEvent.click(cell(2));
-    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    mount(false);
+    expect(panel()).toHaveClass("hidden");
+    expect(panel()).not.toHaveClass("flex");
+    expect(panel()).not.toHaveClass("lg:flex");
   });
 
-  it("opens the grid when a finish attempt leaves statements open", () => {
-    renderNavigator({ answers: answered(1), flagOpen: true });
+  it("carries no toggle of its own: that lives beside the language switch", () => {
+    renderNavigator();
+    expect(screen.queryByRole("button", { name: "All questions" })).toBeNull();
+  });
+
+  // On a phone the open panel sits above the statement, a screen away from the
+  // toggle, so it can be closed from inside.
+  it("can be hidden from inside the panel", () => {
+    const onHide = vi.fn();
+    renderNavigator({ onHide });
+    const hide = screen.getByRole("button", { name: "Hide question numbers" });
+    expect(hide).toHaveAttribute("aria-controls", "grid-panel");
+    fireEvent.click(hide);
+    expect(onHide).toHaveBeenCalledTimes(1);
+  });
+
+  it("disables the Hide button while the quiz is paused", () => {
+    renderNavigator({ disabled: true });
+    expect(
+      screen.getByRole("button", { name: "Hide question numbers" }),
+    ).toBeDisabled();
+  });
+});
+
+describe("QuestionGridToggle", () => {
+  it("is an icon-only button named All questions that reports its state", () => {
+    const onToggle = vi.fn();
+    const { rerender } = render(
+      <QuestionGridToggle open={false} onToggle={onToggle} controls="grid-panel" />,
+    );
+    const toggle = screen.getByRole("button", { name: "All questions" });
+    expect(toggle.textContent).toBe(""); // icon only, no visible text
+    expect(toggle).toHaveAttribute("aria-controls", "grid-panel");
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+
+    fireEvent.click(toggle);
+    expect(onToggle).toHaveBeenCalledTimes(1);
+
+    rerender(<QuestionGridToggle open onToggle={onToggle} controls="grid-panel" />);
     expect(screen.getByRole("button", { name: "All questions" })).toHaveAttribute(
       "aria-expanded",
       "true",
     );
   });
 
-  it("disables the toggle while the quiz is paused", () => {
-    renderNavigator({ disabled: true });
+  it("is disabled while the quiz is paused", () => {
+    render(
+      <QuestionGridToggle open onToggle={vi.fn()} controls="grid-panel" disabled />,
+    );
     expect(screen.getByRole("button", { name: "All questions" })).toBeDisabled();
   });
 });

@@ -162,9 +162,8 @@ export function SavedResultsPanel() {
         {state.kind === "saved" && resultsId && (
           <>
             <p className="text-sm text-muted-foreground">
-              Your results are saved for one year, with no name attached. Keep
-              this ID (it is also in your PDF) to compare when you retake the
-              assessment.
+              Your results are saved with no name attached. Keep this ID (it
+              is also in your PDF) to compare when you retake the assessment.
             </p>
             <ResultsIdBox resultsId={resultsId} />
           </>
@@ -215,7 +214,7 @@ function ResultsIdBox({ resultsId }: { resultsId: string }) {
 
 const LOAD_ERRORS: Record<SavedResultsError, string> = {
   not_found:
-    "No saved results match that ID. Check it and try again. Saved results are deleted after one year.",
+    "No saved results match that ID. Check it and try again.",
   rate_limited: "Too many tries from here. Please wait a while and try again.",
   invalid: "That doesn't look like a results ID. It looks like ALGN-7KQ2-MX9P.",
   failed: "We couldn't load those results just now. Please try again.",

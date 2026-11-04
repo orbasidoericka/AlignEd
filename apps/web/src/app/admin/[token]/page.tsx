@@ -356,9 +356,8 @@ function AdminShell({
               />
               <span>
                 No names or other identifiers are stored: only scores, code,
-                grade, strand, age and date. Results are deleted after one year.
-                This link is the key to this page, so share it only with program
-                admins.
+                grade, strand, age and date. This link is the key to this page,
+                so share it only with program admins.
               </span>
             </p>
           </div>
@@ -541,8 +540,8 @@ function SavedResultsTile({
         </p>
         <p className="text-sm font-medium">
           {gradeFilter
-            ? `${share}% of all saved results. Results are kept for one year.`
-            : "Every result saved in the past year, split by grade below."}
+            ? `${share}% of all saved results.`
+            : "Saved results, split by grade below."}
         </p>
       </div>
       {!gradeFilter && overallCount > 0 && (

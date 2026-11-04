@@ -7,6 +7,7 @@ import {
   type AnimationPlaybackControls,
 } from "framer-motion";
 
+import { useFancyMotion } from "@/hooks/use-fancy-motion";
 import { cn } from "@/lib/utils";
 
 // Vendored from Aceternity UI (ui.aceternity.com/components/glowing-effect).
@@ -18,6 +19,12 @@ import { cn } from "@/lib/utils";
 //   variant uses the foreground token instead of an undefined --black.
 // - Reduced motion: the glow still tracks the pointer but jumps instead of
 //   sweeping around the border.
+// - Off on touch screens (useFancyMotion): there is no pointer to follow, yet
+//   every instance re-measured itself on every scroll frame. The last
+//   position starts off-screen, not at (0,0), so cards scrolling past the
+//   top-left corner on desktop do not light up and restart the tween.
+// - Reduced motion is covered by useFancyMotion too, so it shows the static
+//   border like `disabled`.
 
 interface GlowingEffectProps {
   blur?: number;
@@ -64,10 +71,12 @@ const GlowingEffect = memo(
     className,
     movementDuration = 2,
     borderWidth = 1,
-    disabled = true,
+    disabled: disabledProp = true,
   }: GlowingEffectProps) => {
+    const fancy = useFancyMotion();
+    const disabled = disabledProp || !fancy;
     const containerRef = useRef<HTMLDivElement>(null);
-    const lastPosition = useRef({ x: 0, y: 0 });
+    const lastPosition = useRef({ x: -10_000, y: -10_000 });
     const animationFrameRef = useRef<number>(0);
     const tweenRef = useRef<AnimationPlaybackControls | null>(null);
     const reduceMotion = useReducedMotion();

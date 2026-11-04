@@ -3,25 +3,24 @@
 
 // Six-axis RIASEC radar on shadcn Chart (Recharts). Props are unchanged from
 // the earlier hand-rolled SVG so callers do not move.
+//
+// The chart itself loads lazily (riasec-radar-chart.tsx), so Recharts stays
+// out of the results page's first download. A same-size placeholder holds its
+// square until it arrives, so nothing shifts; the sr-only table is rendered
+// here, at once, so the scores never wait on the picture.
 
-import { useReducedMotion } from "framer-motion";
-import {
-  PolarAngleAxis,
-  PolarGrid,
-  PolarRadiusAxis,
-  Radar,
-  RadarChart,
-} from "recharts";
+import dynamic from "next/dynamic";
 
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  type ChartConfig,
-} from "@/components/ui/chart";
 import { TRAIT_META, TRAIT_ORDER } from "@/lib/riasec/scoring";
 import type { RiasecScores } from "@/store/useAssessmentStore";
 import { cn } from "@/lib/utils";
+
+const RiasecRadarChart = dynamic(() => import("./riasec-radar-chart"), {
+  ssr: false,
+  loading: () => (
+    <div aria-hidden className="aspect-square w-full max-w-sm" />
+  ),
+});
 
 interface RiasecRadarProps {
   scores: RiasecScores;
@@ -29,13 +28,7 @@ interface RiasecRadarProps {
   className?: string;
 }
 
-const chartConfig = {
-  score: { label: "Score", color: "var(--chart-1)" },
-} satisfies ChartConfig;
-
 export function RiasecRadar({ scores, max, className }: RiasecRadarProps) {
-  // Recharts animates in JS, outside MotionConfig and the CSS media query.
-  const reduceMotion = useReducedMotion();
   const safeMax = max > 0 ? max : 1;
   const data = TRAIT_ORDER.map((trait) => ({
     letter: TRAIT_META[trait].letter,
@@ -45,48 +38,7 @@ export function RiasecRadar({ scores, max, className }: RiasecRadarProps) {
 
   return (
     <figure className={cn("flex flex-col items-center", className)}>
-      {/* Visual only; the sr-only table below carries the data. */}
-      <ChartContainer
-        config={chartConfig}
-        className="aspect-square w-full max-w-sm"
-        aria-hidden
-      >
-        <RadarChart data={data} outerRadius="76%">
-          <ChartTooltip
-            cursor={false}
-            content={
-              <ChartTooltipContent
-                labelFormatter={(value, payload) => {
-                  const label = payload?.[0]?.payload?.label;
-                  return label ? `${value}: ${label}` : value;
-                }}
-              />
-            }
-          />
-          <PolarGrid className="stroke-border" />
-          <PolarAngleAxis
-            dataKey="letter"
-            tick={{
-              className: "fill-foreground font-heading text-[15px] font-semibold",
-            }}
-          />
-          <PolarRadiusAxis
-            domain={[0, safeMax]}
-            tick={false}
-            axisLine={false}
-          />
-          <Radar
-            dataKey="score"
-            fill="var(--color-score)"
-            fillOpacity={0.5}
-            stroke="var(--primary-strong)"
-            strokeWidth={2.5}
-            strokeLinejoin="round"
-            dot={{ r: 4, fill: "var(--primary-strong)", fillOpacity: 1 }}
-            isAnimationActive={!reduceMotion}
-          />
-        </RadarChart>
-      </ChartContainer>
+      <RiasecRadarChart data={data} max={safeMax} />
       <figcaption className="sr-only">
         <table>
           <caption>Your RIASEC trait scores</caption>

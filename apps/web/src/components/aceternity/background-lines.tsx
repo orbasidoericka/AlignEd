@@ -109,7 +109,7 @@ function LinesSvg({ duration }: { duration: number }) {
           stroke={COLORS[i % COLORS.length]}
           strokeWidth={2.3}
           strokeLinecap="round"
-          className="opacity-15 motion-safe:animate-line-streak"
+          className="opacity-15 fancy:animate-line-streak"
           style={{
             animationDuration: `${round(total)}s`,
             animationDelay: `${round(delay)}s`,

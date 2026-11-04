@@ -1,7 +1,7 @@
 // Copyright (c) 2026 EdTech. All rights reserved.
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, CheckIcon } from "lucide-react";
@@ -13,7 +13,10 @@ import {
   RapidAnswerDialog,
   showRapidAnswerToast,
 } from "@/components/journey/rapid-answer-warnings";
-import { QuestionNavigator } from "@/components/journey/question-navigator";
+import {
+  QuestionGridToggle,
+  QuestionNavigator,
+} from "@/components/journey/question-navigator";
 import { HexagonPattern } from "@/components/magic/hexagon-pattern";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,6 +24,7 @@ import {
   RadioCardIndicator,
   RadioGroup,
 } from "@/components/ui/radio-group";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import { useRapidAnswerGuard } from "@/hooks/use-rapid-answer-guard";
 import { playSound } from "@/lib/sound/sound-manager";
 import {
@@ -180,6 +184,13 @@ export function AssessmentRunner() {
   // Set by a finish attempt that found gaps: the navigator then marks every
   // open statement and explains why the quiz can't finish yet.
   const [flagOpen, setFlagOpen] = useState(false);
+  // Show or hide the question numbers. Null until the student chooses: the
+  // numbers then show from lg and stay hidden below it (CSS decides, so the
+  // desktop first paint already has them). Once chosen, the choice wins.
+  const [gridChoice, setGridChoice] = useState<boolean | null>(null);
+  const isLarge = useMediaQuery("(min-width: 64rem)");
+  const gridOpen = gridChoice ?? isLarge;
+  const gridPanelId = useId();
   // Latched on "See my results" so a double tap can't navigate twice.
   const [submitting, setSubmitting] = useState(false);
   const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -271,6 +282,8 @@ export function AssessmentRunner() {
       return;
     }
     setFlagOpen(true);
+    // The notice names the open numbers, so show them beside it.
+    setGridChoice(true);
     if (firstOpen === index) {
       // No statement change to trigger the focus effect, so move focus here:
       // it lands the student on the gap and lets the notice be announced.
@@ -434,6 +447,7 @@ export function AssessmentRunner() {
     if (firstOpen !== -1) {
       setFinishing(false);
       setFlagOpen(true);
+      setGridChoice(true);
       moveTo(firstOpen);
       return;
     }
@@ -501,7 +515,9 @@ export function AssessmentRunner() {
   }
 
   return (
-    <div className="relative isolate flex flex-1 flex-col overflow-hidden bg-stage-assessment-soft">
+    // overflow-clip, not -hidden: it clips the glows and Hexi the same way but
+    // is not a scroll container, so the question panel can stay sticky.
+    <div className="relative isolate flex flex-1 flex-col overflow-clip bg-stage-assessment-soft">
       <FocusBackground />
       {/* Hexi keeps the student company through the 42 statements, parked in
           the dead space under the question column. Same <img> reasoning as the
@@ -520,21 +536,38 @@ export function AssessmentRunner() {
         className="pointer-events-none absolute bottom-0 left-0 -z-10 hidden h-auto w-56 select-none lg:block xl:w-72 print:hidden"
       />
       <RapidAnswerDialog open={isBlocked} onAcknowledge={acknowledge} />
-      {/* One column at every width, progress strip on top. It is z-10 so the
-          question area's widened clip box (below) can never sit over it and
-          swallow its clicks. */}
-      <div className="mx-auto grid w-full max-w-2xl flex-1 grid-cols-1 grid-rows-[auto_1fr] gap-6 px-4 py-8">
+      {/* Progress strip across the top at every width. Below lg one column:
+          the numbers panel, when shown, sits under the strip. From lg it sits
+          to the right of the statement, sticky, so it never pushes the
+          question and answers below the fold; hidden, the question takes the
+          single centred column. The toggle (beside the language switch) is
+          what shows and hides it. Strip and panel are z-10 so the question
+          area's widened clip box (below) can never sit over them and swallow
+          their clicks. */}
+      <div
+        data-grid={gridChoice === null ? "auto" : gridChoice ? "open" : "closed"}
+        className="mx-auto grid w-full max-w-2xl flex-1 grid-cols-1 grid-rows-[auto_auto_1fr] gap-6 px-4 py-8 lg:max-w-5xl lg:grid-cols-[minmax(0,1fr)_19rem] lg:grid-rows-[auto_1fr] lg:gap-x-12 lg:data-[grid=closed]:max-w-2xl lg:data-[grid=closed]:grid-cols-1"
+      >
         <QuestionNavigator
           questions={questions}
           answers={answers}
           currentIndex={index}
           flagOpen={flagOpen}
           disabled={isBlocked}
-          onJump={moveTo}
-          className="relative z-10"
+          onJump={(target) => {
+            moveTo(target);
+            // Below lg the panel covers the statement: fold it away once a
+            // number is chosen. Docked beside the statement, it stays.
+            if (!isLarge) setGridChoice(false);
+          }}
+          panelId={gridPanelId}
+          onHide={() => setGridChoice(false)}
+          gridOpen={gridChoice}
+          progressClassName="relative z-10 lg:col-span-full"
+          panelClassName="relative z-10 lg:col-start-2 lg:row-start-2 lg:self-center"
         />
 
-        <div className="flex min-w-0 flex-col gap-6">
+        <div className="flex min-w-0 flex-col gap-6 lg:col-start-1 lg:row-start-2">
           {resumed && !flagOpen && index === firstUnanswered && (
             <p className="rounded-2xl bg-card px-4 py-3 text-sm font-medium text-foreground/80">
               Welcome back! You are continuing right where you left off.
@@ -568,6 +601,42 @@ export function AssessmentRunner() {
                 transition={{ duration: 0.2, ease: "easeOut" }}
                 className="flex flex-col gap-6"
               >
+                {/* The numbers toggle first, then the language switch, above
+                    the statement. The toggle only hides the numbers; the
+                    switch is always here. */}
+                <div className="flex flex-wrap items-center gap-2">
+                  <QuestionGridToggle
+                    open={gridOpen}
+                    onToggle={() => setGridChoice(!gridOpen)}
+                    controls={gridPanelId}
+                    disabled={isBlocked}
+                  />
+                  <div
+                    role="group"
+                    aria-label="Statement language"
+                    className="flex w-fit items-center gap-1 rounded-full bg-card p-1"
+                  >
+                    {LANGUAGE_CHOICES.map((choice) => (
+                      <Button
+                        key={choice.value}
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        lang={choice.lang}
+                        aria-pressed={language === choice.value}
+                        onClick={() => setLanguage(choice.value)}
+                        className={cn(
+                          "h-9 rounded-full px-4 font-semibold",
+                          language === choice.value &&
+                            "bg-highlight-soft text-highlight-soft-foreground hover:bg-highlight-soft",
+                        )}
+                      >
+                        {choice.label}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+
                 {/* Focus target after each advance (tabIndex -1: programmatic
                     focus only). It also names the answer group below. */}
                 <h1
@@ -578,31 +647,6 @@ export function AssessmentRunner() {
                 >
                   {questionText(question, language)}
                 </h1>
-
-                <div
-                  role="group"
-                  aria-label="Statement language"
-                  className="-mt-2 flex w-fit items-center gap-1 rounded-full bg-card p-1"
-                >
-                  {LANGUAGE_CHOICES.map((choice) => (
-                    <Button
-                      key={choice.value}
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      lang={choice.lang}
-                      aria-pressed={language === choice.value}
-                      onClick={() => setLanguage(choice.value)}
-                      className={cn(
-                        "h-9 rounded-full px-4 font-semibold",
-                        language === choice.value &&
-                          "bg-highlight-soft text-highlight-soft-foreground hover:bg-highlight-soft",
-                      )}
-                    >
-                      {choice.label}
-                    </Button>
-                  ))}
-                </div>
 
                 {/* Arrow keys move the selection inside the group; flag them so
                     the resulting value change selects without advancing. */}

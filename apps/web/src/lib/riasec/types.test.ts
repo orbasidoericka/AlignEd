@@ -2,7 +2,22 @@
 
 import { describe, expect, it } from "vitest";
 
-import { NICKNAME_MAX_LENGTH, sanitizeNickname } from "./types";
+import { NICKNAME_MAX_LENGTH, sanitizeNickname, strandLabel } from "./types";
+
+describe("strandLabel", () => {
+  it("prints the picked strand as is", () => {
+    expect(strandLabel("Sports", "ignored")).toBe("Sports");
+  });
+
+  it("prints the typed text for Others, trimmed", () => {
+    expect(strandLabel("Others", "  Cookery ")).toBe("Cookery");
+  });
+
+  it("is null when nothing is picked or Others has no text", () => {
+    expect(strandLabel(null, "Cookery")).toBeNull();
+    expect(strandLabel("Others", "   ")).toBeNull();
+  });
+});
 
 describe("sanitizeNickname", () => {
   it("uppercases whatever is typed", () => {

@@ -28,6 +28,8 @@ Server routes, data, secrets, and privacy controls. Client code lives in `FRONTE
 | `0002_universities.sql` | University directory. **Out of scope per PRD**; slated for removal (Implementation Plan 1.2). |
 | `0003_saved_results.sql` | `saved_results`: results ID, six scores, `max_score`, code, grade, date; expires after one year. RLS on with no policies, so only the service role (server routes) can touch it. |
 | `0004_saved_results_age.sql` | Adds nullable `age` (10–30). |
+| `0005_saved_results_strand.sql` | Adds nullable `strand`, limited to the `SHS_STRANDS` list. |
+| `0007_saved_results_strand_others.sql` | Widens the `strand` check to also allow `'Others'`. Only the word is stored; a typed strand never reaches the server. Run it before deploying the Others option. |
 
 - Clients: `lib/supabase/client.ts` (anon, browser) and `lib/supabase/admin.ts` (service role, server only). Repository in `lib/saved-results/repository.ts`.
 - Reference data: `data/*.csv` → `npm run seed:build` (`scripts/build-seed.mjs`) → `supabase/seed.sql`.
@@ -59,5 +61,6 @@ Set in `apps/web/next.config.ts` for every path: `X-Frame-Options: DENY`, `nosni
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 
+- 2026-11-04 · database · Migration 0007 allows `'Others'` in `saved_results.strand`; `parseStrand` accepts it via `SHS_STRANDS`. · Students with an unlisted strand can still be saved, with no free text on the server.
 - 2026-10-27 · docs · PRD and Implementation Plan aligned to this file; Known gaps corrected (grades 11–12 are intended: SHS only). · Code is the plan of record.
 - 2026-10-27 · docs · Created this file from the current code. · Split backend notes out of the PRD and Implementation Plan.

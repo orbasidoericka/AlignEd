@@ -82,8 +82,8 @@ export function ShimmerButton({
         aria-hidden
         className="pointer-events-none absolute inset-0 -z-30 overflow-visible blur-[2px] @container-[size]"
       >
-        <span className="absolute inset-0 aspect-square h-[100cqh] will-change-transform motion-safe:animate-shimmer-slide">
-          <span className="absolute -inset-full w-auto will-change-transform [background:conic-gradient(from_calc(270deg-(var(--shimmer-spread)*0.5)),transparent_0,var(--shimmer-color)_var(--shimmer-spread),transparent_var(--shimmer-spread))] motion-safe:animate-spin-around" />
+        <span className="absolute inset-0 aspect-square h-[100cqh] fancy:will-change-transform fancy:animate-shimmer-slide">
+          <span className="absolute -inset-full w-auto fancy:will-change-transform [background:conic-gradient(from_calc(270deg-(var(--shimmer-spread)*0.5)),transparent_0,var(--shimmer-color)_var(--shimmer-spread),transparent_var(--shimmer-spread))] fancy:animate-spin-around" />
         </span>
       </span>
 

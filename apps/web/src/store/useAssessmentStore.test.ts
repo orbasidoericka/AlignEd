@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { QUESTIONS } from "@/lib/riasec/questions";
 import {
@@ -6,6 +6,7 @@ import {
   selectIsAssessmentComplete,
   selectIsProfileComplete,
   SESSION_TTL_MS,
+  STORAGE_WRITE_DELAY_MS,
   useAssessmentStore,
 } from "./useAssessmentStore";
 
@@ -215,6 +216,7 @@ describe("useAssessmentStore", () => {
       nickname: "MARI-EL",
       gradeLevel: "11",
       strand: null,
+      strandOther: "",
       age: "",
       privacyAccepted: false,
       school: "San Fernando NHS",
@@ -246,6 +248,7 @@ describe("useAssessmentStore", () => {
       nickname: "",
       gradeLevel: null,
       strand: null,
+      strandOther: "",
       age: "",
       privacyAccepted: false,
       school: "",
@@ -265,6 +268,21 @@ describe("useAssessmentStore", () => {
     // Everything filled in, but the privacy notice has not been agreed to.
     expect(selectIsProfileComplete(useAssessmentStore.getState())).toBe(false);
     useAssessmentStore.getState().setProfile({ privacyAccepted: true });
+    expect(selectIsProfileComplete(useAssessmentStore.getState())).toBe(true);
+  });
+
+  it("picking Others needs a typed strand before the profile is complete", () => {
+    useAssessmentStore.getState().setProfile({
+      nickname: "MARI-EL",
+      gradeLevel: "11",
+      strand: "Others",
+      age: "17",
+      privacyAccepted: true,
+    });
+    expect(selectIsProfileComplete(useAssessmentStore.getState())).toBe(false);
+    useAssessmentStore.getState().setProfile({ strandOther: "   " });
+    expect(selectIsProfileComplete(useAssessmentStore.getState())).toBe(false);
+    useAssessmentStore.getState().setProfile({ strandOther: "Cookery" });
     expect(selectIsProfileComplete(useAssessmentStore.getState())).toBe(true);
   });
 
@@ -320,6 +338,7 @@ describe("useAssessmentStore", () => {
       nickname: "",
       gradeLevel: null,
       strand: null,
+      strandOther: "",
       age: "",
       privacyAccepted: false,
       school: "",
@@ -364,6 +383,7 @@ describe("useAssessmentStore", () => {
       nickname: "",
       gradeLevel: "12",
       strand: null,
+      strandOther: "",
       age: "",
       privacyAccepted: false,
       school: "San Fernando NHS",
@@ -412,6 +432,7 @@ describe("useAssessmentStore", () => {
       nickname: "",
       gradeLevel: "10",
       strand: null,
+      strandOther: "",
       age: "",
       privacyAccepted: false,
       school: "San Fernando NHS",
@@ -494,7 +515,9 @@ describe("session expiry on rehydration", () => {
 
   beforeEach(() => {
     useAssessmentStore.getState().reset();
-    window.localStorage.removeItem(STORAGE_KEY);
+    // Through persist, not localStorage directly: reset()'s write is still
+    // pending in the coalesced storage, and only its removeItem drops it.
+    useAssessmentStore.persist.clearStorage();
   });
 
   it("wipes a session older than 30 minutes and clears its storage key", () => {
@@ -537,5 +560,49 @@ describe("session expiry on rehydration", () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+});
+
+describe("coalesced storage writes", () => {
+  const STORAGE_KEY = "aligned.assessment.v1";
+  const saved = () => window.localStorage.getItem(STORAGE_KEY);
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    useAssessmentStore.getState().reset();
+    useAssessmentStore.persist.clearStorage();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("waits for a pause in typing, then saves the latest value once", () => {
+    const { setProfile } = useAssessmentStore.getState();
+    setProfile({ nickname: "M" });
+    setProfile({ nickname: "MA" });
+    vi.advanceTimersByTime(STORAGE_WRITE_DELAY_MS - 1);
+    setProfile({ nickname: "MAR" });
+    expect(saved()).toBeNull();
+
+    vi.advanceTimersByTime(1);
+    expect(JSON.parse(saved()!).state.profile.nickname).toBe("MAR");
+  });
+
+  it("saves at once when the tab is closed or hidden", () => {
+    useAssessmentStore.getState().setProfile({ nickname: "MARI" });
+    window.dispatchEvent(new Event("pagehide"));
+    expect(JSON.parse(saved()!).state.profile.nickname).toBe("MARI");
+  });
+
+  it("clears at once, and a pending save never brings the data back", () => {
+    useAssessmentStore.getState().setProfile({ nickname: "MARI" });
+    vi.advanceTimersByTime(STORAGE_WRITE_DELAY_MS);
+    useAssessmentStore.getState().setProfile({ nickname: "MARIEL" });
+
+    useAssessmentStore.persist.clearStorage();
+    expect(saved()).toBeNull();
+    vi.advanceTimersByTime(STORAGE_WRITE_DELAY_MS);
+    expect(saved()).toBeNull();
   });
 });

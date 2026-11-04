@@ -9,7 +9,11 @@ import { cn } from "@/lib/utils";
 // - One blurred layer, not two blended with mix-blend-difference: the second
 //   layer cost a full-screen composite for no visible gain under this palette,
 //   and this has to stay smooth on a low-end Android phone.
-// - `motion-safe:`, so reduced motion keeps the field and drops the drift.
+// - `fancy:` (mouse devices without reduced motion) for the drift. Phones get
+//   the field painted once; the endless full-screen blur repaint dropped the
+//   profile page to ~20 fps on a slowed-down CPU.
+// - The drift slides a double-width layer with transform (GPU) instead of
+//   moving background-position (repaint + re-blur every frame).
 // - No motion/react wrapper: the drift is pure CSS in globals.css, and the
 //   demo's fade-in would animate on mount, which the design system reserves
 //   for ambient background loops only.
@@ -41,12 +45,13 @@ export function AuroraBackground({
         <div
           className={cn(
             // Inset past the edges so the blur never reveals a hard border.
-            "absolute -inset-16 aurora-field opacity-60 dark:opacity-30",
-            "motion-safe:animate-aurora-drift",
+            "absolute -inset-16 overflow-hidden opacity-60 dark:opacity-30",
             showRadialGradient &&
               "mask-[radial-gradient(ellipse_at_top,white,transparent_75%)]",
           )}
-        />
+        >
+          <div className="absolute inset-y-0 left-0 w-[200%] aurora-field fancy:animate-aurora-drift" />
+        </div>
       </div>
       {children}
     </div>

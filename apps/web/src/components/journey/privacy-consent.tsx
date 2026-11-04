@@ -1,7 +1,7 @@
 // Copyright (c) 2026 EdTech. All rights reserved.
 "use client";
 
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { ShieldCheck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -18,14 +18,21 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
-// The privacy notice the PRD requires (Data Privacy Act of 2012, RA 10173).
-// Discloses: client-side session data, the saved-results record (grade,
-// strand, age, RIASEC scores and code, date, results ID; no name, nickname,
-// school or answers; kept one year; see supabase/migrations/0003 to 0005), the private
-// admin page, the email route with its optional photo, and analytics.
-// Change the code and this changes too — keep claims accurate.
-export const PRIVACY_POLICY_VERSION = "v1.3";
+// The Terms and Conditions and Data Privacy Policy the PRD requires (Data
+// Privacy Act of 2012, RA 10173), written in plain words. Lists every piece of
+// data AlignEd handles: the profile and session kept on the device (see
+// `partialize` in the assessment store, the sound preference and the theme),
+// the saved-results record (grade, strand, age, RIASEC scores and code, date,
+// results ID; no name, nickname, school or answers; see
+// supabase/migrations/0003 to 0007), the site-wide tests-taken counter, the
+// private admin page, the email route with its optional photo, the in-memory
+// abuse limiters, and PostHog analytics.
+// Change the code and this changes too: keep claims accurate.
+export const PRIVACY_POLICY_VERSION = "v2.3";
 
+export const PRIVACY_CONTACT_EMAIL = "aligned.career.support@gmail.com";
+
+// Wrap a phrase in **double asterisks** to bold it. Only the key points get it.
 type PolicyItem =
   | { type: "para"; text: string }
   | { type: "list"; items: string[] }
@@ -38,366 +45,312 @@ interface PolicySection {
 
 const POLICY_SECTIONS: PolicySection[] = [
   {
-    heading: "1. Who is responsible for your data?",
+    heading: "Who runs AlignEd",
     items: [
       {
         type: "para",
-        text: "The Personal Information Controller responsible for information processed through AlignEd is:",
-      },
-      {
-        type: "list",
-        items: [
-          "Organization/School: [Full name of school, organization, or program operator]",
-          "Address: [Official address]",
-          "Privacy Contact / Data Protection Officer: [Name or office, if applicable]",
-          "Email: [Privacy or official contact email]",
-        ],
+        text: "AlignEd is run by the Polytechnic University of the Philippines, Santa Maria Campus. We decide what data AlignEd uses and why.",
       },
       {
         type: "para",
-        text: "You or your parent/legal guardian may contact us through the details above if you have questions or requests concerning your personal data.",
+        text: `Questions or requests about your data? You or your parent or guardian can email us at **${PRIVACY_CONTACT_EMAIL}**.`,
       },
     ],
   },
   {
-    heading: "2. What information do we collect?",
+    heading: "All the data we collect",
     items: [
       {
         type: "para",
-        text: "AlignEd does not require you to create an account or log in, and it does not ask for your full legal name.",
+        text: "**AlignEd has no accounts and never asks for your real name.** Below is every kind of data AlignEd handles, and where it goes.",
       },
-      {
-        type: "para",
-        text: "To provide the career-interest assessment, we may collect:",
-      },
+      { type: "subheading", text: "What you type in" },
       {
         type: "list",
         items: [
-          "the nickname you choose;",
+          "your nickname (1 to 8 letters);",
           "your age;",
-          "your grade level;",
-          "your SHS strand;",
-          "your school name, if requested or provided;",
-          "your answers to the 42 assessment statements; and",
-          "the RIASEC interest scores calculated from your answers.",
+          "your grade level (11 or 12);",
+          "your SHS strand (if yours is not listed, you can pick Others and type it);",
+          "your school name (optional); and",
+          "your tick showing you agree to these Terms.",
+        ],
+      },
+      { type: "subheading", text: "What AlignEd makes while you use it" },
+      {
+        type: "list",
+        items: [
+          "your answers (Yes or No) to the 42 statements;",
+          "your six RIASEC interest scores and your three-letter code;",
+          "the language you chose for the statements (English or Filipino);",
+          "your place in the assessment, the time of your last activity, and the time you finished;",
+          "a random results ID, like ALGN-7KQ2-MX9P; and",
+          "your choices for theme (Vivid or Dark) and sound.",
+        ],
+      },
+      { type: "subheading", text: "Only if you choose to" },
+      {
+        type: "list",
+        items: [
+          "your **email address**, if you ask us to email your results; and",
+          "a **career look photo** from your camera, if you take one.",
+        ],
+      },
+      { type: "subheading", text: "What is collected automatically" },
+      {
+        type: "list",
+        items: [
+          "**Website visit data** (when analytics is on): the pages you open, when, and your browser and device type. Your IP address is also received, and it may be used to guess your general area.",
+          "**Your IP address, briefly.** Our server scrambles it (a one-way hash) and keeps it only in memory, to stop people from spamming the service.",
+          "**Standard server logs** (such as IP address and time of a visit) that our hosting provider may keep for its own technical and security needs.",
+          "**A tests-taken counter**: one number for the whole site that goes up each time someone finishes. It has no names or IDs.",
+        ],
+      },
+      { type: "subheading", text: "Where each one goes" },
+      {
+        type: "list",
+        items: [
+          "**Stays on your device only:** your nickname, school, answers, language, theme, sound choice, session timing, and any strand you type under Others (it also prints in your own PDF).",
+          "**Saved on our server (no name):** your grade level, SHS strand (only the word Others if you typed your own), age, six scores, three-letter code, date, and results ID.",
+          "**Sent once, then thrown away:** your email address and photo.",
+          "**Sent to our analytics provider:** website visit data, if analytics is on.",
+        ],
+      },
+      { type: "subheading", text: "What we do not collect" },
+      {
+        type: "para",
+        text: "**We do not collect** your full name, home address, phone number, or password, and we do not make accounts. **Your nickname, school, individual answers, typed strand, email address, and photo are never saved on our server.** Please do not type any of those private details into AlignEd.",
+      },
+      {
+        type: "para",
+        text: "Your age and your school details are personal. We treat them with care even though they carry no name.",
+      },
+    ],
+  },
+  {
+    heading: "Why we use your data",
+    items: [
+      { type: "subheading", text: "To give you your results" },
+      {
+        type: "para",
+        text: "Your answers are scored on your device to find your interest scores in six areas: Realistic, Investigative, Artistic, Social, Enterprising, and Conventional. Then we show you careers and college programs that fit.",
+      },
+      { type: "subheading", text: "For program statistics" },
+      {
+        type: "para",
+        text: "The saved records (grade level, strand, age, and scores, with no name) help us see which interests, strands, and age groups AlignEd reaches. This helps us improve AlignEd and understand what students need in career guidance.",
+      },
+      {
+        type: "para",
+        text: "**We do not show ads, we do not sell your data, and we do not use it for anything else.**",
+      },
+    ],
+  },
+  {
+    heading: "What your results mean",
+    items: [
+      {
+        type: "para",
+        text: "**Your results are guidance only.** They do not decide your grades, school admission, job, or whether you can take a course. They are not a final answer on what you must choose. Talk with a guidance counselor, teacher, or family before you decide.",
+      },
+    ],
+  },
+  {
+    heading: "Where your data is stored and who can see it",
+    items: [
+      { type: "subheading", text: "On your device while you take the assessment" },
+      {
+        type: "para",
+        text: "Your nickname, age, grade, strand, school, answers, and scores are kept in your browser on the device you are using. This lets AlignEd remember your place without an account.",
+      },
+      { type: "subheading", text: "On our server after you finish" },
+      {
+        type: "para",
+        text: "When you reach your results, we save one small record in our database. It holds your **grade level, SHS strand, age, six scores, three-letter code, date, and results ID**.",
+      },
+      {
+        type: "para",
+        text: "**It does not hold your name, nickname, school, email, photo, or answers.** We still treat it as protected data, because we cannot promise it is impossible to link to a person.",
+      },
+      {
+        type: "para",
+        text: "**Your results ID works like a password.** Anyone who has it can see the scores saved under it, though nothing that names you. Keep it private.",
+      },
+      { type: "subheading", text: "Who can see it" },
+      {
+        type: "list",
+        items: [
+          "AlignEd program administrators, through a private page that shows saved records and results IDs, but no names;",
+          "school guidance staff the program authorizes; and",
+          "the services that run AlignEd, only as needed to keep it working: Supabase (database), Google Gmail (sends the emails you ask for), PostHog (website statistics, when on), and our website hosting provider.",
         ],
       },
       {
         type: "para",
-        text: "Please do not enter your full name, home address, phone number, passwords, or other information that AlignEd does not ask for.",
-      },
-      {
-        type: "para",
-        text: "Your age and information relating to your education may be considered sensitive personal information under Philippine data-protection law and will be handled with appropriate safeguards.",
+        text: "Everyone with access may use the data only for the reasons in this notice, and must keep it safe.",
       },
     ],
   },
   {
-    heading: "3. Why do we collect this information?",
+    heading: "How long we keep your data",
     items: [
+      { type: "subheading", text: "On your device" },
       {
         type: "para",
-        text: "We process this information for the following purposes:",
+        text: "**Your session is erased after 30 minutes of no activity.** You can erase it right away with **Start over**. Do this on a shared or school computer so the next person cannot see your answers.",
       },
-      { type: "subheading", text: "Providing your assessment." },
+      { type: "subheading", text: "On our server" },
       {
         type: "para",
-        text: "Your answers are used to calculate your career-interest results and show them to you.",
-      },
-      { type: "subheading", text: "Generating RIASEC scores." },
-      {
-        type: "para",
-        text: "Your responses are automatically scored according to the AlignEd assessment method to determine your scores in the six RIASEC interest areas: Realistic, Investigative, Artistic, Social, Enterprising, and Conventional.",
-      },
-      { type: "subheading", text: "Comparing your results later." },
-      {
-        type: "para",
-        text: "A copy of your scores is saved under a random results ID so that you can compare them with a later retake of the assessment.",
-      },
-      { type: "subheading", text: "Program statistics." },
-      {
-        type: "para",
-        text: "The same saved records (grade level, SHS strand, age, and RIASEC scores, with no name) are used to understand the general career interests, strands, and age ranges of participants. This information helps program administrators evaluate and improve AlignEd and better understand student career-guidance needs.",
+        text: "You can delete your saved record at any time with **Delete saved copy** on your results page, or by giving your results ID to the program administrators.",
       },
       {
         type: "para",
-        text: "We will not use your information for advertising, sell your personal data, or use it for purposes that are incompatible with those explained in this notice.",
+        text: "We do not keep data longer than we need it for the reasons in this notice.",
       },
     ],
   },
   {
-    heading: "4. How does the automated scoring work?",
+    heading: "If you email your results",
     items: [
       {
         type: "para",
-        text: "AlignEd automatically processes your answers to calculate your RIASEC career-interest scores.",
-      },
-      {
-        type: "para",
-        text: "Your answers contribute to scores representing different career-interest areas. These scores are then used to provide your assessment results.",
-      },
-      {
-        type: "para",
-        text: "The results are intended only as career-guidance information. They do not determine your grades, school admission, employment, disciplinary status, or eligibility for a particular course or career.",
-      },
-      {
-        type: "para",
-        text: "Your results should not be treated as a final decision about what career or course you must choose.",
-      },
-    ],
-  },
-  {
-    heading: "5. Where is your information stored?",
-    items: [
-      { type: "subheading", text: "During your assessment" },
-      {
-        type: "para",
-        text: "While you are completing the assessment, your nickname, age, grade level, school information, answers, and assessment results are stored locally in the browser on the device you are using.",
-      },
-      {
-        type: "para",
-        text: "This allows AlignEd to maintain your assessment session without requiring an account.",
-      },
-      { type: "subheading", text: "After you complete the assessment" },
-      {
-        type: "para",
-        text: "When you reach your results, AlignEd saves a limited record to the program's secure database so you can compare your results later.",
+        text: "Emailing your results is optional, and we ask for your agreement separately.",
       },
       {
         type: "list",
         items: [
-          "The saved record contains: your grade level, your SHS strand, your age, your six RIASEC interest-area scores and three-letter code, the date you took the assessment, and a random results ID (for example, ALGN-7KQ2-MX9P).",
-          "It does not contain your name, nickname, school, email address, photo, or your individual answers to the 42 assessment statements.",
+          "**Your email address is used once** to send your results, then thrown away. It is not added to your saved record.",
+          "If you took a career look photo, it is attached to the email unless you untick it. **The photo is never stored** by AlignEd.",
+          "The results PDF is protected with a password.",
+          "We will not use your address for ads or marketing.",
+          "To block spam, our server keeps a scrambled (one-way hash) version of your address and your IP in memory for a short time. It cannot be turned back into your address.",
         ],
-      },
-      {
-        type: "para",
-        text: "Your results ID is shown on your results screen and printed in your results PDF. Anyone who has your results ID can see the scores saved under it (but nothing that names you), so keep it private like a password.",
-      },
-      {
-        type: "para",
-        text: "Even without a name, AlignEd treats these records as protected data rather than claiming that they are completely anonymous.",
       },
     ],
   },
   {
-    heading: "6. Who may see the information?",
+    heading: "Website statistics",
     items: [
       {
         type: "para",
-        text: "Access is limited to people who need the information for the purposes described in this notice.",
+        text: "When analytics is on, we use PostHog to count visits: which pages are opened, when, and on what kind of browser or device. It stores a random ID in your browser, not a cookie.",
       },
       {
         type: "para",
-        text: "Depending on how the program is implemented, this may include:",
+        text: "**Analytics never receives your nickname, answers, or results.** It is not loaded on the private admin page. If we ever add other tracking or cookies, we will tell you first and give you a choice where the law requires it.",
+      },
+    ],
+  },
+  {
+    heading: "How we keep your data safe",
+    items: [
+      {
+        type: "para",
+        text: "We use sensible technical and organizational protections against loss, misuse, and unauthorized access. Only people and systems that need the server data can reach it.",
+      },
+      {
+        type: "para",
+        text: "No online service is perfectly safe, but we work to keep the risks low.",
+      },
+    ],
+  },
+  {
+    heading: "Your rights",
+    items: [
+      {
+        type: "para",
+        text: "Under the Data Privacy Act of 2012 (RA 10173), you have the right to:",
       },
       {
         type: "list",
         items: [
-          "authorized AlignEd program administrators, through a private admin page that shows the saved records (with their results IDs) but no names;",
-          "authorized school guidance personnel or designated school staff; and",
-          "service providers that host or support AlignEd's technical infrastructure, where necessary.",
+          "know how your data is used;",
+          "ask to see the data we hold about you;",
+          "ask us to fix wrong data;",
+          "object to some uses of your data;",
+          "ask us to delete or block your data;",
+          "take back your agreement, where the use depends on it;",
+          "get a copy of your data in a usable form;",
+          "claim damages where the law allows; and",
+          "**complain to the National Privacy Commission** if you think your rights were broken.",
         ],
       },
       {
         type: "para",
-        text: "These persons or service providers are expected to handle the information only for authorized purposes and subject to appropriate privacy and security measures.",
-      },
-      {
-        type: "para",
-        text: "Technical service providers used by AlignEd: [Insert relevant hosting/database/email/analytics providers, or state the appropriate classes of providers.]",
-      },
-      {
-        type: "para",
-        text: "Your nickname, school, and individual assessment answers are not included in the saved record made available to administrators.",
+        text: `To use these rights, email **${PRIVACY_CONTACT_EMAIL}**. Data kept only on your device is removed with **Start over**. Your saved record is removed with **Delete saved copy**, or by giving your results ID to the program administrators.`,
       },
     ],
   },
   {
-    heading: "7. How long do we keep your information?",
+    heading: "Students under 18",
     items: [
-      { type: "subheading", text: "Information stored on your device" },
       {
         type: "para",
-        text: "Your active assessment session is automatically cleared after 30 minutes of inactivity.",
-      },
-      {
-        type: "para",
-        text: "You may also delete the current session immediately by selecting Start over.",
-      },
-      {
-        type: "para",
-        text: "This is especially important when using a shared computer or school device because it helps prevent the next user from seeing your assessment information.",
-      },
-      { type: "subheading", text: "Saved results on the server" },
-      {
-        type: "para",
-        text: "Your saved record (grade level, SHS strand, age, RIASEC scores and code, date, and results ID) is kept for one year from the day it was saved, then automatically deleted.",
-      },
-      {
-        type: "para",
-        text: "You can delete it sooner at any time by selecting Delete saved copy on your results page, or by giving your results ID to the program administrators.",
-      },
-      {
-        type: "para",
-        text: "We will not keep identifiable or potentially identifiable information longer than reasonably necessary for the purposes stated in this notice.",
+        text: "Many students who use AlignEd are minors. **If you are under 18, a parent or legal guardian should read this Data Privacy Policy and Terms and Conditions with you.** They give their consent for you to take the assessment by **ticking the box and selecting I agree** on the profile step. Your school or program may also need its own separate agreement before you start, where the law requires it. We explain how data is used in words students can understand.",
       },
     ],
   },
   {
-    heading: "8. If you choose to email your results",
+    heading: "Terms and Conditions",
     items: [
       {
         type: "para",
-        text: "Emailing your AlignEd results is optional.",
-      },
-      { type: "para", text: "If you choose this feature:" },
-      {
-        type: "list",
-        items: [
-          "you will be asked separately before your email address is used;",
-          "your email address will be used to send the requested results;",
-          "your email address will not be added to your saved results record;",
-          "if you took a career look photo, it is attached to the email unless you untick it, and it is not stored by AlignEd;",
-          "AlignEd will not use your address for advertising or marketing; and",
-          "the generated results PDF will be protected according to the security measures implemented by the system.",
-        ],
-      },
-      {
-        type: "para",
-        text: "If AlignEd uses a temporary one-way hash of your email address to prevent repeated or abusive sending, the hash is used only for that security purpose and is not intended to recover your original email address.",
-      },
-      {
-        type: "para",
-        text: "Important: The technical description above must match how the deployed AlignEd email system actually works.",
-      },
-    ],
-  },
-  {
-    heading: "9. Website usage statistics",
-    items: [
-      {
-        type: "para",
-        text: "If privacy-friendly analytics are enabled, AlignEd may collect limited information about how the website is used, such as page visits or general usage counts.",
-      },
-      {
-        type: "para",
-        text: "These analytics will not include your nickname, individual assessment answers, or RIASEC results unless expressly disclosed in an updated privacy notice and supported by an appropriate lawful basis.",
-      },
-      {
-        type: "para",
-        text: "If third-party analytics or cookies are used, AlignEd will provide any additional notice or choice required by applicable law.",
-      },
-    ],
-  },
-  {
-    heading: "10. How do we protect your information?",
-    items: [
-      {
-        type: "para",
-        text: "AlignEd uses reasonable and appropriate organizational, physical, and technical safeguards designed to protect personal data against unauthorized access, disclosure, alteration, loss, or destruction.",
-      },
-      {
-        type: "para",
-        text: "Access to server-side information is restricted to authorized persons and systems that need it for legitimate program purposes.",
-      },
-      {
-        type: "para",
-        text: "No online system can guarantee absolute security, but AlignEd will take appropriate steps to reduce privacy and security risks.",
-      },
-    ],
-  },
-  {
-    heading: "11. What are your privacy rights?",
-    items: [
-      {
-        type: "para",
-        text: "Under the Data Privacy Act of 2012 and applicable regulations, you may have rights concerning your personal data, including the right to:",
+        text: "By using AlignEd, you agree to these rules:",
       },
       {
         type: "list",
         items: [
-          "be informed about how your data is processed;",
-          "request access to personal data held about you;",
-          "request correction of inaccurate or incomplete information;",
-          "object to certain types of processing where applicable;",
-          "request erasure or blocking of information where legally permitted;",
-          "withdraw consent where processing depends on consent, subject to the consequences explained at the time;",
-          "request data portability where applicable;",
-          "claim damages where provided by law; and",
-          "file a complaint with the National Privacy Commission if you believe your privacy rights have been violated.",
+          "**AlignEd is free career guidance.** It is not a test you can pass or fail, and it does not decide your future.",
+          "**Answer honestly** so your results fit you.",
+          "**Do not type private details** such as your full name, address, phone number, or passwords.",
+          "**Keep your results ID private.** Do not try to look up other people's results IDs.",
+          "**Do not misuse AlignEd.** No spamming the email feature, no trying to break or overload the service, and no trying to get into the admin page.",
+          "AlignEd may change, pause, or be unavailable at times. We do our best to keep results accurate, but they can be wrong, so use them together with advice from people you trust.",
         ],
       },
+    ],
+  },
+  {
+    heading: "Changes to these terms",
+    items: [
       {
         type: "para",
-        text: "To exercise your rights regarding information stored by AlignEd, contact your school's Data Protection Officer or program administrators.",
-      },
-      {
-        type: "para",
-        text: "For information stored only in your current browser session, selecting Start over removes the session data from that browser. Your saved results can be deleted with Delete saved copy on your results page, or by giving your results ID to the program administrators.",
+        text: "If we change how your data is collected, used, shared, or kept, or change these terms, we will update this notice and its version number. Where the law requires, we will tell you or your parent or guardian before the change starts.",
       },
     ],
   },
   {
-    heading: "12. Privacy of students under 18",
+    heading: "Agreeing to these terms",
     items: [
       {
         type: "para",
-        text: "AlignEd may be used by students who are minors.",
+        text: "Please read this notice before you start. **Ticking the box means you have read and agree to these Terms and Conditions and the Data Privacy Policy.** You can take back your agreement at any time by unticking the box on the profile step.",
       },
       {
         type: "para",
-        text: "Where consent is the legal basis required for processing a minor's personal or sensitive personal information, the program or participating school will obtain the appropriate consent from a parent, legal guardian, or other person legally authorized to provide consent, where required by Philippine law and applicable school policies.",
-      },
-      {
-        type: "para",
-        text: "Students will also be given information about the processing in language appropriate to them.",
-      },
-      {
-        type: "para",
-        text: "The assessment should only be made available to minors after the school or program administrator has established the appropriate consent or other lawful basis for processing their information.",
-      },
-    ],
-  },
-  {
-    heading: "13. Changes to this notice",
-    items: [
-      {
-        type: "para",
-        text: "If AlignEd materially changes how personal data is collected, used, shared, or retained, this privacy notice will be updated.",
-      },
-      {
-        type: "para",
-        text: "Where required, users and/or their parents or legal guardians will be informed before the new processing takes place.",
-      },
-      {
-        type: "para",
-        text: "The date at the top of this notice shows when it was last updated.",
-      },
-    ],
-  },
-  {
-    heading: "14. Consent and acknowledgment",
-    items: [
-      {
-        type: "para",
-        text: "Before starting the assessment, please read this notice carefully.",
-      },
-      {
-        type: "para",
-        text: "Where AlignEd relies on your consent to process your information, selecting the consent box confirms that you understand the information provided and agree to the processing described in this notice.",
-      },
-      {
-        type: "para",
-        text: "For users who are minors, any parent or legal guardian consent required by the school or program must also be obtained before the assessment begins.",
+        text: "**If you are under 18, a parent or legal guardian should read this notice and tick the box themselves** to give their consent before you begin. Your school or program may also need its own separate agreement, where the law requires it.",
       },
     ],
   },
 ];
 
+// Turns **bold** markers in policy text into <strong>. Only key points are
+// marked, so the weight carries meaning instead of becoming noise.
+function renderInline(text: string) {
+  return text.split("**").map((part, i) =>
+    i % 2 === 1 ? (
+      <strong key={i} className="font-semibold text-foreground">
+        {part}
+      </strong>
+    ) : (
+      <Fragment key={i}>{part}</Fragment>
+    ),
+  );
+}
+
 // The section content, shared by the profile step's consent dialog and the
-// footer's read-only Privacy Policy dialog, so the notice can only ever say
-// one thing.
+// footer's read-only dialog, so the notice can only ever say one thing.
 function PolicyBody() {
   return (
     <div className="flex max-h-[55vh] flex-col gap-5 overflow-y-auto p-6">
@@ -421,14 +374,14 @@ function PolicyBody() {
                   className="list-disc space-y-0.5 pl-5 text-sm text-muted-foreground"
                 >
                   {item.items.map((li, j) => (
-                    <li key={j}>{li}</li>
+                    <li key={j}>{renderInline(li)}</li>
                   ))}
                 </ul>
               );
             }
             return (
               <p key={i} className="text-sm text-pretty text-muted-foreground">
-                {item.text}
+                {renderInline(item.text)}
               </p>
             );
           })}
@@ -465,13 +418,16 @@ export function PrivacyConsent({
     >
       <h2 className="flex items-center gap-2 text-base font-semibold text-foreground">
         <ShieldCheck className="size-5 text-stage-profile-strong" aria-hidden />
-        Data privacy
+        Data Privacy Policy and Terms and Conditions
       </h2>
       <p className="text-sm text-muted-foreground">
-        Your session erases from this device after 30 minutes. Your grade,
-        strand, age, and interest scores are saved for one year, with no name, so you can
-        compare later and for program statistics. No real name or account
-        needed.
+        <strong className="font-semibold text-foreground">
+          No account and no real name needed.
+        </strong>{" "}
+        Your session erases from this device after 30 minutes. Only your grade,
+        strand, age, and interest scores are saved,{" "}
+        <strong className="font-semibold text-foreground">with no name</strong>,
+        for program statistics.
       </p>
 
       <label className="flex items-start gap-3 text-sm text-foreground">
@@ -488,7 +444,7 @@ export function PrivacyConsent({
             onClick={() => setOpen(true)}
             className="cursor-pointer rounded-sm font-semibold text-stage-profile-strong underline underline-offset-2 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
           >
-            Data Privacy Policy
+            Data Privacy Policy and Terms and Conditions
           </button>
           .
         </span>
@@ -500,14 +456,16 @@ export function PrivacyConsent({
           className="text-sm font-semibold text-destructive"
           role="alert"
         >
-          Agree to the Data Privacy Policy to continue.
+          Agree to the Terms and Conditions to continue.
         </p>
       )}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-xl gap-0 p-0">
           <DialogHeader className="border-b border-border p-6 pr-14">
-            <DialogTitle className="text-xl">Data Privacy Policy</DialogTitle>
+            <DialogTitle className="text-xl">
+              Terms and Conditions and Data Privacy Policy
+            </DialogTitle>
             <DialogDescription>
               How AlignEd handles your data ({PRIVACY_POLICY_VERSION}). Please
               read this before you start the assessment.
@@ -540,9 +498,9 @@ export function PrivacyConsent({
   );
 }
 
-// Read-only Privacy Policy dialog for anyone outside the consent flow (the
-// footer link): same notice, same version, no checkbox and no "I agree" —
-// there is nothing here for a visitor to consent to.
+// Read-only dialog for anyone outside the consent flow (the footer link):
+// same notice, same version, no checkbox and no "I agree", because there is
+// nothing here for a visitor to consent to.
 export function PrivacyPolicyDialog({
   trigger,
   children,
@@ -555,7 +513,9 @@ export function PrivacyPolicyDialog({
       <DialogTrigger render={trigger}>{children}</DialogTrigger>
       <DialogContent className="max-w-xl gap-0 p-0">
         <DialogHeader className="border-b border-border p-6 pr-14">
-          <DialogTitle className="text-xl">Data Privacy Policy</DialogTitle>
+          <DialogTitle className="text-xl">
+            Terms and Conditions and Data Privacy Policy
+          </DialogTitle>
           <DialogDescription>
             How AlignEd handles your data ({PRIVACY_POLICY_VERSION}).
           </DialogDescription>

@@ -72,8 +72,8 @@ const SUBTITLE_REVEAL_SECONDS = 1.4;
 // screens. See DESIGN.md "How it works".
 const journeySteps = [
   {
-    title: "Tell us where you are",
-    body: "Your grade level. One tap, no name, no sign-up.",
+    title: "Tell us about yourself",
+    body: "Your nickname, grade, strand, and age. No real name, no sign-up.",
     icon: ClipboardPen,
   },
   {
@@ -128,12 +128,18 @@ export default function HomePage() {
         />
 
         <div className="mx-auto flex min-h-[min(72svh,40rem)] w-full max-w-4xl flex-col items-center justify-center px-4 pt-14 pb-24 text-center sm:pt-20">
-          <BlurFade delay={0.08}>
+          {/* Hero entrances are CSS, not BlurFade: they paint with the HTML,
+              so a slow phone never shows a blank hero while JavaScript
+              loads. */}
+          <div
+            className="motion-safe:animate-fade-up"
+            style={{ "--fade-delay": "80ms" } as React.CSSProperties}
+          >
             {/* "Align" glows in the headline's own ink; then two hand-drawn
                 marks, one after the other: the marker sweeps "passion", then
                 the line underscores "profession". */}
             <h1 className="text-5xl leading-[1.22] font-extrabold tracking-tight text-foreground sm:text-6xl md:text-7xl">
-              <span className="text-glow motion-safe:animate-glow-breathe">
+              <span className="text-glow fancy:animate-glow-breathe">
                 Align
               </span>{" "}
               your{" "}
@@ -162,11 +168,11 @@ export default function HomePage() {
                 profession
               </Highlighter>
             </h1>
-          </BlurFade>
+          </div>
 
-          {/* Words resolve from blur, first to last inside 1.4s (the source's
-              0.2s a word would take over five on a sentence this long). No
-              BlurFade around it: the reveal is the entrance. */}
+          {/* Words fade in, first to last inside 1.4s (the source's 0.2s a
+              word would take over five on a sentence this long). No wrapper
+              entrance around it: the reveal is the entrance. */}
           <TextGenerateEffect
             words={HERO_SUBTITLE}
             totalDuration={SUBTITLE_REVEAL_SECONDS}
@@ -176,18 +182,24 @@ export default function HomePage() {
           {/* The one number a visiting student cares about: how many people
               have actually done this. It renders nothing when the count is
               unavailable. */}
-          <BlurFade delay={0.24} className="mt-7">
+          <div
+            className="mt-7 motion-safe:animate-fade-up"
+            style={{ "--fade-delay": "240ms" } as React.CSSProperties}
+          >
             <TestsTaken />
-          </BlurFade>
+          </div>
 
           {/* The six traits as the hero's image: the code the student is
               about to find, in the same emblems the results page uses. A
               dock: each emblem magnifies under the pointer and jumps to its
               row in "Six traits, one code". The journey's call to action
               lives in the navbar directly above. */}
-          <BlurFade delay={0.4} className="mt-9 md:mt-6">
+          <div
+            className="mt-9 motion-safe:animate-fade-up md:mt-6"
+            style={{ "--fade-delay": "400ms" } as React.CSSProperties}
+          >
             <FloatingDock label="The six traits" items={traitDockItems} />
-          </BlurFade>
+          </div>
         </div>
       </section>
 

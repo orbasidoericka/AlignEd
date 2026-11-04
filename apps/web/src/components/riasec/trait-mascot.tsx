@@ -380,8 +380,8 @@ export function TraitMascot({
         // a trait tint, so one badge reads over all six washes in both themes.
         <p
           className="absolute top-3 left-4 z-10 inline-flex items-center gap-1.5 rounded-full
-                     bg-card/90 px-2.5 py-1 font-heading text-xs font-bold text-foreground
-                     shadow-sm backdrop-blur-sm"
+                     bg-card px-2.5 py-1 font-heading text-xs font-bold text-foreground
+                     shadow-sm"
         >
           <Crown className="size-3.5 text-primary-strong" aria-hidden />
           Your top trait

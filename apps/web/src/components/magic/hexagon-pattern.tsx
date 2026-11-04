@@ -348,7 +348,10 @@ export function HexagonPattern({
                   filter={`url(#${glowId})`}
                   className={cn(
                     cellClassName,
-                    animated && "motion-safe:animate-hex-glow",
+                    // Mouse devices only: each frame of the fade re-runs the
+                    // blur filter on the main thread. Phones keep the lit
+                    // cells, painted once.
+                    animated && "fancy:animate-hex-glow",
                   )}
                   style={{
                     animationDuration: `${roundCoord(duration)}s`,
