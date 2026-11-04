@@ -37,6 +37,14 @@ const cell = (n: number) =>
   screen.getByRole("button", { name: new RegExp(`^Question ${n},`) });
 
 describe("QuestionNavigator", () => {
+  // The language pill lives in the runner now, above the statement.
+  it("does not host the language pill", () => {
+    renderNavigator();
+    expect(
+      screen.queryByRole("group", { name: "Statement language" }),
+    ).not.toBeInTheDocument();
+  });
+
   it("renders one numbered cell per statement, in order", () => {
     renderNavigator();
     const nav = screen.getByRole("navigation", { name: "Question navigator" });

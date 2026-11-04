@@ -1,7 +1,14 @@
 // Copyright (c) 2026 EdTech. All rights reserved.
 
 import type { Metadata } from "next";
-import { ClipboardPen, Compass, PartyPopper } from "lucide-react";
+import {
+  ClipboardPen,
+  Clock,
+  Compass,
+  Gift,
+  PartyPopper,
+  UserRoundX,
+} from "lucide-react";
 
 import { FloatingDock } from "@/components/aceternity/floating-dock";
 import { TextGenerateEffect } from "@/components/aceternity/text-generate-effect";
@@ -109,6 +116,27 @@ const heroCells = scatterHexagons({
   ],
   seed: 7,
 });
+
+// Closing CTA grid: the panel is a pale card, so the warm and green cells take
+// the stage "-strong" tone at low alpha; blue stays the plain stage blue.
+const ctaCells = scatterHexagons({
+  count: 8,
+  cols: 20,
+  rows: 6,
+  classNames: [
+    "fill-stage-profile-strong/30",
+    "fill-stage-assessment/30",
+    "fill-stage-results-strong/30",
+    "fill-stage-profile-strong/30",
+  ],
+  seed: 11,
+});
+
+const ctaBadges = [
+  { label: "Free to use", icon: Gift },
+  { label: "No sign-up needed", icon: UserRoundX },
+  { label: "About 5 minutes", icon: Clock },
+] as const;
 
 export default function HomePage() {
   return (
@@ -312,24 +340,48 @@ export default function HomePage() {
       {/* Final CTA */}
       <section className="mx-auto w-full max-w-6xl px-4 pb-20 sm:px-6">
         <BlurFade inView>
-          <div className="relative flex flex-col items-center gap-6 overflow-hidden rounded-4xl bg-stage-profile-soft px-6 py-14 text-center">
+          <div className="relative isolate flex flex-col items-center gap-6 overflow-hidden rounded-4xl bg-card px-6 py-12 text-center sm:py-16">
+            {/* Hexagon field fills the sides; the centre is masked clear so
+                the text never sits on a lit cell. */}
+            <HexagonPattern
+              radius={32}
+              gap={4}
+              hexagons={ctaCells}
+              className="-z-10 stroke-primary/30 mask-[radial-gradient(ellipse_at_center,transparent_30%,white_80%)] print:hidden dark:stroke-primary/15"
+            />
             {/* The one place on the landing page that gets a shine: the
                 closing invitation. */}
             <ShineBorder borderWidth={2} duration={12} />
+            {/* The six traits: the code the student is about to find. */}
+            <div aria-hidden className="flex justify-center gap-1 sm:gap-2">
+              {traitPreview.map((trait, index) => (
+                <TraitEmblem
+                  key={trait.letter}
+                  letter={trait.letter}
+                  className={cn(
+                    "size-11 sm:size-14",
+                    index % 2 === 1 && "translate-y-2",
+                  )}
+                />
+              ))}
+            </div>
             <h2 className="max-w-xl text-3xl font-bold text-foreground sm:text-4xl">
-              Ready to find your path?
+              Not sure what comes after Senior High?
             </h2>
+            <p className="max-w-md text-lg text-balance text-muted-foreground">
+              Answer at your own pace. There are no wrong answers, and nobody
+              needs to know your name.
+            </p>
             <div className="flex flex-wrap justify-center gap-2">
-              {["Free to use", "No sign-up needed", "About 5 minutes"].map(
-                (badge) => (
-                  <span
-                    key={badge}
-                    className="rounded-full border border-stage-profile/40 bg-card px-4 py-1.5 text-sm font-semibold text-foreground"
-                  >
-                    {badge}
-                  </span>
-                ),
-              )}
+              {ctaBadges.map(({ label, icon: Icon }) => (
+                <span
+                  key={label}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-4 py-1.5 text-sm font-semibold text-foreground"
+                >
+                  <Icon className="size-4" aria-hidden />
+                  {label}
+                </span>
+              ))}
             </div>
             <HeroCta label="Find your path" />
           </div>

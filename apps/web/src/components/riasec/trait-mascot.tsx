@@ -381,7 +381,7 @@ export function TraitMascot({
         <p
           className="absolute top-3 left-4 z-10 inline-flex items-center gap-1.5 rounded-full
                      bg-card px-2.5 py-1 font-heading text-xs font-bold text-foreground
-                     shadow-sm"
+                     shadow-chip"
         >
           <Crown className="size-3.5 text-primary-strong" aria-hidden />
           Your top trait
@@ -392,7 +392,7 @@ export function TraitMascot({
         // Decorative: the card's heading already names the trait.
         aria-hidden="true"
         focusable="false"
-        className={cn("relative h-full w-auto", primary && "drop-shadow-sm")}
+        className={cn("relative h-full w-auto", primary && "drop-shadow-chip")}
         style={letterArtStyle(letter)}
       >
         {MASCOT_ART[letter](uid)}

@@ -203,19 +203,17 @@ describe("AssessmentRunner hardening", () => {
     expect(statement(3)).toBeInTheDocument();
   });
 
-  it("opens on the finish view when every statement is already answered", () => {
+  it("opens the finish pop-up when every statement is already answered", () => {
     answerFirst(QUESTIONS.length);
     render(<AssessmentRunner />);
-    expect(
-      screen.getByRole("heading", { level: 1, name: "All done!" }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: "All done!" })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /Review my answers/ }));
+    wait(500);
+    expect(screen.queryByRole("dialog")).toBeNull();
     expect(statement(QUESTIONS.length - 1)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Finish assessment" }));
-    expect(
-      screen.getByRole("heading", { level: 1, name: "All done!" }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: "All done!" })).toBeInTheDocument();
   });
 
   it("ignores taps that land right after a statement appears", () => {
@@ -328,7 +326,7 @@ describe("AssessmentRunner hardening", () => {
     expect(playSound).toHaveBeenCalledExactlyOnceWith("no");
   });
 
-  it("celebrates when Finish assessment is clicked, once", () => {
+  it("opens the finish pop-up by itself on the last answer and celebrates once", () => {
     answerFirst(QUESTIONS.length - 1);
     render(<AssessmentRunner />);
 
@@ -336,21 +334,21 @@ describe("AssessmentRunner hardening", () => {
     fireEvent.keyDown(document, { key: "y" });
     expect(playSound).toHaveBeenCalledWith("yes");
 
-    // Answering the last statement does not auto-finish.
-    wait(ADVANCE_DELAY_MS + 10);
-    expect(screen.queryByText("All done!")).toBeNull();
+    // Not before the advance delay: the last tap registers first.
+    expect(screen.queryByRole("dialog")).toBeNull();
     expect(playSound).not.toHaveBeenCalledWith("celebration");
 
-    // Finish appears once all are answered; tapping it celebrates.
-    fireEvent.click(screen.getByRole("button", { name: "Finish assessment" }));
-    expect(screen.getByText("All done!")).toBeInTheDocument();
+    // Then it opens with no click on any finish button.
+    wait(ADVANCE_DELAY_MS + 10);
+    expect(screen.getByRole("dialog", { name: "All done!" })).toBeInTheDocument();
     expect(playSound.mock.calls.filter(([n]) => n === "celebration")).toHaveLength(1);
 
     // Review then re-finish: no second celebration.
     playSound.mockClear();
     fireEvent.click(screen.getByRole("button", { name: /Review my answers/ }));
+    wait(500);
     fireEvent.click(screen.getByRole("button", { name: "Finish assessment" }));
-    expect(screen.getByText("All done!")).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: "All done!" })).toBeInTheDocument();
     expect(playSound).not.toHaveBeenCalledWith("celebration");
   });
 
@@ -358,7 +356,7 @@ describe("AssessmentRunner hardening", () => {
     answerFirst(QUESTIONS.length);
     render(<AssessmentRunner />);
 
-    expect(screen.getByText("All done!")).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: "All done!" })).toBeInTheDocument();
     expect(playSound).not.toHaveBeenCalled();
   });
 });
@@ -501,11 +499,8 @@ describe("AssessmentRunner question navigator", () => {
     wait(RAPID_ANSWER_THRESHOLD_MS + 10);
     fireEvent.keyDown(document, { key: "n" });
     wait(ADVANCE_DELAY_MS + 10);
-    // Answering the last gap does not auto-finish; review notice appears.
-    expect(screen.queryByText("All done!")).toBeNull();
-
-    fireEvent.click(screen.getByRole("button", { name: "Finish assessment" }));
-    expect(screen.getByText("All done!")).toBeInTheDocument();
+    // Answering the last gap opens the finish pop-up on its own.
+    expect(screen.getByRole("dialog", { name: "All done!" })).toBeInTheDocument();
 
     const results = screen.getByRole("button", { name: "See my results" });
     fireEvent.click(results);

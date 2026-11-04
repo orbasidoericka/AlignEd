@@ -118,7 +118,7 @@ export function NavBody({
       }}
       transition={transition}
       className={cn(
-        "relative z-60 mx-auto hidden w-full max-w-6xl min-w-4xl flex-row items-center justify-between gap-4 self-start rounded-full px-4 py-2 lg:flex",
+        "relative z-60 mx-auto hidden transition-shadow duration-300 motion-reduce:transition-none w-full max-w-6xl min-w-4xl flex-row items-center justify-between gap-4 self-start rounded-full px-4 py-2 lg:flex",
         visible && "bg-card shadow-bento ring-1 ring-chrome-border",
         className,
       )}
@@ -242,7 +242,7 @@ export function MobileNav({
       animate={{ y: visible ? 8 : 0 }}
       transition={transition}
       className={cn(
-        "relative z-50 mx-auto flex w-full max-w-[calc(100vw-2rem)] flex-col items-center justify-between rounded-xl py-2 lg:hidden",
+        "relative z-50 mx-auto flex w-full max-w-[calc(100vw-2rem)] transition-shadow duration-300 motion-reduce:transition-none flex-col items-center justify-between rounded-xl py-2 lg:hidden",
         visible &&
           "rounded-3xl bg-card px-3 shadow-bento ring-1 ring-chrome-border",
         className,
@@ -308,7 +308,7 @@ export function MobileNavMenu({
           exit={{ opacity: 0 }}
           transition={reduceMotion ? { duration: 0 } : { duration: 0.15 }}
           className={cn(
-            "absolute inset-x-0 top-16 z-50 flex w-full flex-col items-stretch gap-2 rounded-2xl bg-popover px-4 py-5 text-popover-foreground shadow-xl ring-1 ring-border",
+            "absolute inset-x-0 top-16 z-50 flex w-full flex-col items-stretch gap-2 rounded-2xl bg-popover px-4 py-5 text-popover-foreground shadow-overlay ring-1 ring-border",
             className,
           )}
         >

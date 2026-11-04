@@ -14,7 +14,7 @@ Grade 11 and 12 (Senior High) students in the Philippines, mobile-first on budge
 
 1. **Landing** (`/`) — value proposition, ~5-minute promise, journey-aware CTA.
 2. **Profile Setup** (`/assessment/profile`) — nickname (required, up to 8 uppercase letters/hyphens, never stored server-side; sent only inside an email request), grade level (11 or 12), SHS strand (or Others with a typed strand that stays on the device and in the student's PDF), age (10–30) and acceptance of the Data Privacy Policy and Terms and Conditions (all required), and optional school (max 120 chars). Client-side only.
-3. **RIASEC Assessment** (`/assessment`) — 42 yes/no statements (English or Filipino, student's choice), one per screen, auto-advancing (no Next button) with Back to revise; localStorage resume, deterministic scoring (tie-break R→I→A→S→E→C).
+3. **RIASEC Assessment** (`/assessment`) — 42 yes/no statements (English or Filipino, student's choice), one per screen, auto-advancing (no Next button) with Back to revise; localStorage resume, deterministic scoring (tie-break R→I→A→S→E→C). Finished results stay on the device 30 minutes at most and vanish when the tab closes; Results shows the countdown.
 4. **Results** (`/results`) — Holland code + trait breakdown, all majors and related pathways per code letter, password-protected PDF + email export (including the selected SHS strand), optional career-look photo, results ID + compare with a past result.
 
 ## Non-goals
@@ -32,5 +32,6 @@ Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 - 2026-11-04 · product · Terms/Privacy card heading and link renamed "Data Privacy Policy and Terms and Conditions"; the privacy notice, About page, admin page, and results-saved copy no longer state the one-year retention period or the "compare later" purpose. · Removal requested; the server-side one-year expiry is unchanged.
 - 2026-11-04 · product · Profile Setup accepts an "Others" strand (typed text stays on the device and in the PDF). · Covers strands not in the list.
 - 2026-11-04 · product · Privacy notice is now the plain-language "Terms and Conditions and Data Privacy Policy" and lists all data collected (PRD Profile Setup). · Students and parents can see exactly what is collected.
+- 2026-11-02 · results · Results shows a lifetime countdown; finished results wiped on tab close · shared-device privacy
 - 2026-10-31 · product · Assessment statements can be shown in Filipino (PRD FR-3.8). · Wider reach for Filipino-speaking students.
 - 2026-10-27 · product · Audience narrowed to Grade 11–12; profile adds age + privacy acceptance; results describe majors/pathways, encrypted PDF, career look. · Matches the shipped code and the updated PRD.

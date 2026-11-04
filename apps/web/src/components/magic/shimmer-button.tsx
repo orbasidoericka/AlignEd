@@ -65,7 +65,7 @@ export function ShimmerButton({
         // A tight drop shadow and nothing blurred or hover-reactive: the bento
         // frame around this button already runs a pointer-tracked
         // GlowingEffect, and a second halo reads as a bug rather than depth.
-        "shadow-[0_12px_30px_-12px_var(--primary)]",
+        "shadow-glow-primary",
         "transform-gpu transition-transform duration-150 ease-out",
         "active:not-aria-[haspopup]:translate-y-px",
         "outline-none focus-visible:ring-3 focus-visible:ring-ring/50",

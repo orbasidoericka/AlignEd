@@ -116,7 +116,7 @@ describe("PathwayResults", () => {
     for (const mascot of mascots) {
       expect(mascot.parentElement!.className).toContain("h-32 sm:h-36");
     }
-    expect(mascots[0]!.getAttribute("class")).toContain("drop-shadow-sm");
+    expect(mascots[0]!.getAttribute("class")).toContain("drop-shadow-chip");
   });
 
   it("aligns the cards' rows on a shared subgrid", () => {
