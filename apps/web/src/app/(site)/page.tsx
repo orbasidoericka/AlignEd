@@ -23,7 +23,9 @@ import { HeroCta } from "@/components/journey/hero-cta";
 import { TestsTaken } from "@/components/blocks/tests-taken";
 import { RIASEC_PATHWAYS } from "@/lib/riasec/career-pathways";
 import { letterHoverWash } from "@/lib/riasec/letter-chip-styles";
+import { ScoringExample } from "@/components/riasec/scoring-example";
 import { TraitEmblem } from "@/components/riasec/trait-emblem";
+import type { RiasecScores } from "@/store/useAssessmentStore";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -65,7 +67,7 @@ const traitDockItems = traitPreview.map((trait) => ({
 }));
 
 const HERO_SUBTITLE =
-  "Answer 42 quick yes-or-no statements to discover your Holland Code, and the careers and college programs that match you. About 5 minutes, free, no sign-up.";
+  "Answer 42 quick yes-or-no statements to discover your Holland Code, and the careers and college programs that match you.";
 
 // First word starting to last word resolved. The words start once the page
 // has hydrated (about half a second in), so 1.4s keeps the whole sentence
@@ -132,7 +134,39 @@ const ctaCells = scatterHexagons({
   seed: 11,
 });
 
-const ctaBadges = [
+// The scoring procedure (lib/riasec/scoring.ts, PRD FR-4.1/4.2) in plain
+// words. Change the scoring and this changes too.
+const scoringSteps = [
+  {
+    title: "Answer 42 statements",
+    body: "Each statement belongs to one of the six traits. There are 7 for every trait, mixed together.",
+  },
+  {
+    title: "Yes earns 1 point, No earns 0",
+    body: "The point goes to the trait that statement belongs to.",
+  },
+  {
+    title: "Add up the points",
+    body: "Each trait ends with a score from 0 to 7.",
+  },
+  {
+    title: "Your top three make your code",
+    body: "Highest score first. If two scores tie, the trait that comes first in R, I, A, S, E, C goes first, so the same answers always give the same code.",
+  },
+] as const;
+
+// Steph's example: Artistic leads, and Investigative and Social tie for the
+// next two places, so the example shows the tie rule at work.
+const EXAMPLE_SCORES: RiasecScores = {
+  realistic: 2,
+  investigative: 5,
+  artistic: 6,
+  social: 4,
+  enterprising: 3,
+  conventional: 1,
+};
+
+const heroBadges = [
   { label: "Free to use", icon: Gift },
   { label: "No sign-up needed", icon: UserRoundX },
   { label: "About 5 minutes", icon: Clock },
@@ -197,6 +231,24 @@ export default function HomePage() {
               </Highlighter>
             </h1>
           </div>
+
+          {/* The three promises, straight under the headline: free, no
+              sign-up, about five minutes. CSS entrance like the headline, so
+              they paint with the HTML. */}
+          <ul
+            className="mt-6 flex w-full flex-wrap justify-center gap-2 motion-safe:animate-fade-up"
+            style={{ "--fade-delay": "160ms" } as React.CSSProperties}
+          >
+            {heroBadges.map(({ label, icon: Icon }) => (
+              <li
+                key={label}
+                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-sm font-semibold text-foreground sm:px-4"
+              >
+                <Icon className="size-4" aria-hidden />
+                {label}
+              </li>
+            ))}
+          </ul>
 
           {/* Words fade in, first to last inside 1.4s (the source's 0.2s a
               word would take over five on a sentence this long). No wrapper
@@ -337,6 +389,60 @@ export default function HomePage() {
         </BlurFade>
       </section>
 
+      {/* How scoring works: the procedure as a real four-step sequence on
+          the left, a worked example computed with the real scoring code on
+          the right. Plain counting, told plainly. */}
+      <section
+        id="scoring"
+        className="mx-auto w-full max-w-6xl scroll-mt-24 px-4 py-16 sm:px-6"
+      >
+        <BlurFade inView>
+          <div className="mx-auto flex max-w-2xl flex-col items-center gap-3 text-center">
+            <h2 className="text-3xl font-bold text-balance text-foreground sm:text-4xl">
+              How your code is scored
+            </h2>
+            <p className="text-lg text-pretty text-muted-foreground">
+              No right or wrong answers. Your code comes from simple counting.
+            </p>
+          </div>
+        </BlurFade>
+
+        <div className="mt-10 grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,28rem)] lg:gap-12">
+          <BlurFade inView delay={0.05}>
+            <ol className="flex flex-col gap-6">
+              {scoringSteps.map((step, index) => (
+                <li key={step.title} className="flex gap-4">
+                  {/* The order matters here, so the step earns its number. */}
+                  <span
+                    aria-hidden
+                    className="flex size-11 shrink-0 items-center justify-center bg-stage-assessment font-heading text-lg font-extrabold text-stage-assessment-foreground [clip-path:polygon(50%_0%,100%_25%,100%_75%,50%_100%,0%_75%,0%_25%)]"
+                  >
+                    {index + 1}
+                  </span>
+                  <div className="flex flex-col gap-1 pt-1.5">
+                    <h3 className="text-lg font-bold text-foreground">
+                      {step.title}
+                    </h3>
+                    <p className="text-base text-pretty text-muted-foreground">
+                      {step.body}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+            <p className="mt-8 rounded-2xl bg-stage-assessment-soft px-5 py-4 text-base text-pretty text-foreground">
+              Scores show what you enjoy, not how smart you are. Every major
+              and pathway for your three letters is shown, and none is ranked
+              above another.
+            </p>
+          </BlurFade>
+
+          <BlurFade inView delay={0.12}>
+            <ScoringExample name="Steph" scores={EXAMPLE_SCORES} />
+          </BlurFade>
+        </div>
+      </section>
+
       {/* Final CTA */}
       <section className="mx-auto w-full max-w-6xl px-4 pb-20 sm:px-6">
         <BlurFade inView>
@@ -372,17 +478,6 @@ export default function HomePage() {
               Answer at your own pace. There are no wrong answers, and nobody
               needs to know your name.
             </p>
-            <div className="flex flex-wrap justify-center gap-2">
-              {ctaBadges.map(({ label, icon: Icon }) => (
-                <span
-                  key={label}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-4 py-1.5 text-sm font-semibold text-foreground"
-                >
-                  <Icon className="size-4" aria-hidden />
-                  {label}
-                </span>
-              ))}
-            </div>
             <HeroCta label="Find your path" />
           </div>
         </BlurFade>

@@ -52,12 +52,6 @@ export function ResultsDashboard() {
     <div className="flex flex-1 flex-col bg-background print:bg-white">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-10 sm:px-6">
         <div className="flex flex-col gap-2">
-          <p
-            className="font-heading text-sm font-bold text-primary-strong print:hidden"
-            data-print-hidden
-          >
-            Step 3 of 3 · Your results
-          </p>
           {/* The page's only h1: the cards below are all h2. Before hydration
               (and for a profile with no nickname) it drops the name rather
               than the greeting, so the line never reads half-finished. */}

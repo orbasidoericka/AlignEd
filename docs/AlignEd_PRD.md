@@ -79,6 +79,7 @@ Navigation rules:
 - FR-1.3. Explains the 4-step journey and expected duration (~5 minutes).
 - FR-1.4. Journey-aware CTA: if a completed assessment exists in local storage, the primary CTA becomes "View your results".
 - FR-1.5. Shows the lifetime number of assessments taken, read from an aggregate counter (`site_counters`, key `tests_taken`) incremented once per completion. The figure is cumulative and never decreases: deleting a saved result or purging an expired one does not un-take the test. It is a count only — no identifiers, nothing per student — so it stays inside the anonymous-by-design commitment. When the count cannot be read, nothing is shown; a placeholder or estimate is never substituted.
+- FR-1.6. Explains the scoring procedure in plain language (42 statements, 7 per trait, Yes = 1 point / No = 0, scores 0 to 7, top three form the code, ties broken R→I→A→S→E→C per FR-4.2) with a worked example computed by the real scoring function; reachable from the navbar ("Scoring").
 
 ### FR-2 Student Profile Setup
 Captured before the assessment begins; stored client-side only (localStorage via the persisted store). Only grade level and age ever reach the server, inside the nameless saved-results record (FR-9).
@@ -293,6 +294,7 @@ AlignEd ships as a mostly-static, anonymous-first Next.js application.
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 
+- 2026-11-05 · landing · Added FR-1.6: a plain-language scoring section with a worked example, linked from the navbar. · Students understand how their answers become a code.
 - 2026-11-04 · privacy · "Students under 18" and "Agreeing to these terms" (v2.3) now say a parent or legal guardian should read the notice and tick the box themselves to consent for a minor, since AlignEd has no separate parent account or flow. · User asked this spelled out; same single checkbox, clearer about who is meant to click it.
 - 2026-11-04 · privacy · Terms/Privacy card heading and checkbox link renamed "Data Privacy Policy and Terms and Conditions" (v2.2); removed the "kept for one year" retention claim and the "so you can compare later" purpose from the privacy notice, the About page, the admin page, and the results-saved/not-found copy. The server's one-year row expiry itself is unchanged (FR-9.4, BACKEND.md) — only the user-facing claim about it is gone. · Requested removal of those two claims from the site; the dialog's own title keeps its original word order (not renamed).
 - 2026-11-04 · profile · Added an "Others" strand with a typed strand kept on device and in the student's PDF only (server stores "Others"); Terms and Privacy bumped to v2.1; profile heading is "Tell us about yourself", "Step 1 of 3" and input placeholders removed, consent blurb no longer mentions compare or the retention period. · Students whose strand is not listed can still continue, without free text reaching the server.

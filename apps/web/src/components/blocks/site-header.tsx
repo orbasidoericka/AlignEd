@@ -66,6 +66,7 @@ export function SiteHeader() {
   const items: NavItem[] = [
     { name: "How it works", link: "/#how-it-works" },
     { name: "Six Traits", link: "/#six-traits" },
+    { name: "Scoring", link: "/#scoring" },
   ];
 
   return (

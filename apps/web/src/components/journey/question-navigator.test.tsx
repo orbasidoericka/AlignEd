@@ -26,7 +26,7 @@ function renderNavigator(
       onJump={onJump}
       panelId="grid-panel"
       onHide={vi.fn()}
-      gridOpen={null}
+      gridOpen={false}
       {...props}
     />,
   );
@@ -88,7 +88,7 @@ describe("QuestionNavigator", () => {
         onJump={vi.fn()}
         panelId="grid-panel"
         onHide={vi.fn()}
-        gridOpen={null}
+        gridOpen={false}
       />,
     );
     rerender(
@@ -100,7 +100,7 @@ describe("QuestionNavigator", () => {
         onJump={vi.fn()}
         panelId="grid-panel"
         onHide={vi.fn()}
-        gridOpen={null}
+        gridOpen={false}
       />,
     );
     expect(
@@ -218,11 +218,10 @@ describe("QuestionNavigator", () => {
     expect(onJump).not.toHaveBeenCalled();
   });
 
-  // The runner owns show/hide. Until the student chooses (null) the panel is
-  // shown from lg and hidden below; a choice wins at every width.
-  it("shows the numbers from lg by default, and follows the student's choice", () => {
+  // The runner owns show/hide; the panel starts hidden and follows it.
+  it("shows the numbers panel only while the runner says it is open", () => {
     const panel = () => screen.getByRole("region", { name: "All questions" });
-    const mount = (gridOpen: boolean | null) =>
+    const mount = (gridOpen: boolean) =>
       render(
         <QuestionNavigator
           questions={QUESTIONS}
@@ -231,28 +230,24 @@ describe("QuestionNavigator", () => {
           flagOpen={false}
           onJump={vi.fn()}
           panelId="grid-panel"
-      onHide={vi.fn()}
+          onHide={vi.fn()}
           gridOpen={gridOpen}
         />,
       );
 
-    const unchosen = mount(null);
+    const closed = mount(false);
     expect(panel()).toHaveAttribute("id", "grid-panel");
-    expect(panel()).toHaveClass("hidden", "lg:flex");
+    expect(panel()).toHaveClass("hidden");
+    expect(panel()).not.toHaveClass("flex");
+    expect(panel()).not.toHaveClass("lg:flex"); // hidden at every width
     expect(panel()).toContainElement(
       screen.getByRole("navigation", { name: "Question navigator" }),
     );
-    unchosen.unmount();
+    closed.unmount();
 
-    const shown = mount(true);
+    mount(true);
     expect(panel()).toHaveClass("flex");
     expect(panel()).not.toHaveClass("hidden");
-    shown.unmount();
-
-    mount(false);
-    expect(panel()).toHaveClass("hidden");
-    expect(panel()).not.toHaveClass("flex");
-    expect(panel()).not.toHaveClass("lg:flex");
   });
 
   it("carries no toggle of its own: that lives beside the language switch", () => {

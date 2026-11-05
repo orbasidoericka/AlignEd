@@ -265,11 +265,10 @@ export function QuestionNavigator({
       <section
         id={panelId}
         aria-label="All questions"
-        data-grid={gridOpen === null ? "auto" : gridOpen ? "open" : "closed"}
+        data-grid={gridOpen ? "open" : "closed"}
         className={cn(
           "flex-col gap-4 rounded-3xl bg-card p-4 shadow-bento ring-1 ring-border",
-          // Not chosen yet: shown from lg, hidden below. Chosen: that wins.
-          gridOpen === null ? "hidden lg:flex" : gridOpen ? "flex" : "hidden",
+          gridOpen ? "flex" : "hidden",
           panelClassName,
         )}
       >

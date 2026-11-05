@@ -185,12 +185,11 @@ export function AssessmentRunner() {
   // Set by a finish attempt that found gaps: the navigator then marks every
   // open statement and explains why the quiz can't finish yet.
   const [flagOpen, setFlagOpen] = useState(false);
-  // Show or hide the question numbers. Null until the student chooses: the
-  // numbers then show from lg and stay hidden below it (CSS decides, so the
-  // desktop first paint already has them). Once chosen, the choice wins.
-  const [gridChoice, setGridChoice] = useState<boolean | null>(null);
+  // Show or hide the question numbers. Hidden from the start, at every width:
+  // the student opens them with the toggle beside the language switch, and a
+  // failed finish opens them too.
+  const [gridOpen, setGridOpen] = useState(false);
   const isLarge = useMediaQuery("(min-width: 64rem)");
-  const gridOpen = gridChoice ?? isLarge;
   const gridPanelId = useId();
   // Latched on "See my results" so a double tap can't navigate twice.
   const [submitting, setSubmitting] = useState(false);
@@ -278,7 +277,7 @@ export function AssessmentRunner() {
     }
     setFlagOpen(true);
     // The notice names the open numbers, so show them beside it.
-    setGridChoice(true);
+    setGridOpen(true);
     if (firstOpen === index) {
       // No statement change to trigger the focus effect, so move focus here:
       // it lands the student on the gap and lets the notice be announced.
@@ -448,7 +447,7 @@ export function AssessmentRunner() {
     if (firstOpen !== -1) {
       setFinishing(false);
       setFlagOpen(true);
-      setGridChoice(true);
+      setGridOpen(true);
       moveTo(firstOpen);
       return;
     }
@@ -493,7 +492,7 @@ export function AssessmentRunner() {
           area's widened clip box (below) can never sit over them and swallow
           their clicks. */}
       <div
-        data-grid={gridChoice === null ? "auto" : gridChoice ? "open" : "closed"}
+        data-grid={gridOpen ? "open" : "closed"}
         className="mx-auto grid w-full max-w-2xl flex-1 grid-cols-1 grid-rows-[auto_auto_1fr] gap-6 px-4 py-8 lg:max-w-5xl lg:grid-cols-[minmax(0,1fr)_19rem] lg:grid-rows-[auto_1fr] lg:gap-x-12 lg:data-[grid=closed]:max-w-2xl lg:data-[grid=closed]:grid-cols-1"
       >
         <QuestionNavigator
@@ -506,11 +505,11 @@ export function AssessmentRunner() {
             moveTo(target);
             // Below lg the panel covers the statement: fold it away once a
             // number is chosen. Docked beside the statement, it stays.
-            if (!isLarge) setGridChoice(false);
+            if (!isLarge) setGridOpen(false);
           }}
           panelId={gridPanelId}
-          onHide={() => setGridChoice(false)}
-          gridOpen={gridChoice}
+          onHide={() => setGridOpen(false)}
+          gridOpen={gridOpen}
           progressClassName="relative z-10 lg:col-span-full"
           panelClassName="relative z-10 lg:col-start-2 lg:row-start-2 lg:self-center"
         />
@@ -555,7 +554,7 @@ export function AssessmentRunner() {
                 <div className="flex flex-wrap items-center gap-2">
                   <QuestionGridToggle
                     open={gridOpen}
-                    onToggle={() => setGridChoice(!gridOpen)}
+                    onToggle={() => setGridOpen(!gridOpen)}
                     controls={gridPanelId}
                     disabled={isBlocked}
                   />
