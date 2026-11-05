@@ -13,6 +13,7 @@ import {
   POSE_RIGHT_SHOULDER,
   RIGHT_EYE_CORNERS,
   smoothAnchor,
+  smoothingAmount,
   toFaceSpace,
   type Landmark,
 } from "./face-anchor";
@@ -39,6 +40,21 @@ describe("computeFaceAnchor", () => {
     expect(anchor).not.toBeNull();
     expect(anchor!.x).toBeCloseTo(500);
     expect(anchor!.y).toBeCloseTo(100);
+    expect(anchor!.width).toBeCloseTo(200);
+    expect(anchor!.angle).toBeCloseTo(0);
+  });
+
+  it("keeps its size when the head turns to the side", () => {
+    // Turned: the cheeks are closer on screen but one is deeper.
+    const anchor = computeFaceAnchor(
+      face({
+        [FOREHEAD_TOP]: { x: 0.5, y: 0.2 },
+        [FACE_EDGE_RIGHT]: { x: 0.42, y: 0.4, z: -0.06 },
+        [FACE_EDGE_LEFT]: { x: 0.58, y: 0.4, z: 0.06 },
+      }),
+      1000,
+      500,
+    );
     expect(anchor!.width).toBeCloseTo(200);
     expect(anchor!.angle).toBeCloseTo(0);
   });
@@ -224,5 +240,40 @@ describe("smoothAnchor", () => {
       0.5,
     );
     expect(Math.abs(Math.cos(smoothed.angle) + 1)).toBeLessThan(1e-6);
+  });
+});
+
+describe("smoothingAmount", () => {
+  const eyes = {
+    eyeY: 0.5,
+    chinY: 1.2,
+    rightEye: { x: -0.2, y: 0.5 },
+    leftEye: { x: 0.2, y: 0.5 },
+    eyeSize: 0.2,
+  };
+  const still = { x: 0, y: 0, angle: 0, width: 100, ...eyes };
+  const frame = 1 / 30;
+
+  it("smooths a still head hard and follows a moving one closely", () => {
+    const jitter = smoothingAmount(still, { ...still, x: 0.5 }, frame);
+    const moving = smoothingAmount(still, { ...still, x: 20 }, frame);
+    expect(jitter).toBeLessThan(0.3);
+    expect(moving).toBeGreaterThan(0.6);
+  });
+
+  it("reads speed in face widths, so distance from the camera does not matter", () => {
+    const near = smoothingAmount(still, { ...still, x: 10 }, frame);
+    const far = smoothingAmount(
+      { ...still, width: 50 },
+      { ...still, width: 50, x: 5 },
+      frame,
+    );
+    expect(near).toBeCloseTo(far);
+  });
+
+  it("moves further per reading when readings arrive less often", () => {
+    const fast = smoothingAmount(still, { ...still, x: 0.5 }, 1 / 60);
+    const slow = smoothingAmount(still, { ...still, x: 1 }, 1 / 15);
+    expect(slow).toBeGreaterThan(fast);
   });
 });

@@ -87,7 +87,7 @@ function floating(
   ctx.restore();
 }
 
-function heart(
+export function heart(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
@@ -188,76 +188,6 @@ function drawBridge(
 }
 
 // ---------------------------------------------------------------------------
-// Clothing: jackets and coats that dress the body below the face.
-
-// Where a jacket's shoulder seams sit in its own design: a little inside
-// its outer edge (±1.25), matching the pose tracker's shoulder joints, and
-// this far below the collar line.
-const BODY_SHOULDER_X = 1.15;
-const BODY_SHOULDER_DROP = 0.5;
-
-// Clothing is designed hanging from the chin with shoulders at about
-// ±1.15 face widths (a typical build). When the pose tracker sees the real
-// shoulders, this moves, scales and turns the canvas so the design's
-// shoulders land exactly on them; otherwise it leaves the design as is.
-function fitToBody(ctx: CanvasRenderingContext2D, face: FaceShape, top: number) {
-  if (!face.shoulders) return;
-  const from1 = { x: -BODY_SHOULDER_X, y: top + BODY_SHOULDER_DROP };
-  const from2 = { x: BODY_SHOULDER_X, y: top + BODY_SHOULDER_DROP };
-  const { near: to1, far: to2 } = face.shoulders;
-  const fromLength = Math.hypot(from2.x - from1.x, from2.y - from1.y);
-  const toLength = Math.hypot(to2.x - to1.x, to2.y - to1.y);
-  if (toLength === 0) return;
-  const turn =
-    Math.atan2(to2.y - to1.y, to2.x - to1.x) -
-    Math.atan2(from2.y - from1.y, from2.x - from1.x);
-  const scale = toLength / fromLength;
-  ctx.translate((to1.x + to2.x) / 2, (to1.y + to2.y) / 2);
-  ctx.rotate(turn);
-  ctx.scale(scale, scale);
-  ctx.translate(-(from1.x + from2.x) / 2, -(from1.y + from2.y) / 2);
-}
-
-// Jacket or coat body with a V opening at the front, `vDepth` deep and
-// `vHalf` wide at the collar. Fill with "evenodd" so the V is a hole that
-// shows the shirt beneath.
-function jacketPath(top: number, vHalf: number, vDepth: number): Path2D {
-  const path = new Path2D();
-  path.moveTo(-vHalf, top);
-  path.bezierCurveTo(-0.6, top + 0.05, -1.05, top + 0.2, -1.25, top + 0.55);
-  path.lineTo(-1.45, top + 3.2);
-  path.lineTo(1.45, top + 3.2);
-  path.lineTo(1.25, top + 0.55);
-  path.bezierCurveTo(1.05, top + 0.2, 0.6, top + 0.05, vHalf, top);
-  path.closePath();
-  path.moveTo(-vHalf, top);
-  path.lineTo(0, top + vDepth);
-  path.lineTo(vHalf, top);
-  path.closePath();
-  return path;
-}
-
-// Notched lapels along each edge of the V, in the current fill and stroke.
-function drawLapels(
-  ctx: CanvasRenderingContext2D,
-  top: number,
-  vHalf: number,
-  vDepth: number,
-) {
-  for (const side of [-1, 1]) {
-    ctx.beginPath();
-    ctx.moveTo(side * vHalf, top);
-    ctx.lineTo(side * 0.55, top + 0.08);
-    ctx.lineTo(side * 0.6, top + 0.5);
-    ctx.lineTo(side * 0.46, top + 0.56);
-    ctx.lineTo(0, top + vDepth);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-  }
-}
-
-// ---------------------------------------------------------------------------
 // R: Realistic, Engineering
 
 function drawHardHat(ctx: CanvasRenderingContext2D) {
@@ -316,111 +246,124 @@ function drawHardHat(ctx: CanvasRenderingContext2D) {
 
 // ---------------------------------------------------------------------------
 // I: Investigative, Chemistry and Medicine
-
-// Lab coat scientist: white coat fitted to the shoulders, safety goggles
-// pushed up on the forehead (clear of the eyes and any real glasses), and
-// a bubbling flask floating beside the head.
-function drawLabCoat(
+// Scientist: one-piece safety goggles worn over the eyes (a clear tinted
+// shield in a chunky frame, with a strap round the head), a DNA helix
+// twisting on one side of the head and a bubbling flask on the other.
+// Face-only, so it never needs the body tracker.
+function drawGoggles(
   ctx: CanvasRenderingContext2D,
   face: FaceShape,
   time: number,
 ) {
-  // --- Coat, fitted to the body ---
-  const top = face.chinY + 0.1;
-  const vHalf = 0.34;
-  const vDepth = 1.25;
+  // --- Goggles, over the eyes ---
+  const layout = eyewearLayout(face, 1.8, 1.3);
+  const [near, far] = layout.lenses;
+  const pad = face.eyeSize * 0.85;
+  const left = near.x - pad;
+  const right = far.x + pad;
+  const midX = (near.x + far.x) / 2;
+  const cy = (near.y + far.y) / 2;
+  const h = face.eyeSize * 1.75;
+  const top = cy - h * 0.5;
+  const bottom = cy + h * 0.5;
+  const r = h * 0.38;
+  const noseHalf = face.eyeSize * 0.4;
+  const noseRise = h * 0.38;
 
-  ctx.save();
-  fitToBody(ctx, face, top);
+  const shield = new Path2D();
+  shield.moveTo(left + r, top);
+  shield.lineTo(right - r, top);
+  shield.quadraticCurveTo(right, top, right, top + r);
+  shield.lineTo(right, bottom - r);
+  shield.quadraticCurveTo(right, bottom, right - r, bottom);
+  shield.lineTo(midX + noseHalf, bottom);
+  shield.bezierCurveTo(
+    midX + noseHalf * 0.5,
+    bottom - noseRise,
+    midX - noseHalf * 0.5,
+    bottom - noseRise,
+    midX - noseHalf,
+    bottom,
+  );
+  shield.lineTo(left + r, bottom);
+  shield.quadraticCurveTo(left, bottom, left, bottom - r);
+  shield.lineTo(left, top + r);
+  shield.quadraticCurveTo(left, top, left + r, top);
+  shield.closePath();
 
-  // Light blue shirt in the coat's opening, with its collar points.
-  outline(ctx, "#74a9d8", 0.012);
-  ctx.fillStyle = "#a5d8ff";
-  ctx.beginPath();
-  ctx.moveTo(-vHalf - 0.02, top - 0.02);
-  ctx.lineTo(0, top + vDepth + 0.05);
-  ctx.lineTo(vHalf + 0.02, top - 0.02);
-  ctx.closePath();
-  ctx.fill();
-  ctx.fillStyle = "#d0ebff";
-  for (const side of [-1, 1]) {
-    ctx.beginPath();
-    ctx.moveTo(side * 0.03, top - 0.02);
-    ctx.lineTo(side * 0.28, top - 0.06);
-    ctx.lineTo(side * 0.16, top + 0.18);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-  }
-
-  // White coat and lapels.
-  const cloth = ctx.createLinearGradient(0, top, 0, top + 2.5);
-  cloth.addColorStop(0, "#ffffff");
-  cloth.addColorStop(1, "#e9ecef");
-  ctx.fillStyle = cloth;
-  const coat = jacketPath(top, vHalf, vDepth);
-  ctx.fill(coat, "evenodd");
-  outline(ctx, "#a4acb5", 0.016);
-  ctx.stroke(coat);
-  ctx.fillStyle = "#f8f9fa";
-  drawLapels(ctx, top, vHalf, vDepth);
-
-  // Buttons down the front.
-  outline(ctx, "#a4acb5", 0.01);
-  circle(ctx, 0, top + vDepth + 0.15, 0.04, "#f1f3f5");
-  circle(ctx, 0, top + vDepth + 0.5, 0.04, "#f1f3f5");
-
-  // Chest pocket with a blue and a red pen clipped in it.
-  const pens: [number, string][] = [
-    [0.64, "#1c7ed6"],
-    [0.74, "#e03131"],
-  ];
-  for (const [x, color] of pens) {
-    outline(ctx, "#343a40", 0.008);
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    ctx.roundRect(x - 0.025, top + 0.72, 0.05, 0.28, 0.02);
-    ctx.fill();
-    ctx.stroke();
-    ctx.fillStyle = "#ced4da";
-    ctx.fillRect(x - 0.008, top + 0.74, 0.016, 0.12);
-  }
-  outline(ctx, "#a4acb5", 0.014);
-  ctx.fillStyle = "#f8f9fa";
-  ctx.beginPath();
-  ctx.roundRect(0.52, top + 0.88, 0.36, 0.3, 0.02);
-  ctx.fill();
-  ctx.stroke();
-  ctx.restore();
-
-  // --- Goggles, pushed up onto the forehead ---
-  const worn = eyewearLayout(face, 1.8, 1.3);
-  const foreheadY = face.eyeY * 0.3;
-  const goggles: EyewearLayout = {
-    ...worn,
-    h: worn.h * 0.8,
-    lenses: [
-      { x: worn.lenses[0].x, y: foreheadY },
-      { x: worn.lenses[1].x, y: foreheadY },
-    ],
-  };
-  outline(ctx, "#1f5f6e", goggles.h * 0.3);
+  // Strap, behind the frame, out to the sides of the head.
+  outline(ctx, "#1f5f6e", h * 0.32);
   ctx.lineCap = "butt";
-  drawSides(ctx, goggles, 0);
-  outline(ctx, "#123f49", 0.03);
-  drawBridge(ctx, goggles, 0.01);
-  ctx.fillStyle = "rgba(190, 235, 255, 0.45)";
-  drawLenses(ctx, goggles, goggles.h * 0.4);
-  ctx.strokeStyle = "rgba(255, 255, 255, 0.9)";
-  ctx.lineWidth = 0.018;
-  for (const eye of goggles.lenses) {
-    const left = eye.x - goggles.w / 2;
-    const lensTop = eye.y - goggles.h / 2;
+  ctx.beginPath();
+  ctx.moveTo(left + 0.01, cy);
+  ctx.lineTo(layout.sideX[0], cy - 0.02);
+  ctx.moveTo(right - 0.01, cy);
+  ctx.lineTo(layout.sideX[1], cy - 0.02);
+  ctx.stroke();
+
+  // Clear, lightly tinted shield so the eyes still show.
+  ctx.fillStyle = "rgba(190, 235, 255, 0.32)";
+  ctx.fill(shield);
+
+  // Chunky frame: a dark rim with a lighter inner edge.
+  outline(ctx, "#123f49", 0.065);
+  ctx.stroke(shield);
+  outline(ctx, "#3fb6c9", 0.025);
+  ctx.stroke(shield);
+
+  // Vents along the top of the frame.
+  ctx.fillStyle = "#0b2a31";
+  for (const t of [0.22, 0.36, 0.64, 0.78]) {
     ctx.beginPath();
-    ctx.moveTo(left + goggles.w * 0.18, lensTop + goggles.h * 0.45);
-    ctx.lineTo(left + goggles.w * 0.35, lensTop + goggles.h * 0.22);
+    ctx.arc(left + (right - left) * t, top, 0.012, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Glare streaks on each side of the shield.
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.85)";
+  ctx.lineWidth = 0.018;
+  for (const x of [near.x, far.x]) {
+    ctx.beginPath();
+    ctx.moveTo(x - layout.w * 0.45, cy + h * 0.05);
+    ctx.lineTo(x - layout.w * 0.2, cy - h * 0.25);
     ctx.stroke();
   }
+
+  // --- DNA helix twisting beside the head, image left ---
+  const dx = -1;
+  const dy = -0.3 + bob(time, 2);
+  floating(ctx, dx, dy, 1.15, () => {
+    const steps = 9;
+    const span = 0.5;
+    const amp = 0.11;
+    const turn = time * 1.6;
+    const strand = (phase: number) => {
+      ctx.beginPath();
+      for (let i = 0; i <= 40; i++) {
+        const t = i / 40;
+        const x = dx + Math.sin(t * Math.PI * 2 + turn + phase) * amp;
+        const y = dy - span / 2 + t * span;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    };
+    // Rungs between the strands.
+    outline(ctx, "#ced4da", 0.014);
+    for (let i = 1; i < steps; i++) {
+      const t = i / steps;
+      const a = t * Math.PI * 2 + turn;
+      const y = dy - span / 2 + t * span;
+      ctx.beginPath();
+      ctx.moveTo(dx + Math.sin(a) * amp, y);
+      ctx.lineTo(dx + Math.sin(a + Math.PI) * amp, y);
+      ctx.stroke();
+    }
+    outline(ctx, "#2192ff", 0.03);
+    strand(0);
+    outline(ctx, "#be4bdb", 0.03);
+    strand(Math.PI);
+  });
 
   // --- Bubbling flask beside the head ---
   const fx = 1;
@@ -661,110 +604,61 @@ function drawCounselor(
 // ---------------------------------------------------------------------------
 // E: Enterprising, Business and Law
 
-// Full suit over the student's own clothes, fitted to their shoulders (see
-// fitToBody). It runs off the bottom of the frame on purpose.
-function drawSuit(ctx: CanvasRenderingContext2D, face: FaceShape, time: number) {
-  const top = face.chinY + 0.1; // collar line, just below the chin
-  const vDepth = 1.5; // jacket opening, collar to top button
-  const vHalf = 0.3; // half the opening's width at the collar
+// Presenter's headset for pitching and leading a room: a band over the
+// head, ear cups at the sides of the face and a mic boom reaching to the
+// mouth. Everything hangs off the face, so it never needs the body tracker.
+// A briefcase and a rising bar chart float either side of the head.
+function drawHeadset(
+  ctx: CanvasRenderingContext2D,
+  face: FaceShape,
+  time: number,
+) {
+  const earY = face.eyeY + 0.12;
+  const cupX = 0.53;
+  const mouthY = face.eyeY + (face.chinY - face.eyeY) * 0.62;
 
-  ctx.save();
-  fitToBody(ctx, face, top);
-
-  // Shirt, filling the jacket's opening.
-  outline(ctx, "#adb5bd", 0.012);
-  ctx.fillStyle = "#f8f9fa";
+  // Band over the top of the head, from cup to cup.
+  outline(ctx, "#151a24", 0.07);
   ctx.beginPath();
-  ctx.moveTo(-vHalf - 0.02, top - 0.02);
-  ctx.lineTo(0, top + vDepth + 0.05);
-  ctx.lineTo(vHalf + 0.02, top - 0.02);
-  ctx.closePath();
+  ctx.moveTo(-cupX, earY - 0.08);
+  ctx.bezierCurveTo(-0.62, -0.42, 0.62, -0.42, cupX, earY - 0.08);
+  ctx.stroke();
+  outline(ctx, "#4d5b75", 0.03);
+  ctx.stroke();
+
+  // Mic boom from the image-left cup round to the corner of the mouth.
+  const tipX = -0.13;
+  outline(ctx, "#151a24", 0.03);
+  ctx.beginPath();
+  ctx.moveTo(-cupX, earY + 0.05);
+  ctx.quadraticCurveTo(-0.5, mouthY + 0.02, tipX, mouthY);
+  ctx.stroke();
+  outline(ctx, "#0b0e14", 0.012);
+  ctx.fillStyle = "#2b3345";
+  ctx.beginPath();
+  ctx.ellipse(tipX, mouthY, 0.065, 0.045, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = "#e03131";
+  ctx.beginPath();
+  ctx.arc(tipX + 0.03, mouthY - 0.012, 0.012, 0, Math.PI * 2);
   ctx.fill();
 
-  // Shirt collar points either side of the knot.
-  ctx.fillStyle = "#ffffff";
+  // Ear cups, drawn over the band and boom ends.
   for (const side of [-1, 1]) {
+    outline(ctx, "#0b0e14", 0.014);
+    ctx.fillStyle = "#2b3345";
     ctx.beginPath();
-    ctx.moveTo(side * 0.03, top - 0.02);
-    ctx.lineTo(side * 0.26, top - 0.06);
-    ctx.lineTo(side * 0.15, top + 0.18);
-    ctx.closePath();
+    ctx.roundRect(side * cupX - 0.075, earY - 0.13, 0.15, 0.26, 0.07);
     ctx.fill();
     ctx.stroke();
-  }
-
-  // Tie: blade, then the knot on top. Burgundy so it stands out against
-  // the dark jacket.
-  outline(ctx, "#4a0d16", 0.014);
-  const tie = new Path2D();
-  tie.moveTo(-0.08, top + 0.12);
-  tie.lineTo(0.08, top + 0.12);
-  tie.lineTo(0.13, top + 1.05);
-  tie.lineTo(0, top + 1.2);
-  tie.lineTo(-0.13, top + 1.05);
-  tie.closePath();
-  ctx.fillStyle = "#9c1c2e";
-  ctx.fill(tie);
-  ctx.save();
-  ctx.clip(tie);
-  ctx.strokeStyle = "#f2c94c";
-  ctx.lineWidth = 0.025;
-  for (let y = top + 0.1; y < top + 1.3; y += 0.14) {
+    ctx.fillStyle = "#2192ff";
     ctx.beginPath();
-    ctx.moveTo(-0.2, y);
-    ctx.lineTo(0.2, y + 0.12);
-    ctx.stroke();
+    ctx.roundRect(side * cupX - 0.035, earY - 0.08, 0.07, 0.16, 0.035);
+    ctx.fill();
   }
-  ctx.restore();
-  ctx.stroke(tie);
 
-  ctx.fillStyle = "#7d1624";
-  ctx.beginPath();
-  ctx.moveTo(-0.08, top);
-  ctx.lineTo(0.08, top);
-  ctx.lineTo(0.06, top + 0.13);
-  ctx.lineTo(-0.06, top + 0.13);
-  ctx.closePath();
-  ctx.fill();
-  ctx.stroke();
-
-  // Jacket over the tie's edges, as a real jacket sits over the tie.
-  const cloth = ctx.createLinearGradient(0, top, 0, top + 2.5);
-  cloth.addColorStop(0, "#3a4458");
-  cloth.addColorStop(1, "#232a38");
-  ctx.fillStyle = cloth;
-  const jacket = jacketPath(top, vHalf, vDepth);
-  ctx.fill(jacket, "evenodd");
-  outline(ctx, "#151a24", 0.016);
-  ctx.stroke(jacket);
-  ctx.fillStyle = "#434e64";
-  drawLapels(ctx, top, vHalf, vDepth);
-
-  // Buttons below the opening.
-  outline(ctx, "#0b0e14", 0.01);
-  circle(ctx, 0, top + vDepth + 0.12, 0.045, "#1b202b");
-  circle(ctx, 0, top + vDepth + 0.42, 0.045, "#1b202b");
-
-  // Breast pocket with a white pocket square.
-  outline(ctx, "#151a24", 0.014);
-  ctx.beginPath();
-  ctx.moveTo(0.55, top + 0.95);
-  ctx.lineTo(0.9, top + 0.92);
-  ctx.stroke();
-  outline(ctx, "#ced4da", 0.01);
-  ctx.fillStyle = "#ffffff";
-  ctx.beginPath();
-  ctx.moveTo(0.6, top + 0.945);
-  ctx.lineTo(0.66, top + 0.84);
-  ctx.lineTo(0.73, top + 0.9);
-  ctx.lineTo(0.8, top + 0.82);
-  ctx.lineTo(0.85, top + 0.925);
-  ctx.closePath();
-  ctx.fill();
-  ctx.stroke();
-  ctx.restore();
-
-  // Briefcase floating beside the head.
+  // Briefcase floating beside the head, image right.
   const bx = 1.02;
   const by = bob(time, 1);
   floating(ctx, bx, by, 1.5, () => {
@@ -784,6 +678,42 @@ function drawSuit(ctx: CanvasRenderingContext2D, face: FaceShape, time: number) 
     ctx.stroke();
     ctx.fillStyle = "#f2c94c";
     ctx.fillRect(bx - 0.03, by - 0.05, 0.06, 0.06);
+  });
+
+  // Rising bar chart with an arrow, image left.
+  const cx = -1.02;
+  const cy = bob(time, 3);
+  floating(ctx, cx, cy, 1.5, () => {
+    outline(ctx, "#1b5e20", 0.012);
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath();
+    ctx.roundRect(cx - 0.22, cy - 0.2, 0.44, 0.38, 0.04);
+    ctx.fill();
+    ctx.stroke();
+    const bars: [number, number][] = [
+      [-0.13, 0.1],
+      [-0.02, 0.18],
+      [0.09, 0.27],
+    ];
+    ctx.fillStyle = "#38e54d";
+    for (const [x, h] of bars) {
+      ctx.beginPath();
+      ctx.rect(cx + x - 0.035, cy + 0.12 - h, 0.07, h);
+      ctx.fill();
+      ctx.stroke();
+    }
+    outline(ctx, "#1b5e20", 0.02);
+    ctx.beginPath();
+    ctx.moveTo(cx - 0.16, cy + 0.0);
+    ctx.lineTo(cx + 0.14, cy - 0.15);
+    ctx.stroke();
+    ctx.fillStyle = "#1b5e20";
+    ctx.beginPath();
+    ctx.moveTo(cx + 0.17, cy - 0.17);
+    ctx.lineTo(cx + 0.08, cy - 0.17);
+    ctx.lineTo(cx + 0.15, cy - 0.09);
+    ctx.closePath();
+    ctx.fill();
   });
 }
 
@@ -887,9 +817,8 @@ export const CAREER_LOOKS: Readonly<Record<RiasecLetter, CareerLook>> = {
   I: {
     letter: "I",
     caption: youAre("I"),
-    propsLabel: "a lab coat and goggles",
-    draw: drawLabCoat,
-    usesBody: true,
+    propsLabel: "safety goggles",
+    draw: drawGoggles,
   },
   A: {
     letter: "A",
@@ -906,9 +835,8 @@ export const CAREER_LOOKS: Readonly<Record<RiasecLetter, CareerLook>> = {
   E: {
     letter: "E",
     caption: youAre("E"),
-    propsLabel: "a suit and tie",
-    draw: drawSuit,
-    usesBody: true,
+    propsLabel: "a headset mic",
+    draw: drawHeadset,
   },
   C: {
     letter: "C",

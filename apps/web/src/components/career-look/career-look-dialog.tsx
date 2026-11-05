@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import type {
   FaceLandmarker,
   FilesetResolver,
+  GestureRecognizer,
   PoseLandmarker,
 } from "@mediapipe/tasks-vision";
 import {
@@ -29,11 +30,17 @@ import {
   computeFaceAnchor,
   computeShoulders,
   smoothAnchor,
+  smoothingAmount,
   smoothShoulders,
   toFaceSpace,
   type FaceAnchor,
   type Shoulders,
 } from "@/lib/career-look/face-anchor";
+import { drawEffects, spawnEffect, type Effect } from "@/lib/career-look/effects";
+import {
+  createSignDetector,
+  type HandReading,
+} from "@/lib/career-look/hand-signs";
 import { CAREER_LOOKS, type CareerLook } from "@/lib/career-look/looks";
 import { useCareerLookPhoto } from "@/lib/career-look/photo-store";
 import { RIASEC_PATHWAYS } from "@/lib/riasec/career-pathways";
@@ -49,12 +56,23 @@ import { cn } from "@/lib/utils";
 //
 // MediaPipe (~3.7 MB face model + WASM, self-hosted under /mediapipe) is
 // imported only once the dialog opens, so the results page pays nothing for
-// it. The pose model (~5.8 MB) loads only when a look that dresses the body
-// is picked.
+// it. The hand-sign model (~8.4 MB) loads once the face is tracked, for the
+// sign effects; the pose model (~5.8 MB) only when a look that dresses the
+// body is picked.
 
 const WASM_PATH = "/mediapipe/wasm";
 const MODEL_PATH = "/mediapipe/face_landmarker.task";
 const POSE_MODEL_PATH = "/mediapipe/pose_landmarker_lite.task";
+const GESTURE_MODEL_PATH = "/mediapipe/gesture_recognizer.task";
+
+// Hand signs are read on every third camera frame: plenty for a held sign
+// or a wave, at a third of the cost on a budget phone.
+const HAND_EVERY = 3;
+
+// How long the props stay put after the tracker loses the face or the
+// shoulders, before they are taken off.
+const FACE_HOLD_MS = 300;
+const SHOULDERS_HOLD_MS = 500;
 
 // MediaPipe does not export this type, only the function that returns it.
 type WasmFileset = Awaited<
@@ -153,6 +171,7 @@ function CareerLookCamera({ look }: { look: CareerLook }) {
   }, [look]);
   const [status, setStatus] = useState<Status>({ kind: "starting" });
   const [attempt, setAttempt] = useState(0);
+  const [handsReady, setHandsReady] = useState(false);
   const [photo, setPhoto] = useState<{ url: string; file: File } | null>(
     null,
   );
@@ -166,6 +185,24 @@ function CareerLookCamera({ look }: { look: CareerLook }) {
     let anchor: FaceAnchor | null = null;
     let faceFound = false;
     let lastVideoTime = -1;
+    // When each tracker last saw its target, in ms. A missed frame or two
+    // (a hand across the face, motion blur) keeps the last position instead
+    // of blinking the props off and flashing the "look at the camera" hint.
+    let faceSeenAt = 0;
+    let shouldersSeenAt = 0;
+    let detectedAt = 0;
+    let poseTurn = false;
+    // Read once: getComputedStyle every frame forces a style recalculation.
+    let fontFamily: string | null = null;
+    // Hand signs and the bursts they set off. Effects are decoration, so
+    // under reduced motion each is one still icon that fades.
+    let hands: GestureRecognizer | null = null;
+    let handFrame = 0;
+    const detectSigns = createSignDetector();
+    let effects: Effect[] = [];
+    const reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
     const restoreConsole = filterInfoLogs();
 
     // Pose tracker for looks that dress the body. Loaded the first time
@@ -197,6 +234,34 @@ function CareerLookCamera({ look }: { look: CareerLook }) {
         });
     };
 
+    // Loaded once the face is tracked. If it cannot load, the looks work as
+    // before, just without the sign effects.
+    const loadHands = () => {
+      if (!vision || !fileset) return;
+      const tasks = vision;
+      const files = fileset;
+      const options = (delegate: "GPU" | "CPU") => ({
+        baseOptions: { modelAssetPath: GESTURE_MODEL_PATH, delegate },
+        runningMode: "VIDEO" as const,
+        numHands: 2,
+      });
+      tasks.GestureRecognizer.createFromOptions(files, options("GPU"))
+        .catch(() =>
+          tasks.GestureRecognizer.createFromOptions(files, options("CPU")),
+        )
+        .then((created) => {
+          if (cancelled) {
+            created.close();
+            return;
+          }
+          hands = created;
+          setHandsReady(true);
+        })
+        .catch((error: unknown) => {
+          console.warn("Hand signs unavailable:", error);
+        });
+    };
+
     const render = () => {
       const video = videoRef.current;
       const canvas = canvasRef.current;
@@ -211,33 +276,89 @@ function CareerLookCamera({ look }: { look: CareerLook }) {
 
         if (video.currentTime !== lastVideoTime) {
           lastVideoTime = video.currentTime;
-          const result = landmarker.detectForVideo(video, performance.now());
+          const now = performance.now();
+          const seconds = detectedAt ? (now - detectedAt) / 1000 : 0;
+          detectedAt = now;
+
+          const result = landmarker.detectForVideo(video, now);
           const face = result.faceLandmarks[0];
           const next = face ? computeFaceAnchor(face, width, height) : null;
-          anchor = next ? smoothAnchor(anchor, next) : null;
+          if (next) {
+            faceSeenAt = now;
+            anchor = anchor
+              ? smoothAnchor(anchor, next, smoothingAmount(anchor, next, seconds))
+              : next;
+          } else if (now - faceSeenAt > FACE_HOLD_MS) {
+            anchor = null;
+          }
           if (Boolean(anchor) !== faceFound) {
             faceFound = Boolean(anchor);
             setStatus({ kind: "live", faceFound });
           }
 
-          // Shoulders, only while a look that dresses the body is on.
+          // Shoulders, only while a look that dresses the body is on. They
+          // move slower than a head, so the pose model runs every other
+          // frame, which halves its cost on a budget phone.
           const wantsBody = lookRef.current.usesBody === true;
           if (wantsBody && !pose) loadPose();
-          if (wantsBody && pose) {
-            const bodyResult = pose.detectForVideo(video, performance.now());
-            const body = bodyResult.landmarks[0];
+          poseTurn = !poseTurn;
+          if (wantsBody && pose && poseTurn) {
+            const body = pose.detectForVideo(video, now).landmarks[0];
             const nextShoulders = body
               ? computeShoulders(body, width, height)
               : null;
-            shoulders = nextShoulders
-              ? smoothShoulders(shoulders, nextShoulders)
-              : null;
-          } else {
+            if (nextShoulders) {
+              shouldersSeenAt = now;
+              shoulders = smoothShoulders(shoulders, nextShoulders);
+            } else if (now - shouldersSeenAt > SHOULDERS_HOLD_MS) {
+              shoulders = null;
+            }
+          } else if (!wantsBody) {
             shoulders = null;
+          }
+
+          handFrame = (handFrame + 1) % HAND_EVERY;
+          if (hands && handFrame === 0) {
+            const result = hands.recognizeForVideo(video, now);
+            const readings: HandReading[] = [];
+            result.landmarks.forEach((points, i) => {
+              const top = result.gestures[i]?.[0];
+              // Palm centre: between the wrist and the middle knuckle.
+              const wrist = points[0];
+              const knuckle = points[9];
+              if (!top || !wrist || !knuckle) return;
+              readings.push({
+                gesture: top.categoryName,
+                score: top.score,
+                at: { x: (wrist.x + knuckle.x) / 2, y: (wrist.y + knuckle.y) / 2 },
+              });
+            });
+            const size = anchor?.width ?? width * 0.2;
+            for (const fired of detectSigns(readings, now)) {
+              effects.push(
+                spawnEffect(
+                  fired.sign,
+                  lookRef.current.letter,
+                  { x: fired.at.x * width, y: fired.at.y * height },
+                  size,
+                  now,
+                  reducedMotion,
+                ),
+              );
+            }
           }
         }
 
-        drawFrame(ctx, video, anchor, lookRef.current, shoulders);
+        fontFamily ??= getComputedStyle(canvas).fontFamily || "sans-serif";
+        effects = drawFrame(
+          ctx,
+          video,
+          anchor,
+          lookRef.current,
+          shoulders,
+          fontFamily,
+          effects,
+        );
       }
       frame = requestAnimationFrame(render);
     };
@@ -291,6 +412,7 @@ function CareerLookCamera({ look }: { look: CareerLook }) {
       landmarker = created;
       setStatus({ kind: "live", faceFound: false });
       frame = requestAnimationFrame(render);
+      loadHands();
     }
 
     start().catch((error: unknown) => {
@@ -307,6 +429,7 @@ function CareerLookCamera({ look }: { look: CareerLook }) {
       stream?.getTracks().forEach((track) => track.stop());
       landmarker?.close();
       pose?.close();
+      hands?.close();
       restoreConsole();
     };
   }, [attempt]);
@@ -396,6 +519,12 @@ function CareerLookCamera({ look }: { look: CareerLook }) {
         )}
         <CameraOverlay status={status} look={look} hidden={photo !== null} />
       </div>
+
+      {handsReady && live && !photo && (
+        <p className="-mt-2 text-center text-sm text-muted-foreground">
+          Try a wave, thumbs up, peace sign or the I-love-you sign.
+        </p>
+      )}
 
       {status.kind === "error" ? (
         <Button
@@ -494,7 +623,9 @@ function drawFrame(
   anchor: FaceAnchor | null,
   look: CareerLook,
   shoulders: Shoulders | null,
-) {
+  fontFamily: string,
+  effects: readonly Effect[],
+): Effect[] {
   const { width, height } = ctx.canvas;
 
   // Mirrored like a selfie camera. Landmarks are in the unmirrored frame,
@@ -516,15 +647,21 @@ function drawFrame(
     look.draw(ctx, face, performance.now() / 1000);
     ctx.restore();
   }
+  // Sign bursts over the look, under the same mirror as the hands.
+  const live = drawEffects(ctx, effects, performance.now());
   ctx.setTransform(1, 0, 0, 1, 0, 0);
-  drawBanner(ctx, look.caption);
+  drawBanner(ctx, look.caption, fontFamily);
+  return live;
 }
 
 // Caption pill along the bottom edge, drawn unmirrored so it stays legible
 // in the saved photo.
-function drawBanner(ctx: CanvasRenderingContext2D, caption: string) {
+function drawBanner(
+  ctx: CanvasRenderingContext2D,
+  caption: string,
+  family: string,
+) {
   const { width, height } = ctx.canvas;
-  const family = getComputedStyle(ctx.canvas).fontFamily || "sans-serif";
   const text = `${caption} · AlignEd`;
 
   // Shrink long captions to fit: a portrait phone frame is narrow, and

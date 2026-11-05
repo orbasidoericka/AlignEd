@@ -2,7 +2,7 @@
 //
 // Self-hosts the MediaPipe trackers for the career look filter, so the
 // camera feature never calls a third-party CDN at runtime. Copies the WASM
-// runtime out of node_modules and downloads the face and pose models once.
+// runtime out of node_modules and downloads the face, hand and pose models once.
 // Runs before `dev` and `build`; the output folder is gitignored.
 
 import { copyFile, mkdir, stat, writeFile } from "node:fs/promises";
@@ -14,13 +14,16 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const outDir = path.join(here, "..", "public", "mediapipe");
 const wasmOut = path.join(outDir, "wasm");
 
-// Face tracking for every look; pose (shoulders) only for looks that dress
-// the body, loaded by the page on demand.
+// Face tracking for every look; hand signs for the effects, loaded once
+// the face is tracked; pose (shoulders) only for looks that dress the body,
+// loaded by the page on demand.
 const MODELS = {
   "face_landmarker.task":
     "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
   "pose_landmarker_lite.task":
     "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task",
+  "gesture_recognizer.task":
+    "https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task",
 };
 
 // Only the SIMD and no-SIMD script builds; the ES-module build is unused.

@@ -6,9 +6,11 @@
 // so a hat fits whether the student sits close to the camera or far away.
 
 export interface Landmark {
-  // Normalized 0-1 image coordinates, as MediaPipe returns them.
+  // Normalized 0-1 image coordinates, as MediaPipe returns them. `z` is
+  // depth on roughly the same scale as `x`; absent, the face is flat.
   x: number;
   y: number;
+  z?: number;
 }
 
 export interface FaceAnchor {
@@ -66,13 +68,17 @@ export function computeFaceAnchor(
 
   const dx = (left.x - right.x) * frameWidth;
   const dy = (left.y - right.y) * frameHeight;
-  const width = Math.hypot(dx, dy);
-  if (width === 0) return null;
+  const flat = Math.hypot(dx, dy);
+  if (flat === 0) return null;
+  // The scale includes depth: on screen the cheek line shortens as the head
+  // turns, which would shrink the hat with every glance to the side.
+  const dz = ((left.z ?? 0) - (right.z ?? 0)) * frameWidth;
+  const width = Math.hypot(flat, dz);
 
   // Head-local axes: "across" runs along the cheek line, "down" is that
   // line turned 90°. Points are measured from the anchor in face widths.
-  const acrossX = dx / width;
-  const acrossY = dy / width;
+  const acrossX = dx / flat;
+  const acrossY = dy / flat;
   const local = (point: Landmark): FacePoint => {
     const px = (point.x - top.x) * frameWidth;
     const py = (point.y - top.y) * frameHeight;
@@ -174,6 +180,28 @@ export function toFaceSpace(point: FacePoint, anchor: FaceAnchor): FacePoint {
 // long way round when the angle crosses ±π.
 function angleDelta(from: number, to: number): number {
   return Math.atan2(Math.sin(to - from), Math.cos(to - from));
+}
+
+// How far to move toward a new reading, adapted to speed (the "one euro"
+// filter): a still head is smoothed hard so the hat stops trembling, a
+// moving one barely at all so the hat keeps up instead of trailing. Speed is
+// in face widths per second, so it reads the same near or far from the
+// camera, and `seconds` since the last reading keeps slow phones in step.
+export function smoothingAmount(
+  previous: FaceAnchor,
+  next: FaceAnchor,
+  seconds: number,
+  minCutoff = 1.2,
+  beta = 2.5,
+): number {
+  if (seconds <= 0) return 1;
+  const moved =
+    Math.hypot(next.x - previous.x, next.y - previous.y) / previous.width +
+    Math.abs(angleDelta(previous.angle, next.angle)) +
+    Math.abs(next.width - previous.width) / previous.width;
+  const cutoff = minCutoff + beta * (moved / seconds);
+  const tau = 1 / (2 * Math.PI * cutoff);
+  return 1 / (1 + tau / seconds);
 }
 
 // Exponential smoothing between frames. Raw landmarks jitter by a pixel or
