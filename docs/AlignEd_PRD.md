@@ -156,6 +156,11 @@ Captured before the assessment begins; stored client-side only (localStorage via
 - FR-11.2. The last photo is kept in memory only (never persisted, gone on refresh) and can be attached to the results email (FR-8.3). It is never stored on the server.
 - FR-11.3. Hand signs in front of the camera set off short decorative effects themed to the look being worn (Realistic gears, Investigative atoms and bubbles, Artistic paint, Social hearts and smileys, Enterprising coins and arrows, Conventional checkmarks and tiles); the sign sets how the burst moves (wave: a falling fan, thumbs up and peace: a ring, I-love-you: floating up, pointing up: one big emblem rising), tracked in-browser with MediaPipe's gesture recognizer like the face. They are silent, change nothing (switching looks and taking photos stay button-only), and nothing about the hands is recorded or stored. Under reduced motion each effect is one still icon that fades. If the hand model cannot load, the looks work without effects.
 
+### FR-12 Share Image
+- FR-12.1. From Results, a student may open a preview of a square image showing their Holland Code with its three trait badges and labels. The image carries no nickname, school, age, strand, results ID, date, scores, rankings or match labels.
+- FR-12.2. The image is built in the browser. AlignEd never uploads or stores it, and no request is made to create it.
+- FR-12.3. Where the browser can share files, a Share action opens the device's own share menu, so the student picks the app. A Save image action is always offered once the image is ready. There are no per-network buttons and no public results page.
+
 ## 7. Non-Functional Requirements
 
 | Category | Requirement |
@@ -236,6 +241,10 @@ Captured before the assessment begins; stored client-side only (localStorage via
 - **Given** a valid results ID, **then** the student can compare against it and delete it; a deleted or unknown ID returns not-found.
 - **Given** `ADMIN_TOKEN` is unset or under 32 characters, or the URL token does not match, **then** the admin page shows nothing.
 
+### Share Image
+- **Given** a student opens Share my results, **then** the preview shows only the Holland Code, its three trait badges and labels, and AlignEd branding, and no network request is made to build it.
+- **Given** a browser that cannot share files, **then** Share is hidden and Save image still works.
+
 ### Non-functional gates
 - Lighthouse ≥ 90 (Perf/A11y/SEO, mobile emulation) enforced in CI on every PR.
 - The complete journey is finishable with keyboard only, and with `prefers-reduced-motion` enabled, with no loss of content or function.
@@ -295,6 +304,7 @@ AlignEd ships as a mostly-static, anonymous-first Next.js application.
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 
+- 2026-11-08 · results · Added FR-12 share image: on-device picture of the code, trait badges and labels, shared via the device menu or saved · students asked to post their result
 - 2026-11-05 · landing · Added FR-1.6: a plain-language scoring section with a worked example, linked from the navbar. · Students understand how their answers become a code.
 - 2026-11-04 · privacy · "Students under 18" and "Agreeing to these terms" (v2.3) now say a parent or legal guardian should read the notice and tick the box themselves to consent for a minor, since AlignEd has no separate parent account or flow. · User asked this spelled out; same single checkbox, clearer about who is meant to click it.
 - 2026-11-04 · privacy · Terms/Privacy card heading and checkbox link renamed "Data Privacy Policy and Terms and Conditions" (v2.2); removed the "kept for one year" retention claim and the "so you can compare later" purpose from the privacy notice, the About page, the admin page, and the results-saved/not-found copy. The server's one-year row expiry itself is unchanged (FR-9.4, BACKEND.md) — only the user-facing claim about it is gone. · Requested removal of those two claims from the site; the dialog's own title keeps its original word order (not renamed).

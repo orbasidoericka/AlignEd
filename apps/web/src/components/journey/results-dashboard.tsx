@@ -8,6 +8,7 @@ import { BentoGrid, BentoGridItem } from "@/components/aceternity/bento-grid";
 import { CareerLookDialog } from "@/components/career-look/career-look-dialog";
 import { ResultsKeepsakeActions } from "@/components/journey/results-actions";
 import { ResultsExpiryNote } from "@/components/journey/results-expiry-note";
+import { SavedResultsPanel } from "@/components/journey/saved-results-panel";
 import { BlurFade } from "@/components/magic/blur-fade";
 import { HexagonPattern } from "@/components/magic/hexagon-pattern";
 import { NumberTicker } from "@/components/magic/number-ticker";
@@ -228,6 +229,12 @@ export function ResultsDashboard() {
               </ul>
             </BentoGridItem>
           </BlurFade>
+
+          {/* Mounting this panel is what saves the result (PRD FR-9) and
+              shows the results ID, so it must stay on the page. */}
+          <div className="md:col-span-3 print:hidden" data-print-hidden>
+            <SavedResultsPanel />
+          </div>
 
           {/* Majors and related pathways for each code letter (official
               RIASEC sheet). Every item listed, no ranking or match labels. */}

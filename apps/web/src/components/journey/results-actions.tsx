@@ -1,7 +1,7 @@
 // Copyright (c) 2026 EdTech. All rights reserved.
 "use client";
 
-import { useState, type ReactElement, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactElement, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import {
   CheckCircle2Icon,
@@ -10,6 +10,7 @@ import {
   MailIcon,
   RotateCcwIcon,
   SendIcon,
+  Share2Icon,
 } from "lucide-react";
 
 import {
@@ -34,6 +35,8 @@ import {
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { TraitEmblem } from "@/components/riasec/trait-emblem";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Tooltip,
   TooltipContent,
@@ -50,8 +53,13 @@ import {
 } from "@/lib/results-email/send-results-email";
 import { downloadResultsPdf } from "@/lib/results-pdf/download-results-pdf";
 import { resultsPdfPassword, resultsTakenOn } from "@/lib/results-pdf/password";
+import { buildShareImage } from "@/lib/results-share/build-share-image";
 import { QUESTIONS } from "@/lib/riasec/questions";
-import { computeHollandCode, maxScorePerTrait } from "@/lib/riasec/scoring";
+import {
+  computeHollandCode,
+  formatHollandCode,
+  maxScorePerTrait,
+} from "@/lib/riasec/scoring";
 import { strandLabel } from "@/lib/riasec/types";
 import { useAssessmentStore } from "@/store/useAssessmentStore";
 
@@ -65,8 +73,8 @@ const iconTrigger = (
   />
 );
 
-// Keepsake actions (PRD FR-8) as icon-only buttons beside the career look:
-// password-protected PDF, email, and retake. The label is the accessible
+// Keepsake actions (PRD FR-8, FR-12) as icon-only buttons beside the career
+// look: password-protected PDF, email, share, and retake. The label is the accessible
 // name and the tooltip, so nothing is lost by dropping the visible text.
 export function ResultsKeepsakeActions() {
   return (
@@ -74,6 +82,7 @@ export function ResultsKeepsakeActions() {
       <div className="flex items-center gap-2">
         <DownloadPdfDialog />
         <EmailResultsDialog />
+        <ShareResultsDialog />
         <RetakeDialog />
       </div>
     </TooltipProvider>
@@ -248,6 +257,140 @@ function DownloadPdfDialog() {
             {busy ? "Creating PDF…" : "Download PDF"}
           </Button>
         </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// Share image (PRD FR-12). Built when the dialog opens rather than on the
+// Share tap: browsers refuse navigator.share once too long has passed since
+// the tap, and the preview shows the student exactly what they would post.
+function ShareResultsDialog() {
+  const scores = useAssessmentStore((state) => state.scores);
+  const code = computeHollandCode(scores);
+  const [image, setImage] = useState<{ file: File; url: string } | null>(null);
+  const [failed, setFailed] = useState(false);
+  const latestBuild = useRef(0);
+  // The card draws these same emblems, so it can never drift from the page.
+  const badges = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    return () => {
+      if (image) URL.revokeObjectURL(image.url);
+    };
+  }, [image]);
+
+  const build = async () => {
+    const thisBuild = ++latestBuild.current;
+    setImage(null);
+    setFailed(false);
+    try {
+      const file = await buildShareImage(code, [
+        ...(badges.current?.querySelectorAll<SVGSVGElement>(":scope > svg") ??
+          []),
+      ]);
+      if (thisBuild !== latestBuild.current) return;
+      setImage({ file, url: URL.createObjectURL(file) });
+    } catch (error) {
+      if (thisBuild !== latestBuild.current) return;
+      console.warn("Share image could not be created:", error);
+      setFailed(true);
+    }
+  };
+
+  const canShare =
+    image !== null &&
+    typeof navigator !== "undefined" &&
+    navigator.canShare?.({ files: [image.file] }) === true;
+
+  const share = async () => {
+    if (!image) return;
+    try {
+      await navigator.share({
+        files: [image.file],
+        title: "My AlignEd Holland Code",
+      });
+    } catch {
+      // Closing the share menu rejects; there is nothing to report.
+    }
+  };
+
+  return (
+    <Dialog
+      onOpenChange={(open) => {
+        if (open) void build();
+      }}
+    >
+      <div ref={badges} className="hidden" aria-hidden>
+        {code.map((letter) => (
+          <TraitEmblem key={letter} letter={letter} />
+        ))}
+      </div>
+      <IconTooltip
+        trigger={
+          <DialogTrigger render={iconTrigger} aria-label="Share my results">
+            <Share2Icon className="size-5" aria-hidden />
+          </DialogTrigger>
+        }
+      >
+        Share my results
+      </IconTooltip>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Share my results</DialogTitle>
+          <DialogDescription>
+            This picture shows your Holland Code and nothing about who you are.
+            You choose whether to post it and where.
+          </DialogDescription>
+        </DialogHeader>
+        {failed ? (
+          <div className="flex flex-col items-start gap-3">
+            <p className="text-sm font-medium text-destructive" role="alert">
+              The image could not be created. Please try again.
+            </p>
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={() => void build()}
+              className="rounded-full bg-card"
+            >
+              <RotateCcwIcon className="size-4" />
+              Try again
+            </Button>
+          </div>
+        ) : image ? (
+          // eslint-disable-next-line @next/next/no-img-element -- local blob URL
+          <img
+            src={image.url}
+            alt={`Your results picture, showing Holland Code ${formatHollandCode(code)}`}
+            className="mx-auto w-full max-w-72 rounded-2xl border border-border"
+          />
+        ) : (
+          <Skeleton
+            className="mx-auto aspect-square w-full max-w-72 rounded-2xl"
+            aria-label="Creating your picture"
+          />
+        )}
+        {image && (
+          <DialogFooter>
+            <Button
+              size="lg"
+              variant={canShare ? "outline" : "default"}
+              className="rounded-full"
+              nativeButton={false}
+              render={<a href={image.url} download={image.file.name} />}
+            >
+              <DownloadIcon className="size-4" />
+              Save image
+            </Button>
+            {canShare && (
+              <Button size="lg" onClick={share} className="rounded-full">
+                <Share2Icon className="size-4" />
+                Share
+              </Button>
+            )}
+          </DialogFooter>
+        )}
       </DialogContent>
     </Dialog>
   );

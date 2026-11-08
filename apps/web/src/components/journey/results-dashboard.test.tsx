@@ -10,6 +10,13 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
 }));
 
+const saveResults = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/saved-results/client", () => ({
+  saveResults,
+  loadSavedResult: vi.fn(),
+  deleteSavedResult: vi.fn(),
+}));
+
 function completeAssessment(nickname: string) {
   const { reset, setProfile, setAnswer } = useAssessmentStore.getState();
   reset();
@@ -22,6 +29,18 @@ function completeAssessment(nickname: string) {
 describe("ResultsDashboard greeting", () => {
   beforeEach(() => {
     useAssessmentStore.getState().reset();
+    saveResults.mockReset();
+    saveResults.mockResolvedValue({ ok: true, value: "ALGN-7KQ2-MX9P" });
+  });
+
+  it("saves the finished result once and shows its results ID", async () => {
+    completeAssessment("FERF");
+    render(<ResultsDashboard />);
+
+    expect(await screen.findByTestId("results-id")).toHaveTextContent(
+      "ALGN-7KQ2-MX9P",
+    );
+    expect(saveResults).toHaveBeenCalledTimes(1);
   });
 
   it("greets the student by the nickname they chose", () => {
@@ -63,6 +82,7 @@ describe("ResultsDashboard greeting", () => {
     for (const name of [
       "Download PDF",
       "Email me my results",
+      "Share my results",
       "Retake assessment",
     ]) {
       const button = within(codeCard).getByRole("button", { name });
