@@ -33,7 +33,6 @@ import {
   orderQuestions,
   QUESTIONS,
   questionText,
-  type QuestionLanguage,
 } from "@/lib/riasec/questions";
 import { useAssessmentStore } from "@/store/useAssessmentStore";
 import { cn } from "@/lib/utils";
@@ -45,15 +44,6 @@ export const INPUT_GUARD_MS = 350;
 
 const LAST_INDEX = QUESTIONS.length - 1;
 const statementId = (questionId: string) => `statement-${questionId}`;
-
-const LANGUAGE_CHOICES: readonly {
-  value: QuestionLanguage;
-  label: string;
-  lang: string;
-}[] = [
-  { value: "en", label: "English", lang: "en" },
-  { value: "fil", label: "Filipino", lang: "fil" },
-];
 
 // Keyboard shortcuts: first letter of each answer label in either language
 // (Y / N, O / H), so a shortcut works whichever language is showing.
@@ -137,7 +127,6 @@ export function AssessmentRunner() {
     (state) => state.ensureQuestionOrder,
   );
   const language = useAssessmentStore((state) => state.language);
-  const setLanguage = useAssessmentStore((state) => state.setLanguage);
 
   // The statements in this session's random order (printed order until the
   // store seeds one, which happens in the effect below). Index-based
@@ -170,6 +159,11 @@ export function AssessmentRunner() {
   const [finishing, setFinishing] = useState(() =>
     questions.every((q) => q.id in answers),
   );
+  // Set once the student leaves the finish pop-up to look over their answers
+  // (button, Escape or outside click). It is what brings the "Finish
+  // assessment" button onto the page: until then the pop-up is the only way
+  // forward, so the button never flashes in behind it.
+  const [reviewing, setReviewing] = useState(false);
   const [resumed] = useState(
     () => Object.keys(answers).length > 0 && firstUnanswered > 0,
   );
@@ -481,19 +475,23 @@ export function AssessmentRunner() {
         open={showFinish}
         submitting={submitting}
         onSeeResults={seeResults}
-        onReview={() => setFinishing(false)}
+        onReview={() => {
+          setFinishing(false);
+          setReviewing(true);
+        }}
       />
-      {/* Progress strip across the top at every width. Below lg one column:
-          the numbers panel, when shown, sits under the strip. From lg it sits
-          to the right of the statement, sticky, so it never pushes the
-          question and answers below the fold; hidden, the question takes the
-          single centred column. The toggle (beside the language switch) is
-          what shows and hides it. Strip and panel are z-10 so the question
-          area's widened clip box (below) can never sit over them and swallow
-          their clicks. */}
+      {/* Progress strip above the question at every width, in the one centred
+          column. Below lg the numbers panel, when shown, sits under the strip.
+          From 1328px it docks in the margin to the right of that column, top
+          level with the strip, so opening it moves nothing: the strip and
+          question stay exactly where they were. Between lg and 1328px there is
+          no room in the margin, so the column makes way and slides left. The
+          toggle (beside the language switch) shows and hides the panel. Strip
+          and panel are z-10 so the question area's widened clip box (below)
+          can never sit over them and swallow their clicks. */}
       <div
         data-grid={gridOpen ? "open" : "closed"}
-        className="mx-auto grid w-full max-w-2xl flex-1 grid-cols-1 grid-rows-[auto_auto_1fr] gap-6 px-4 py-8 lg:max-w-5xl lg:grid-cols-[minmax(0,1fr)_19rem] lg:grid-rows-[auto_1fr] lg:gap-x-12 lg:data-[grid=closed]:max-w-2xl lg:data-[grid=closed]:grid-cols-1"
+        className="relative mx-auto grid w-full max-w-2xl grid-cols-1 gap-5 px-4 py-6 lg:max-w-5xl lg:grid-cols-[minmax(0,1fr)_19rem] lg:gap-x-12 lg:data-[grid=closed]:max-w-2xl lg:data-[grid=closed]:grid-cols-1 min-[1328px]:data-[grid=open]:max-w-2xl min-[1328px]:data-[grid=open]:grid-cols-1"
       >
         <QuestionNavigator
           questions={questions}
@@ -510,17 +508,17 @@ export function AssessmentRunner() {
           panelId={gridPanelId}
           onHide={() => setGridOpen(false)}
           gridOpen={gridOpen}
-          progressClassName="relative z-10 lg:col-span-full"
-          panelClassName="relative z-10 lg:col-start-2 lg:row-start-2 lg:self-center"
+          progressClassName="relative z-10 lg:col-start-1 lg:row-start-1"
+          panelClassName="relative z-10 lg:max-[1327px]:col-start-2 lg:max-[1327px]:row-span-2 lg:max-[1327px]:row-start-1 lg:max-[1327px]:self-start min-[1328px]:absolute min-[1328px]:top-8 min-[1328px]:left-[calc(100%+0.5rem)] min-[1328px]:w-76"
         />
 
-        <div className="flex min-w-0 flex-col gap-6 lg:col-start-1 lg:row-start-2">
+        <div className="flex min-w-0 flex-col gap-5 lg:col-start-1 lg:row-start-2">
           {resumed && !flagOpen && index === firstUnanswered && (
             <p className="rounded-2xl bg-card px-4 py-3 text-sm font-medium text-foreground/80">
               Welcome back! You are continuing right where you left off.
             </p>
           )}
-          {allAnswered && !finishing && (
+          {allAnswered && reviewing && !finishing && (
             <p className="rounded-2xl bg-card px-4 py-3 text-sm font-medium text-foreground/80">
               All {QUESTIONS.length} statements answered! Change any answer you
               like, then tap{" "}
@@ -529,15 +527,17 @@ export function AssessmentRunner() {
             </p>
           )}
 
-          {/* Question card. The x-clip keeps the slide transition from causing
-              horizontal scroll; -mx-24/px-24 moves the clip edge out 96px so the
-              answer cards' glow fades out fully instead of ending in a hard
-              vertical edge (the runner root's overflow-hidden still contains
-              it). The slack must stay ahead of the glow's reach in
+          {/* Question card, flowing directly under the progress strip rather
+              than centred in the viewport, so the two read as one compact
+              block. The x-clip keeps the slide transition from causing
+              horizontal scroll; -mx-24/px-24 moves the clip edge out 96px so
+              the answer cards' glow fades out fully instead of ending in a
+              hard vertical edge (the runner root's overflow-hidden still
+              contains it). The slack must stay ahead of the glow's reach in
               BackgroundGradient: -inset-1 plus blur-2xl carries roughly 64px.
-              Negative margin and padding cancel, so content width is unchanged.
-              The bottom padding lifts the question above dead centre. */}
-          <div className="relative -mx-24 flex flex-1 flex-col justify-center overflow-x-clip px-24 pb-[12vh]">
+              Negative margin and padding cancel, so content width is
+              unchanged. */}
+          <div className="relative -mx-24 flex flex-col overflow-x-clip px-24">
             <AnimatePresence mode="popLayout" initial={false} custom={direction}>
               <motion.div
                 key={question.id}
@@ -548,41 +548,14 @@ export function AssessmentRunner() {
                 transition={{ duration: 0.2, ease: "easeOut" }}
                 className="flex flex-col gap-6"
               >
-                {/* The numbers toggle first, then the language switch, above
-                    the statement. The toggle only hides the numbers; the
-                    switch is always here. */}
-                <div className="flex flex-wrap items-center gap-2">
-                  <QuestionGridToggle
-                    open={gridOpen}
-                    onToggle={() => setGridOpen(!gridOpen)}
-                    controls={gridPanelId}
-                    disabled={isBlocked}
-                  />
-                  <div
-                    role="group"
-                    aria-label="Statement language"
-                    className="flex w-fit items-center gap-1 rounded-full bg-card p-1"
-                  >
-                    {LANGUAGE_CHOICES.map((choice) => (
-                      <Button
-                        key={choice.value}
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        lang={choice.lang}
-                        aria-pressed={language === choice.value}
-                        onClick={() => setLanguage(choice.value)}
-                        className={cn(
-                          "h-9 rounded-full px-4 font-semibold",
-                          language === choice.value &&
-                            "bg-highlight-soft text-highlight-soft-foreground hover:bg-highlight-soft",
-                        )}
-                      >
-                        {choice.label}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
+                {/* Hides the numbers only; the language toggle lives in the
+                    FocusBar now. */}
+                <QuestionGridToggle
+                  open={gridOpen}
+                  onToggle={() => setGridOpen(!gridOpen)}
+                  controls={gridPanelId}
+                  disabled={isBlocked}
+                />
 
                 {/* Focus target after each advance (tabIndex -1: programmatic
                     focus only). It also names the answer group below. */}
@@ -743,11 +716,11 @@ export function AssessmentRunner() {
             ) : null}
           </div>
 
-          {allAnswered && (
+          {allAnswered && reviewing && (
             <Button
               size="lg"
-              onClick={requestFinish}
-              disabled={isBlocked}
+              onClick={seeResults}
+              disabled={isBlocked || submitting}
               className="h-13 w-full rounded-full bg-stage-results font-heading text-lg font-semibold text-stage-results-foreground hover:bg-stage-results/85"
             >
               Finish assessment

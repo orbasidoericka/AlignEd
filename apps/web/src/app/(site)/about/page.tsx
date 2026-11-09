@@ -4,8 +4,8 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { ArrowDown, Compass, ShieldCheck, Users } from "lucide-react";
 
+import { ClosingCta } from "@/components/blocks/closing-cta";
 import { SectionLink } from "@/components/blocks/section-link";
-import { HeroCta } from "@/components/journey/hero-cta";
 import { BlurFade } from "@/components/magic/blur-fade";
 import {
   HexagonPattern,
@@ -54,13 +54,6 @@ type TeamMember = {
   name: string;
   role: string;
   photo: string;
-  /**
-   * Where the member sits in the four-column grid from `sm` up. Every card
-   * spans two columns, so a pair fills a row (columns 1 and 3) and a lone
-   * member sits between them (column 2), which is what centres the project
-   * manager under the researchers and over the developers.
-   */
-  placement: string;
   /** Per-photo framing, so every face sits at the same height in its hex. */
   imageClassName?: string;
 };
@@ -71,31 +64,26 @@ const team: readonly TeamMember[] = [
     name: "Patricia Mariz P. Bantog",
     role: "Researcher",
     photo: "/about us/patricia.jpg",
-    placement: "sm:col-start-1",
   },
   {
     name: "Yvonne Denise D. Peñamante",
     role: "Researcher",
     photo: "/about us/yvonne.jpg",
-    placement: "sm:col-start-3",
   },
   {
     name: "Stephanie O. Dulay",
     role: "Project Manager",
     photo: "/about us/stephanie.jpg",
-    placement: "sm:col-start-2",
   },
   {
     name: "Ericka A. Orbasido",
     role: "Full Stack Developer",
     photo: "/about us/ericka.jpg",
-    placement: "sm:col-start-1",
   },
   {
     name: "Winn Jashmir M. Sandiko",
     role: "Full Stack Developer",
     photo: "/about us/winn.jpg",
-    placement: "sm:col-start-3",
     // His photo has extra white above the head; lift and tighten it.
     imageClassName: "scale-112 -translate-y-[5%]",
   },
@@ -191,83 +179,83 @@ export default function AboutPage() {
 
       <section
         id="team"
-        className="mx-auto w-full max-w-5xl scroll-mt-24 px-4 py-16 outline-none sm:px-6"
+        className="mx-auto w-full max-w-6xl scroll-mt-24 px-4 py-16 outline-none sm:px-6"
       >
         <BlurFade inView>
-          <div className="mx-auto max-w-2xl text-center">
-            <h2 className="text-3xl font-bold text-balance text-foreground sm:text-4xl">
-              Meet the team
-            </h2>
-            <p className="mt-4 text-lg text-pretty text-muted-foreground">
-              Five 4th-year BS Information Technology students from the{" "}
-              {SCHOOL}: the people behind AlignEd.
-            </p>
-          </div>
-        </BlurFade>
+          <div className="rounded-4xl border border-border bg-card px-4 py-12 shadow-bento sm:px-8 sm:py-14">
+            <div className="mx-auto max-w-2xl text-center">
+              <h2 className="text-3xl font-bold text-balance text-foreground sm:text-4xl">
+                Meet the team
+              </h2>
+              <p className="mt-4 text-lg text-pretty text-muted-foreground">
+                Five 4th-year BS Information Technology students from the{" "}
+                {SCHOOL}: the people behind AlignEd.
+              </p>
+            </div>
 
-        <ul className="mx-auto mt-14 grid max-w-2xl grid-cols-1 justify-items-center gap-y-12 sm:grid-cols-4">
-          {team.map((member, index) => (
-            <li
-              key={member.name}
-              className={cn("w-full max-w-80 sm:col-span-2", member.placement)}
-            >
-              <BlurFade inView delay={index * 0.08}>
-                <div className="group flex flex-col items-center text-center">
-                  {/* Double hex: clip-path drops borders, so the frame is
-                      an accent hex with the photo inset inside it. */}
-                  <div
-                    className={cn(
-                      "relative size-44 p-1.5 transition-[translate,filter] duration-300 ease-out motion-safe:group-hover:-translate-y-1 group-hover:brightness-105",
-                      HEX,
-                      frameClass,
-                    )}
-                  >
-                    <div
-                      className={cn(
-                        "relative size-full overflow-hidden bg-card",
-                        HEX,
-                      )}
-                    >
-                      <Image
-                        src={member.photo}
-                        alt={`Portrait of ${member.name}`}
-                        fill
-                        sizes="176px"
+            {/* One row of five from lg. Below that the same cards wrap (three,
+                then two to a row) and the last row centres itself, so nothing
+                is cut off and no breakpoint needs its own layout. Each card's
+                width is a share of the row minus its gaps. */}
+            <ul className="mt-12 flex flex-wrap justify-center gap-x-4 gap-y-10 sm:gap-x-6">
+              {team.map((member, index) => (
+                <li
+                  key={member.name}
+                  className="w-[calc(50%-0.5rem)] sm:w-[calc(33.333%-1rem)] lg:w-[calc(20%-1.2rem)]"
+                >
+                  <BlurFade inView delay={index * 0.08} className="h-full">
+                    <div className="group flex h-full flex-col items-center text-center">
+                      {/* Double hex: clip-path drops borders, so the frame is
+                          an accent hex with the photo inset inside it. */}
+                      <div
                         className={cn(
-                          "object-cover object-top",
-                          member.imageClassName,
+                          "relative aspect-square w-full max-w-44 p-1.5 transition-[translate,filter] duration-300 ease-out motion-safe:group-hover:-translate-y-1 group-hover:brightness-105",
+                          HEX,
+                          frameClass,
                         )}
-                      />
+                      >
+                        <div
+                          className={cn(
+                            "relative size-full overflow-hidden bg-card",
+                            HEX,
+                          )}
+                        >
+                          <Image
+                            src={member.photo}
+                            alt={`Portrait of ${member.name}`}
+                            fill
+                            sizes="(min-width: 1024px) 176px, 45vw"
+                            className={cn(
+                              "object-cover object-top",
+                              member.imageClassName,
+                            )}
+                          />
+                        </div>
+                      </div>
+                      {/* flex-1 pushes the role chip to the card's bottom, so
+                          the chips line up across a row whether a name takes
+                          one line or two. */}
+                      <h3 className="mt-5 flex-1 text-base font-bold text-balance text-foreground sm:text-lg">
+                        {member.name}
+                      </h3>
+                      <p
+                        className={cn(
+                          "mt-3 rounded-full px-2 py-1 font-heading text-xs font-semibold whitespace-nowrap sm:px-3 sm:text-sm",
+                          chipClass,
+                        )}
+                      >
+                        {member.role}
+                      </p>
                     </div>
-                  </div>
-                  <h3 className="mt-6 text-xl font-bold text-balance text-foreground">
-                    {member.name}
-                  </h3>
-                  <p
-                    className={cn(
-                      "mt-2 rounded-full px-3 py-1 font-heading text-sm font-semibold",
-                      chipClass,
-                    )}
-                  >
-                    {member.role}
-                  </p>
-                </div>
-              </BlurFade>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section className="mx-auto w-full max-w-6xl px-4 pt-8 pb-20 sm:px-6">
-        <BlurFade inView>
-          <div className="flex flex-col items-center gap-6 rounded-4xl bg-stage-profile-soft px-6 py-14 text-center">
-            <h2 className="max-w-xl text-3xl font-bold text-balance text-foreground sm:text-4xl">
-              Ready to see where you fit?
-            </h2>
-            <HeroCta />
+                  </BlurFade>
+                </li>
+              ))}
+            </ul>
           </div>
         </BlurFade>
       </section>
+
+      <ClosingCta />
     </div>
   );
 }

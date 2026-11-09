@@ -51,11 +51,15 @@ const WHITE = "#ffffff";
 // Saturated twins of the pastel --trait-* tokens in globals.css: same hue per
 // letter as the screen, taken up to full strength so the print still reads as
 // AlignEd but carries on paper, where the on-screen pastels wash out.
+//
+// R, A and S are rose, beige and light blue on screen, which would wash out on
+// white paper, so their print twins are the deep rose, tan and steel blue of
+// the same hues (4.29 / 4.13 / 4.68:1 on white, as text and as bars).
 const TRAIT_COLOR: Record<RiasecLetter, string> = {
-  R: "#2563eb",
+  R: "#d94452",
   I: "#7c3aed",
-  A: "#f59e0b",
-  S: "#16a34a",
+  A: "#9a7740",
+  S: "#3b79a8",
   E: "#ea580c",
   C: "#0d9488",
 };

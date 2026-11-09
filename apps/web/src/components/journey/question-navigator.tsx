@@ -26,6 +26,10 @@ const FALLBACK_COLUMNS = 6;
 // instead of one long climb. 42 statements put the notches at 7/14/21/28/35.
 const MILESTONE_EVERY = 7;
 
+// The progress strip and the numbers panel's header share this height, so
+// when both are on screen they line up as one row.
+const BAND_HEIGHT = "h-12";
+
 const openList = new Intl.ListFormat("en", {
   style: "long",
   type: "conjunction",
@@ -211,39 +215,43 @@ export function QuestionNavigator({
         aria-label="Assessment progress"
         className={cn("flex flex-col gap-2.5", progressClassName)}
       >
-        <div className="flex items-center gap-3">
-          <p
-            className="min-w-0 flex-1 font-heading text-base font-bold whitespace-nowrap text-foreground sm:text-lg"
-            aria-live="polite"
-          >
-            Question {currentIndex + 1} of {total}
-          </p>
-          <p className="font-heading text-lg font-bold text-stage-assessment-strong tabular-nums sm:text-xl">
-            {percent}%
-          </p>
-        </div>
+        {/* Fixed height (BAND_HEIGHT), the same as the numbers panel's header,
+            so the two line up edge to edge when the panel is open. */}
+        <div className={cn("flex flex-col justify-between", BAND_HEIGHT)}>
+          <div className="flex items-center gap-3">
+            <p
+              className="min-w-0 flex-1 font-heading text-base font-bold whitespace-nowrap text-foreground sm:text-lg"
+              aria-live="polite"
+            >
+              Question {currentIndex + 1} of {total}
+            </p>
+            <p className="font-heading text-lg font-bold text-stage-assessment-strong tabular-nums sm:text-xl">
+              {percent}%
+            </p>
+          </div>
 
-        <div className="relative">
-          <Progress
-            value={answeredCount}
-            max={total}
-            aria-label="Assessment progress"
-            aria-valuetext={`${answeredCount} of ${total} statements answered`}
-            className="h-2.5 bg-stage-assessment/30"
-            indicatorClassName="bg-stage-assessment-strong motion-reduce:transition-none"
-          />
-          {/* Decorative: gaps cut the bar into chunks of seven. The gap is
-              the page's own ground, since the bar sits on it, not on a card. */}
-          {milestones.map((at) => (
-            <span
-              key={at}
-              aria-hidden
-              data-milestone={at}
-              data-passed={answeredCount >= at || undefined}
-              style={{ left: `${(at / total) * 100}%` }}
-              className="pointer-events-none absolute inset-y-0 w-0.5 -translate-x-1/2 bg-stage-assessment-soft"
+          <div className="relative">
+            <Progress
+              value={answeredCount}
+              max={total}
+              aria-label="Assessment progress"
+              aria-valuetext={`${answeredCount} of ${total} statements answered`}
+              className="h-2.5 bg-stage-assessment/30"
+              indicatorClassName="bg-stage-assessment-strong motion-reduce:transition-none"
             />
-          ))}
+            {/* Decorative: gaps cut the bar into chunks of seven. The gap is
+                the page's own ground, since the bar sits on it, not on a card. */}
+            {milestones.map((at) => (
+              <span
+                key={at}
+                aria-hidden
+                data-milestone={at}
+                data-passed={answeredCount >= at || undefined}
+                style={{ left: `${(at / total) * 100}%` }}
+                className="pointer-events-none absolute inset-y-0 w-0.5 -translate-x-1/2 bg-stage-assessment-soft"
+              />
+            ))}
+          </div>
         </div>
 
         {/* Always mounted so the notice is announced when it appears. */}
@@ -267,12 +275,17 @@ export function QuestionNavigator({
         aria-label="All questions"
         data-grid={gridOpen ? "open" : "closed"}
         className={cn(
-          "flex-col gap-4 rounded-3xl bg-card p-4 shadow-bento ring-1 ring-border",
+          "flex-col gap-4 rounded-3xl bg-card px-4 pb-4 shadow-bento ring-1 ring-border",
           gridOpen ? "flex" : "hidden",
           panelClassName,
         )}
       >
-        <div className="-my-2 flex items-center justify-between gap-2">
+        <div
+          className={cn(
+            "flex items-center justify-between gap-2",
+            BAND_HEIGHT,
+          )}
+        >
           <h2 className="font-heading text-sm font-bold text-foreground">
             All questions
           </h2>

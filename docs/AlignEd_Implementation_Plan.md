@@ -15,7 +15,7 @@ AlignEd ships as a **mostly-static, anonymous-first** Next.js 16 application. Ma
 
 - **Input:** static TypeScript question bank → client-side profile + answers in `useAssessmentStore` (`apps/web/src/store/useAssessmentStore.ts`, localStorage, 30-minute session TTL); official results-sheet data in `lib/riasec/career-pathways.ts`.
 - **Process:** pure-TS scoring library (`src/lib/riasec/scoring.ts`) derives the 3-letter Holland code with deterministic R→I→A→S→E→C tie-breaking (PRD FR-4); server routes validate input with `lib/riasec/validate-results.ts` and write through `lib/saved-results/repository.ts` with the service-role client.
-- **Output:** client-computed results dashboard (code, radar, majors and pathways per letter); encrypted pdfmake PDF built in the browser; the same PDF rendered on the server and emailed via nodemailer/Gmail; a results ID for later comparison; aggregate stats on the admin page.
+- **Output:** client-computed results dashboard (code, radar, majors and pathways per letter); encrypted pdfmake PDF built in the browser; the same PDF rendered on the server and emailed via nodemailer/Gmail; a results ID saved silently for aggregate stats on the admin page.
 
 ### Tech stack
 
@@ -60,7 +60,7 @@ Design language and page-level wireframes live in `docs/AlignEd_Design_Vision.md
 | **Results — majors & pathways** (FR-5) | `riasec/pathway-results.tsx`: one card per code letter (mascot cover, description, all majors, all pathways as equal-weight tags). No ranking, badges or university links anywhere. |
 | **PDF export** (FR-7) | pdfmake document built in the browser (`lib/results-pdf/build-results-pdf.ts` + `download-results-pdf.ts`), encrypted with nickname + code. A4, grayscale-legible. |
 | **Email-my-results** (FR-8) | `Dialog` + `Input` + consent `Checkbox` (Data Privacy Act copy) + `Sonner` toasts, posting to `/api/send-results`. Honeypot `website` field included. |
-| **Saved results** (FR-9) | `journey/saved-results-panel.tsx`: auto-save once per session, results ID display, delete, retry on failure. |
+| **Saved results** (FR-9) | `journey/saved-results-panel.tsx`: no UI, just auto-saves once per session for the admin stats page (FR-10). |
 | **Admin** (FR-10) | `app/admin/[token]/page.tsx`: server-rendered stats, token-gated. |
 | **Career look** (FR-11) | `components/career-look` + `lib/career-look`: MediaPipe face landmarks, memory-only photo. |
 
@@ -175,5 +175,6 @@ Design language and page-level wireframes live in `docs/AlignEd_Design_Vision.md
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 
+- 2026-11-09 · frontend/backend · Task 3.5's saved results is now a no-UI auto-save only: ID display, compare-by-ID, and delete are all gone from `saved-results-panel.tsx` and `/api/results/[id]`. · Requested removal of the results-ID feature from the Results page.
 - 2026-11-09 · frontend/backend · Task 3.5's compare-by-ID is removed (saved results now auto-save + delete only). · Comparing was cut from the results page.
 - 2026-10-27 · backend · Architecture, stack, database plan and component map rewritten to the shipped code (Next route handlers, `saved_results`, Gmail SMTP, pdfmake, admin page, career look). Tasks 1.6, 3.2, 3.3 marked superseded; 2.6, 4.1–4.3, 5.4–5.6 rewritten; 3.5, 4.5, 5.7 added; QA protocol updated. · The codebase is the plan of record.

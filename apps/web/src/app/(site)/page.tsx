@@ -18,8 +18,7 @@ import {
   HexagonPattern,
   scatterHexagons,
 } from "@/components/magic/hexagon-pattern";
-import { ShineBorder } from "@/components/magic/shine-border";
-import { HeroCta } from "@/components/journey/hero-cta";
+import { ClosingCta } from "@/components/blocks/closing-cta";
 import { TestsTaken } from "@/components/blocks/tests-taken";
 import { RIASEC_PATHWAYS } from "@/lib/riasec/career-pathways";
 import { letterHoverWash } from "@/lib/riasec/letter-chip-styles";
@@ -117,21 +116,6 @@ const heroCells = scatterHexagons({
     heroGreenCell,
   ],
   seed: 7,
-});
-
-// Closing CTA grid: the panel is a pale card, so the warm and green cells take
-// the stage "-strong" tone at low alpha; blue stays the plain stage blue.
-const ctaCells = scatterHexagons({
-  count: 8,
-  cols: 20,
-  rows: 6,
-  classNames: [
-    "fill-stage-profile-strong/30",
-    "fill-stage-assessment/30",
-    "fill-stage-results-strong/30",
-    "fill-stage-profile-strong/30",
-  ],
-  seed: 11,
 });
 
 // The scoring procedure (lib/riasec/scoring.ts, PRD FR-4.1/4.2) in plain
@@ -443,45 +427,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Final CTA */}
-      <section className="mx-auto w-full max-w-6xl px-4 pb-20 sm:px-6">
-        <BlurFade inView>
-          <div className="relative isolate flex flex-col items-center gap-6 overflow-hidden rounded-4xl bg-card px-6 py-12 text-center sm:py-16">
-            {/* Hexagon field fills the sides; the centre is masked clear so
-                the text never sits on a lit cell. */}
-            <HexagonPattern
-              radius={32}
-              gap={4}
-              hexagons={ctaCells}
-              className="-z-10 stroke-primary/30 mask-[radial-gradient(ellipse_at_center,transparent_30%,white_80%)] print:hidden dark:stroke-primary/15"
-            />
-            {/* The one place on the landing page that gets a shine: the
-                closing invitation. */}
-            <ShineBorder borderWidth={2} duration={12} />
-            {/* The six traits: the code the student is about to find. */}
-            <div aria-hidden className="flex justify-center gap-1 sm:gap-2">
-              {traitPreview.map((trait, index) => (
-                <TraitEmblem
-                  key={trait.letter}
-                  letter={trait.letter}
-                  className={cn(
-                    "size-11 sm:size-14",
-                    index % 2 === 1 && "translate-y-2",
-                  )}
-                />
-              ))}
-            </div>
-            <h2 className="max-w-xl text-3xl font-bold text-foreground sm:text-4xl">
-              Not sure what comes after Senior High?
-            </h2>
-            <p className="max-w-md text-lg text-balance text-muted-foreground">
-              Answer at your own pace. There are no wrong answers, and nobody
-              needs to know your name.
-            </p>
-            <HeroCta label="Find your path" />
-          </div>
-        </BlurFade>
-      </section>
+      <ClosingCta />
     </div>
   );
 }

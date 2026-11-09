@@ -70,6 +70,19 @@ export function letterVar(letter: RiasecLetter): string {
   return letterVarStyles[letter];
 }
 
+// How much of the trait colour the art's rim keeps when it is mixed toward the
+// ink, in percent. The pale Artistic beige keeps less, so its rim is dark
+// enough to hold the shape on a white card: at 65% it measured 3.01:1 against
+// white, at 55% it is 3.88:1. Social's light blue is 3.55:1 at 65%.
+export const TRAIT_SHADE_KEEP: Readonly<Record<RiasecLetter, number>> = {
+  R: 65,
+  I: 65,
+  A: 55,
+  S: 65,
+  E: 65,
+  C: 65,
+};
+
 // What the generated trait art (trait-emblem.tsx, trait-mascot.tsx) paints
 // from: `currentColor` is the trait, --trait-shade its darker sibling for rims
 // and garments. Mixed toward the trait ink rather than black, so the shade
@@ -77,8 +90,7 @@ export function letterVar(letter: RiasecLetter): string {
 export function letterArtStyle(letter: RiasecLetter): CSSProperties {
   return {
     color: letterVar(letter),
-    "--trait-shade":
-      "color-mix(in oklab, currentColor 65%, var(--trait-foreground))",
+    "--trait-shade": `color-mix(in oklab, currentColor ${TRAIT_SHADE_KEEP[letter]}%, var(--trait-foreground))`,
   } as CSSProperties;
 }
 

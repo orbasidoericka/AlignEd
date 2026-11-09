@@ -16,6 +16,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { POLICY_SECTIONS_FIL, PRIVACY_TEXT_FIL } from "@/lib/riasec/privacy-fil";
+import type { QuestionLanguage } from "@/lib/riasec/questions";
+import { useAssessmentStore } from "@/store/useAssessmentStore";
 import { cn } from "@/lib/utils";
 
 // The Terms and Conditions and Data Privacy Policy the PRD requires (Data
@@ -33,12 +36,13 @@ export const PRIVACY_POLICY_VERSION = "v2.3";
 export const PRIVACY_CONTACT_EMAIL = "aligned.career.support@gmail.com";
 
 // Wrap a phrase in **double asterisks** to bold it. Only the key points get it.
-type PolicyItem =
+// Exported so privacy-fil.ts's Filipino translation matches this shape.
+export type PolicyItem =
   | { type: "para"; text: string }
   | { type: "list"; items: string[] }
   | { type: "subheading"; text: string };
 
-interface PolicySection {
+export interface PolicySection {
   heading: string;
   items: PolicyItem[];
 }
@@ -351,10 +355,14 @@ function renderInline(text: string) {
 
 // The section content, shared by the profile step's consent dialog and the
 // footer's read-only dialog, so the notice can only ever say one thing.
-function PolicyBody() {
+function PolicyBody({ language }: { language: QuestionLanguage }) {
+  const sections = language === "fil" ? POLICY_SECTIONS_FIL : POLICY_SECTIONS;
   return (
-    <div className="flex max-h-[55vh] flex-col gap-5 overflow-y-auto p-6">
-      {POLICY_SECTIONS.map((section) => (
+    <div
+      lang={language === "fil" ? "fil" : undefined}
+      className="flex max-h-[55vh] flex-col gap-5 overflow-y-auto p-6"
+    >
+      {sections.map((section) => (
         <div key={section.heading} className="flex flex-col gap-2">
           <h3 className="font-heading text-base font-bold text-foreground">
             {section.heading}
@@ -408,6 +416,9 @@ export function PrivacyConsent({
 }: PrivacyConsentProps) {
   const [open, setOpen] = useState(false);
   const invalid = showHint && !accepted;
+  const language = useAssessmentStore((state) => state.language);
+  const fil = language === "fil";
+  const t = fil ? PRIVACY_TEXT_FIL : null;
 
   return (
     <section
@@ -416,21 +427,44 @@ export function PrivacyConsent({
         invalid ? "border-destructive" : "border-border",
       )}
     >
-      <h2 className="flex items-center gap-2 text-base font-semibold text-foreground">
+      <h2
+        lang={fil ? "fil" : undefined}
+        className="flex items-center gap-2 text-base font-semibold text-foreground"
+      >
         <ShieldCheck className="size-5 text-stage-profile-strong" aria-hidden />
-        Data Privacy Policy and Terms and Conditions
+        {t ? t.cardHeading : "Data Privacy Policy and Terms and Conditions"}
       </h2>
-      <p className="text-sm text-muted-foreground">
-        <strong className="font-semibold text-foreground">
-          No account and no real name needed.
-        </strong>{" "}
-        Your session erases from this device after 30 minutes. Only your grade,
-        strand, age, and interest scores are saved,{" "}
-        <strong className="font-semibold text-foreground">with no name</strong>,
-        for program statistics.
+      <p lang={fil ? "fil" : undefined} className="text-sm text-muted-foreground">
+        {t ? (
+          <>
+            <strong className="font-semibold text-foreground">
+              {t.cardBlurbLead}
+            </strong>{" "}
+            {t.cardBlurbRest}{" "}
+            <strong className="font-semibold text-foreground">
+              {t.cardBlurbNoName}
+            </strong>
+            {t.cardBlurbTail}
+          </>
+        ) : (
+          <>
+            <strong className="font-semibold text-foreground">
+              No account and no real name needed.
+            </strong>{" "}
+            Your session erases from this device after 30 minutes. Only your
+            grade, strand, age, and interest scores are saved,{" "}
+            <strong className="font-semibold text-foreground">
+              with no name
+            </strong>
+            , for program statistics.
+          </>
+        )}
       </p>
 
-      <label className="flex items-start gap-3 text-sm text-foreground">
+      <label
+        lang={fil ? "fil" : undefined}
+        className="flex items-start gap-3 text-sm text-foreground"
+      >
         <Checkbox
           checked={accepted}
           onCheckedChange={(checked) => onAcceptedChange(checked === true)}
@@ -438,49 +472,62 @@ export function PrivacyConsent({
           className="mt-0.5"
         />
         <span>
-          I have read and agree to the{" "}
+          {t ? t.consentPrefix : "I have read and agree to the"}{" "}
           <button
             type="button"
             onClick={() => setOpen(true)}
             className="cursor-pointer rounded-sm font-semibold text-stage-profile-strong underline underline-offset-2 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
           >
-            Data Privacy Policy and Terms and Conditions
+            {t
+              ? t.consentLinkText
+              : "Data Privacy Policy and Terms and Conditions"}
           </button>
           .
+          <span aria-hidden className="ml-0.5 text-destructive">
+            *
+          </span>
         </span>
       </label>
 
       {invalid && (
         <p
           id="privacy-hint"
+          lang={fil ? "fil" : undefined}
           className="text-sm font-semibold text-destructive"
           role="alert"
         >
-          Agree to the Terms and Conditions to continue.
+          {t ? t.hint : "Agree to the Terms and Conditions to continue."}
         </p>
       )}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-xl gap-0 p-0">
-          <DialogHeader className="border-b border-border p-6 pr-14">
+          <DialogHeader
+            lang={fil ? "fil" : undefined}
+            className="border-b border-border p-6 pr-14"
+          >
             <DialogTitle className="text-xl">
-              Terms and Conditions and Data Privacy Policy
+              {t ? t.dialogTitle : "Terms and Conditions and Data Privacy Policy"}
             </DialogTitle>
             <DialogDescription>
-              How AlignEd handles your data ({PRIVACY_POLICY_VERSION}). Please
-              read this before you start the assessment.
+              {t
+                ? t.dialogDescriptionConsent(PRIVACY_POLICY_VERSION)
+                : `How AlignEd handles your data (${PRIVACY_POLICY_VERSION}). Please read this before you start the assessment.`}
             </DialogDescription>
           </DialogHeader>
 
-          <PolicyBody />
+          <PolicyBody language={language} />
 
-          <DialogFooter className="border-t border-border p-6">
+          <DialogFooter
+            lang={fil ? "fil" : undefined}
+            className="border-t border-border p-6"
+          >
             <Button
               variant="outline"
               className="rounded-full"
               onClick={() => setOpen(false)}
             >
-              Close
+              {t ? t.close : "Close"}
             </Button>
             <Button
               className="rounded-full bg-stage-profile font-semibold text-stage-profile-foreground hover:bg-stage-profile/85"
@@ -489,7 +536,7 @@ export function PrivacyConsent({
                 setOpen(false);
               }}
             >
-              I agree
+              {t ? t.agree : "I agree"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -508,24 +555,36 @@ export function PrivacyPolicyDialog({
   trigger: React.ReactElement;
   children: React.ReactNode;
 }) {
+  const language = useAssessmentStore((state) => state.language);
+  const fil = language === "fil";
+  const t = fil ? PRIVACY_TEXT_FIL : null;
+
   return (
     <Dialog>
       <DialogTrigger render={trigger}>{children}</DialogTrigger>
       <DialogContent className="max-w-xl gap-0 p-0">
-        <DialogHeader className="border-b border-border p-6 pr-14">
+        <DialogHeader
+          lang={fil ? "fil" : undefined}
+          className="border-b border-border p-6 pr-14"
+        >
           <DialogTitle className="text-xl">
-            Terms and Conditions and Data Privacy Policy
+            {t ? t.dialogTitle : "Terms and Conditions and Data Privacy Policy"}
           </DialogTitle>
           <DialogDescription>
-            How AlignEd handles your data ({PRIVACY_POLICY_VERSION}).
+            {t
+              ? t.dialogDescriptionReadOnly(PRIVACY_POLICY_VERSION)
+              : `How AlignEd handles your data (${PRIVACY_POLICY_VERSION}).`}
           </DialogDescription>
         </DialogHeader>
 
-        <PolicyBody />
+        <PolicyBody language={language} />
 
-        <DialogFooter className="border-t border-border p-6">
+        <DialogFooter
+          lang={fil ? "fil" : undefined}
+          className="border-t border-border p-6"
+        >
           <DialogClose render={<Button variant="outline" className="rounded-full" />}>
-            Close
+            {t ? t.close : "Close"}
           </DialogClose>
         </DialogFooter>
       </DialogContent>

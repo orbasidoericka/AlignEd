@@ -77,4 +77,27 @@ describe("FocusBar start over", () => {
       screen.getByRole("button", { name: "Start over" }),
     ).toBeInTheDocument();
   });
+
+  it("the language toggle is on Profile Setup and the quiz, and switches the language", () => {
+    pathname.current = "/assessment/profile";
+    const { rerender } = render(<FocusBar />);
+    const profileButton = screen.getByLabelText(
+      "Language: English. Switch to Filipino",
+    );
+
+    fireEvent.click(profileButton);
+    expect(useAssessmentStore.getState().language).toBe("fil");
+
+    pathname.current = "/assessment";
+    rerender(<FocusBar />);
+    expect(
+      screen.getByLabelText("Language: Filipino. Switch to English"),
+    ).toBeInTheDocument();
+  });
+
+  it("the language toggle is absent elsewhere", () => {
+    pathname.current = "/results";
+    render(<FocusBar />);
+    expect(screen.queryByLabelText(/^Language:/)).toBeNull();
+  });
 });

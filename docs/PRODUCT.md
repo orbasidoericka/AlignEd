@@ -15,7 +15,7 @@ Grade 11 and 12 (Senior High) students in the Philippines, mobile-first on budge
 1. **Landing** (`/`) — value proposition, ~5-minute promise, journey-aware CTA, and a plain-language "How your code is scored" section.
 2. **Profile Setup** (`/assessment/profile`) — nickname (required, up to 8 uppercase letters/hyphens, never stored server-side; sent only inside an email request), grade level (11 or 12), SHS strand (or Others with a typed strand that stays on the device and in the student's PDF), age (10–30) and acceptance of the Data Privacy Policy and Terms and Conditions (all required), and optional school (max 120 chars). Client-side only.
 3. **RIASEC Assessment** (`/assessment`) — 42 yes/no statements (English or Filipino, student's choice), one per screen, auto-advancing (no Next button) with Back to revise; localStorage resume, deterministic scoring (tie-break R→I→A→S→E→C). Finished results stay on the device 30 minutes at most and vanish when the tab closes; Results shows the countdown.
-4. **Results** (`/results`) — Holland code + trait breakdown, all majors and related pathways per code letter, password-protected PDF + email export (including the selected SHS strand), optional career-look photo (face props, plus hand-sign effects), a share image of the code with no identifying data (device share menu or save), results ID kept as a record.
+4. **Results** (`/results`) — Holland code + trait breakdown, all majors and related pathways per code letter, password-protected PDF + email export (including the selected SHS strand), optional career-look photo (face props, plus hand-sign effects), a share image of the code with no identifying data (device share menu or save). A results ID is saved server-side for the admin stats page, but nothing about it appears on screen.
 
 ## Non-goals
 
@@ -29,6 +29,7 @@ Product app with one brand surface: the landing page is brand register (identity
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 
+- 2026-11-09 · results · Removed the "Your results ID" panel from Results entirely (no display, copy, or delete). The save that feeds the admin stats page still runs, silently, with nothing on screen for it. · Requested removal of the results-ID feature from the Results page.
 - 2026-11-09 · results · Removed compare-by-ID from Results (PRD FR-9.3 cut); the results ID is now kept only as a record, save and delete unchanged. · Comparing was cut from the results page.
 - 2026-11-08 · results · Results can share an image of the code, with no identifying data (PRD FR-12). · Students asked to post their result.
 - 2026-11-05 · product · Landing explains how the code is scored (PRD FR-1.6). · Transparency about the scoring before students start.

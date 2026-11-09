@@ -64,13 +64,13 @@ interface Theme {
 }
 
 export const THEMES: Readonly<Record<RiasecLetter, Theme>> = {
-  R: { shapes: ["gear", "nut"], colors: ["#ffc81f", "#ff8c1a", "#adb5bd"] },
+  R: { shapes: ["gear", "nut"], colors: ["#ff9aa2", "#e8737f", "#adb5bd"] },
   I: { shapes: ["atom", "bubble"], colors: ["#a37cff", "#4dabf7", "#51cf66"] },
   A: {
     shapes: ["splat", "star"],
-    colors: ["#ff5c8a", "#ffd21f", "#2192ff", "#38e54d", "#a37cff"],
+    colors: ["#ff9aa2", "#e8d5b5", "#a6c8e2", "#c9a45f", "#7fb0d6"],
   },
-  S: { shapes: ["heart", "smiley"], colors: ["#ff5c8a", "#ffd21f", "#ff8fab"] },
+  S: { shapes: ["heart", "smiley"], colors: ["#a6c8e2", "#7fb0d6", "#e3f0fa", "#ff8fab"] },
   E: { shapes: ["coin", "arrow"], colors: ["#ffd21f", "#38e54d", "#f2a900"] },
   C: { shapes: ["check", "tile"], colors: ["#38e54d", "#1fd8c8", "#2192ff"] },
 };

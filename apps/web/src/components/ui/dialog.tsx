@@ -22,15 +22,22 @@ function DialogClose({ ...props }: DialogPrimitive.Close.Props) {
 
 function DialogContent({
   className,
+  overlayClassName,
   children,
   showCloseButton = true,
   ...props
-}: DialogPrimitive.Popup.Props & { showCloseButton?: boolean }) {
+}: DialogPrimitive.Popup.Props & {
+  showCloseButton?: boolean;
+  overlayClassName?: string;
+}) {
   return (
     <DialogPrimitive.Portal>
       <DialogPrimitive.Backdrop
         data-slot="dialog-overlay"
-        className="fixed inset-0 z-50 bg-black/25 transition-opacity duration-150 data-ending-style:opacity-0 data-starting-style:opacity-0"
+        className={cn(
+          "fixed inset-0 z-50 bg-black/25 transition-opacity duration-150 data-ending-style:opacity-0 data-starting-style:opacity-0",
+          overlayClassName,
+        )}
       />
       <DialogPrimitive.Popup
         data-slot="dialog-content"

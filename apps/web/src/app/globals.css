@@ -201,13 +201,18 @@
   --foreground: #0a1a33;
   --chrome: #d6e9ff;
   --chrome-border: #2192ff;
-  /* Category scale punched up to match: blue and green are the palette's
-     own; violet, gold, coral and teal are pitched at the same loudness. All
-     carry the ink at ≥5.48:1. */
-  --trait-r: #2192ff;
+  /* Category scale. Realistic (rose), Artistic (beige) and Social (light blue)
+     stay clear of the app's own saturated blue / yellow / green (Social is a
+     soft powder blue, much paler than #2192FF), so a letter chip is not
+     mistaken for a stage accent or a brand fill; violet, coral and teal keep
+     the louder pitch. All carry the ink at ≥5.70:1 (rose 8.60,
+     beige 12.09, light blue 9.91). The three are 2.02 / 1.44 / 1.75:1 against
+     a white card, so they never rely on the fill alone: the art's rim is
+     TRAIT_SHADE_KEEP in letter-chip-styles.ts (≥3:1 on white). */
+  --trait-r: #ff9aa2;
   --trait-i: #a37cff;
-  --trait-a: #ffd21f;
-  --trait-s: #38e54d;
+  --trait-a: #e8d5b5;
+  --trait-s: #a6c8e2;
   --trait-e: #ff7f4d;
   --trait-c: #1fd8c8;
   --trait-foreground: #0a1a33;
@@ -339,10 +344,10 @@
   --chrome-border: rgb(197 224 255 / 0.22);
   /* The pastel letter fills stay as they are on dark; they are fills with
      dark text, the same way the stage chips work. */
-  --trait-r: #7cafe8;
+  --trait-r: #f2a3aa;
   --trait-i: #b59be6;
-  --trait-a: #eec96c;
-  --trait-s: #9ed691;
+  --trait-a: #dcc9a6;
+  --trait-s: #a6c8e2;
   --trait-e: #f7a284;
   --trait-c: #7ad7d1;
   --trait-foreground: #0d192f;

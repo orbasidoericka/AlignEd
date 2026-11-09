@@ -195,7 +195,7 @@ function drawHardHat(ctx: CanvasRenderingContext2D) {
   // and size up so the shell covers the hair instead of perching on it.
   ctx.translate(0, 0.1);
   ctx.scale(1.15, 1.15);
-  outline(ctx, "#6b4300");
+  outline(ctx, "#6e2a33");
 
   // Shell
   const shell = new Path2D();
@@ -204,18 +204,18 @@ function drawHardHat(ctx: CanvasRenderingContext2D) {
   shell.closePath();
 
   const shellFill = ctx.createLinearGradient(0, -0.62, 0, -0.05);
-  shellFill.addColorStop(0, "#ffe066");
-  shellFill.addColorStop(0.55, "#ffc81f");
-  shellFill.addColorStop(1, "#e8a200");
+  shellFill.addColorStop(0, "#ffd6da");
+  shellFill.addColorStop(0.55, "#ff9aa2");
+  shellFill.addColorStop(1, "#e0707c");
   ctx.fillStyle = shellFill;
   ctx.fill(shell);
 
   // Ridges, clipped to the shell so they follow its curve.
   ctx.save();
   ctx.clip(shell);
-  ctx.fillStyle = "#f0b000";
+  ctx.fillStyle = "#f58a95";
   ctx.fillRect(-0.075, -0.7, 0.15, 0.65);
-  ctx.fillStyle = "rgba(107, 67, 0, 0.18)";
+  ctx.fillStyle = "rgba(110, 42, 51, 0.18)";
   ctx.fillRect(-0.3, -0.7, 0.035, 0.65);
   ctx.fillRect(0.265, -0.7, 0.035, 0.65);
   // Soft highlight on the upper left of the dome.
@@ -229,8 +229,8 @@ function drawHardHat(ctx: CanvasRenderingContext2D) {
 
   // Brim, drawn over the shell's lower edge.
   const brimFill = ctx.createLinearGradient(0, -0.14, 0, 0.02);
-  brimFill.addColorStop(0, "#ffcf33");
-  brimFill.addColorStop(1, "#d99400");
+  brimFill.addColorStop(0, "#ffb0b7");
+  brimFill.addColorStop(1, "#d9606d");
   ctx.fillStyle = brimFill;
   ctx.beginPath();
   ctx.ellipse(0, -0.06, 0.68, 0.075, 0, 0, Math.PI * 2);
@@ -239,7 +239,7 @@ function drawHardHat(ctx: CanvasRenderingContext2D) {
 
   // Front badge
   circle(ctx, 0, -0.3, 0.075, "#ffffff");
-  ctx.fillStyle = "#2f9e44";
+  ctx.fillStyle = "#b8333f";
   ctx.fillRect(-0.016, -0.35, 0.032, 0.1);
   ctx.fillRect(-0.05, -0.316, 0.1, 0.032);
 }
@@ -415,28 +415,28 @@ function drawGoggles(
 // A: Artistic, Fine and Performing Arts
 
 function drawBeret(ctx: CanvasRenderingContext2D, _face: FaceShape, time: number) {
-  outline(ctx, "#5c0f12");
+  outline(ctx, "#5a4524");
 
   // Beret, slouched to one side and pulled down over the hairline.
   ctx.save();
   ctx.translate(0.06, 0.08);
   ctx.rotate(-0.14);
   const fill = ctx.createRadialGradient(-0.1, -0.3, 0.05, 0, -0.18, 0.7);
-  fill.addColorStop(0, "#e03e45");
-  fill.addColorStop(1, "#a51d24");
+  fill.addColorStop(0, "#f1e4cb");
+  fill.addColorStop(1, "#cdb487");
   ctx.fillStyle = fill;
   ctx.beginPath();
   ctx.ellipse(0.04, -0.2, 0.66, 0.24, 0, 0, Math.PI * 2);
   ctx.fill();
   ctx.stroke();
   // Headband
-  ctx.fillStyle = "#7d1418";
+  ctx.fillStyle = "#8c7344";
   ctx.beginPath();
   ctx.ellipse(0, -0.03, 0.5, 0.06, 0, 0, Math.PI * 2);
   ctx.fill();
   ctx.stroke();
   // Stalk on top
-  ctx.fillStyle = "#7d1418";
+  ctx.fillStyle = "#8c7344";
   ctx.beginPath();
   ctx.roundRect(0.02, -0.5, 0.05, 0.08, 0.02);
   ctx.fill();
@@ -447,11 +447,11 @@ function drawBeret(ctx: CanvasRenderingContext2D, _face: FaceShape, time: number
   const px = -1.02;
   const py = 0.15 + bob(time, 1.5);
   const blobs: [number, number, string][] = [
-    [-0.13, -0.02, "#e03131"],
-    [-0.06, -0.1, "#fab005"],
-    [0.05, -0.1, "#2f9e44"],
-    [0.13, -0.03, "#1c7ed6"],
-    [-0.08, 0.08, "#ae3ec9"],
+    [-0.13, -0.02, "#ff9aa2"],
+    [-0.06, -0.1, "#b8955a"],
+    [0.05, -0.1, "#e8737f"],
+    [0.13, -0.03, "#a6c8e2"],
+    [-0.08, 0.08, "#7fb0d6"],
   ];
   floating(ctx, px, py, 1.4, () => {
     outline(ctx, "#7a4b1e", 0.014);
@@ -501,12 +501,12 @@ function handshake(ctx: CanvasRenderingContext2D, x: number, y: number) {
   circle(ctx, x, y, 0.22, "#ffffff");
 
   outline(ctx, "#343a40", 0.01);
-  ctx.fillStyle = "#4c6ef5";
+  ctx.fillStyle = "#a6c8e2";
   ctx.beginPath();
   ctx.roundRect(x - 0.2, y - 0.05, 0.1, 0.12, 0.02);
   ctx.fill();
   ctx.stroke();
-  ctx.fillStyle = "#fd7e14";
+  ctx.fillStyle = "#ffb59c";
   ctx.beginPath();
   ctx.roundRect(x + 0.1, y - 0.05, 0.1, 0.12, 0.02);
   ctx.fill();
@@ -540,7 +540,7 @@ function drawCounselor(
 
   // Lanyard straps from either side of the neck down to an ID badge. Kept
   // short so the badge clears the caption banner.
-  outline(ctx, "#0c8599", 0.05);
+  outline(ctx, "#3f6f95", 0.05);
   ctx.lineCap = "butt";
   ctx.beginPath();
   const badgeTop = neck + 0.26;
@@ -561,7 +561,7 @@ function drawCounselor(
   ctx.roundRect(-0.15, badgeTop, 0.3, 0.26, 0.03);
   ctx.fill();
   ctx.stroke();
-  ctx.fillStyle = "#3bc9db";
+  ctx.fillStyle = "#a6c8e2";
   ctx.fillRect(-0.15, badgeTop, 0.3, 0.06);
   // Photo and two name lines
   circle(ctx, -0.07, badgeTop + 0.15, 0.045, "#ced4da");
@@ -587,8 +587,8 @@ function drawCounselor(
   const bx = 0.98;
   const by = -0.15 + bob(time, 2);
   floating(ctx, bx, by, 1.2, () => {
-    outline(ctx, "#0b7285", 0.014);
-    ctx.fillStyle = "#c5f6fa";
+    outline(ctx, "#3f6f95", 0.014);
+    ctx.fillStyle = "#e6f1f9";
     speechBubble(ctx, bx, by, 0.34, 0.24, -1);
     outline(ctx, "#a61e4d", 0.01);
     ctx.fillStyle = "#f06595";

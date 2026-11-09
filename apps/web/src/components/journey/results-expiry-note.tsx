@@ -4,10 +4,8 @@
 import { useEffect, useState } from "react";
 
 import { useHydrated } from "@/hooks/use-hydrated";
-import {
-  sessionRemainingMs,
-  useAssessmentStore,
-} from "@/store/useAssessmentStore";
+import { RESULTS_TEXT_FIL } from "@/lib/riasec/results-fil";
+import { sessionRemainingMs, useAssessmentStore } from "@/store/useAssessmentStore";
 
 function formatClock(ms: number): string {
   const total = Math.ceil(ms / 1000);
@@ -21,7 +19,8 @@ function formatClock(ms: number): string {
 export function ResultsExpiryNote() {
   const hydrated = useHydrated();
   const lastUpdated = useAssessmentStore((state) => state.lastUpdated);
-  const resultsId = useAssessmentStore((state) => state.resultsId);
+  const fil = useAssessmentStore((state) => state.language) === "fil";
+  const t = RESULTS_TEXT_FIL.expiry;
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -47,28 +46,41 @@ export function ResultsExpiryNote() {
 
   return (
     <p
+      lang={fil ? "fil" : undefined}
       className="text-sm text-muted-foreground print:hidden"
       data-print-hidden
       data-testid="results-expiry-note"
     >
-      <span className="sr-only">
-        Your results stay on this device for about {wholeMinutes}{" "}
-        {wholeMinutes === 1 ? "more minute" : "more minutes"}, or until you
-        close this tab.
-      </span>
-      <span aria-hidden="true">
-        Your results stay on this device for{" "}
-        <span className="font-semibold tabular-nums text-foreground">
-          {formatClock(remaining)}
-        </span>{" "}
-        more, or until you close this tab.
-      </span>
-      {resultsId ? (
+      {fil ? (
         <>
-          {" "}
-          Keep your Results ID to see your scores again.
+          <span className="sr-only">
+            {t.srPrefix} {wholeMinutes}{" "}
+            {wholeMinutes === 1 ? t.srMoreMinute : t.srMoreMinutes}, {t.srSuffix}
+          </span>
+          <span aria-hidden="true">
+            {t.visiblePrefix}{" "}
+            <span className="font-semibold tabular-nums text-foreground">
+              {formatClock(remaining)}
+            </span>{" "}
+            {t.visibleSuffix}
+          </span>
         </>
-      ) : null}
+      ) : (
+        <>
+          <span className="sr-only">
+            Your results stay on this device for about {wholeMinutes}{" "}
+            {wholeMinutes === 1 ? "more minute" : "more minutes"}, or until you
+            close this tab.
+          </span>
+          <span aria-hidden="true">
+            Your results stay on this device for{" "}
+            <span className="font-semibold tabular-nums text-foreground">
+              {formatClock(remaining)}
+            </span>{" "}
+            more, or until you close this tab.
+          </span>
+        </>
+      )}
     </p>
   );
 }

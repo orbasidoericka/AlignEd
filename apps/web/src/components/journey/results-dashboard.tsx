@@ -19,6 +19,7 @@ import { Progress } from "@/components/ui/progress";
 import { TraitEmblem } from "@/components/riasec/trait-emblem";
 import { letterChip } from "@/lib/riasec/letter-chip-styles";
 import { QUESTIONS } from "@/lib/riasec/questions";
+import { RESULTS_TEXT_FIL, TRAIT_LABEL_FIL } from "@/lib/riasec/results-fil";
 import {
   computeHollandCode,
   formatHollandCode,
@@ -39,6 +40,10 @@ const printSingle = "print:col-span-1 print:row-span-1";
 export function ResultsDashboard() {
   const scores = useAssessmentStore((state) => state.scores);
   const nickname = useAssessmentStore((state) => state.profile.nickname);
+  const fil = useAssessmentStore((state) => state.language) === "fil";
+  const t = RESULTS_TEXT_FIL;
+  const traitLabel = (trait: (typeof TRAIT_ORDER)[number]) =>
+    fil ? TRAIT_LABEL_FIL[trait] : TRAIT_META[trait].label;
   // JourneyGuard already withholds this whole subtree until the persisted
   // store has rehydrated, which is why `scores` above is safe. The greeting
   // keeps its own gate anyway: it is the one string a student would notice
@@ -56,10 +61,17 @@ export function ResultsDashboard() {
           {/* The page's only h1: the cards below are all h2. Before hydration
               (and for a profile with no nickname) it drops the name rather
               than the greeting, so the line never reads half-finished. */}
-          <h1 className="font-heading text-3xl font-bold tracking-tight text-balance text-foreground sm:text-4xl">
-            {hydrated && nickname
-              ? `Here are your results, ${nickname}!`
-              : "Here are your results"}
+          <h1
+            lang={fil ? "fil" : undefined}
+            className="font-heading text-3xl font-bold tracking-tight text-balance text-foreground sm:text-4xl"
+          >
+            {fil
+              ? hydrated && nickname
+                ? t.greeting(nickname)
+                : t.greetingNoName
+              : hydrated && nickname
+                ? `Here are your results, ${nickname}!`
+                : "Here are your results"}
           </h1>
           <ResultsExpiryNote />
         </div>
@@ -108,16 +120,20 @@ export function ResultsDashboard() {
                 ]}
                 className="-z-10 -scale-x-100 stroke-primary/40 mask-[linear-gradient(to_right,white,transparent_75%)] print:hidden dark:stroke-primary/20"
               />
-              <p className="text-sm font-semibold text-muted-foreground">
-                Your Holland Code
+              <p
+                lang={fil ? "fil" : undefined}
+                className="text-sm font-semibold text-muted-foreground"
+              >
+                {fil ? t.hollandCodeLabel : "Your Holland Code"}
               </p>
               {/* h2, like every other bento cell: the page's h1 is the
                   greeting above the grid. */}
               <h2
                 id="code-heading"
+                lang={fil ? "fil" : undefined}
                 className="-mt-2 text-3xl font-bold text-foreground sm:text-4xl"
               >
-                You are an{" "}
+                {fil ? t.youAre : "You are an"}{" "}
                 <span className="whitespace-nowrap">
                   {formatHollandCode(code)}
                 </span>
@@ -135,8 +151,11 @@ export function ResultsDashboard() {
                     className="flex flex-col items-center gap-1.5 text-center"
                   >
                     <TraitEmblem letter={letter} className="size-16 sm:size-20" />
-                    <span className="text-sm text-muted-foreground sm:text-base">
-                      {TRAIT_META[traitForLetter(letter)].label}
+                    <span
+                      lang={fil ? "fil" : undefined}
+                      className="text-sm text-muted-foreground sm:text-base"
+                    >
+                      {traitLabel(traitForLetter(letter))}
                     </span>
                   </li>
                 ))}
@@ -159,11 +178,19 @@ export function ResultsDashboard() {
           >
             <BentoGridItem
               headingId="radar-heading"
-              title="Your six traits"
+              title={
+                fil ? <span lang="fil">{t.sixTraitsTitle}</span> : "Your six traits"
+              }
               icon={
                 <RadarIcon className="size-5 text-primary-strong" aria-hidden />
               }
-              description={`Scores out of ${max} for each RIASEC trait.`}
+              description={
+                fil ? (
+                  <span lang="fil">{t.sixTraitsDescription(max)}</span>
+                ) : (
+                  `Scores out of ${max} for each RIASEC trait.`
+                )
+              }
               className="h-full"
             >
               <RiasecRadar scores={scores} max={max} className="my-auto" />
@@ -201,7 +228,13 @@ export function ResultsDashboard() {
           >
             <BentoGridItem
               headingId="traits-heading"
-              title="What your code means"
+              title={
+                fil ? (
+                  <span lang="fil">{t.codeMeaningTitle}</span>
+                ) : (
+                  "What your code means"
+                )
+              }
               className="h-full"
             >
               <ul className="flex flex-col gap-5">
@@ -209,11 +242,15 @@ export function ResultsDashboard() {
                   const trait = traitForLetter(letter);
                   const percent =
                     max > 0 ? Math.round((scores[trait] / max) * 100) : 0;
+                  const label = traitLabel(trait);
                   return (
                     <li key={letter} className="flex flex-col gap-2">
                       <div className="flex items-baseline justify-between gap-2">
-                        <h3 className="font-heading text-base font-bold text-foreground">
-                          {letter}: {TRAIT_META[trait].label}
+                        <h3
+                          lang={fil ? "fil" : undefined}
+                          className="font-heading text-base font-bold text-foreground"
+                        >
+                          {letter}: {label}
                         </h3>
                         <span className="font-heading text-sm font-semibold text-primary-strong tabular-nums">
                           <NumberTicker value={scores[trait]} /> / {max}
@@ -221,7 +258,7 @@ export function ResultsDashboard() {
                       </div>
                       <Progress
                         value={percent}
-                        aria-label={`${TRAIT_META[trait].label}: ${scores[trait]} out of ${max}`}
+                        aria-label={`${label}: ${scores[trait]} ${fil ? t.outOf(max) : `out of ${max}`}`}
                       />
                     </li>
                   );
@@ -230,11 +267,9 @@ export function ResultsDashboard() {
             </BentoGridItem>
           </BlurFade>
 
-          {/* Mounting this panel is what saves the result (PRD FR-9) and
-              shows the results ID, so it must stay on the page. */}
-          <div className="md:col-span-3 print:hidden" data-print-hidden>
-            <SavedResultsPanel />
-          </div>
+          {/* No UI: mounting this is what saves the result row for admin
+              stats (PRD FR-9, BACKEND.md), so it must stay on the page. */}
+          <SavedResultsPanel />
 
           {/* Majors and related pathways for each code letter (official
               RIASEC sheet). Every item listed, no ranking or match labels. */}

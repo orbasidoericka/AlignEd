@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { QUESTIONS } from "@/lib/riasec/questions";
@@ -11,10 +11,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 const saveResults = vi.hoisted(() => vi.fn());
-vi.mock("@/lib/saved-results/client", () => ({
-  saveResults,
-  deleteSavedResult: vi.fn(),
-}));
+vi.mock("@/lib/saved-results/client", () => ({ saveResults }));
 
 function completeAssessment(nickname: string) {
   const { reset, setProfile, setAnswer } = useAssessmentStore.getState();
@@ -32,14 +29,15 @@ describe("ResultsDashboard greeting", () => {
     saveResults.mockResolvedValue({ ok: true, value: "ALGN-7KQ2-MX9P" });
   });
 
-  it("saves the finished result once and shows its results ID", async () => {
+  it("saves the finished result once, silently, and stores its results ID", async () => {
     completeAssessment("FERF");
     render(<ResultsDashboard />);
 
-    expect(await screen.findByTestId("results-id")).toHaveTextContent(
-      "ALGN-7KQ2-MX9P",
-    );
+    await waitFor(() => {
+      expect(useAssessmentStore.getState().resultsId).toBe("ALGN-7KQ2-MX9P");
+    });
     expect(saveResults).toHaveBeenCalledTimes(1);
+    expect(screen.queryByTestId("results-id")).toBeNull();
   });
 
   it("greets the student by the nickname they chose", () => {

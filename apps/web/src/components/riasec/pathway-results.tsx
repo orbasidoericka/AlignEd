@@ -5,8 +5,16 @@ import { BentoGrid, BentoGridItem } from "@/components/aceternity/bento-grid";
 import { TraitEmblem } from "@/components/riasec/trait-emblem";
 import { TraitMascot } from "@/components/riasec/trait-mascot";
 import { pathwaysForCode } from "@/lib/riasec/career-pathways";
+import {
+  PATHWAY_DESCRIPTION_FIL,
+  PATHWAY_MAJORS_FIL,
+  PATHWAY_NAME_FIL,
+  PATHWAY_RELATED_FIL,
+} from "@/lib/riasec/career-pathways-fil";
 import { letterBorder, letterRing } from "@/lib/riasec/letter-chip-styles";
+import { RESULTS_TEXT_FIL } from "@/lib/riasec/results-fil";
 import type { RiasecLetter } from "@/lib/riasec/types";
+import { useAssessmentStore } from "@/store/useAssessmentStore";
 import { cn } from "@/lib/utils";
 
 interface PathwayResultsProps {
@@ -27,6 +35,9 @@ export function PathwayResults({
   topThreeLetters,
   className,
 }: PathwayResultsProps) {
+  const fil = useAssessmentStore((state) => state.language) === "fil";
+  const t = RESULTS_TEXT_FIL;
+
   return (
     <BentoGrid className={cn("print:grid-cols-1", className)}>
       {pathwaysForCode(topThreeLetters).map((profile, index) => {
@@ -34,27 +45,33 @@ export function PathwayResults({
         // badge and a double edge in its own trait color, but stays the same
         // size as the others: a ring is a box-shadow, so nothing shifts.
         const primary = index === 0;
+        const { letter } = profile;
         return (
           <BentoGridItem
-            key={profile.letter}
-            headingId={`pathway-${profile.letter}-heading`}
+            key={letter}
+            headingId={`pathway-${letter}-heading`}
             frameClassName={cn(
               rowAligned,
               primary &&
-                cn("ring-1", letterBorder(profile.letter), letterRing(profile.letter)),
+                cn("ring-1", letterBorder(letter), letterRing(letter)),
             )}
-            header={<TraitMascot letter={profile.letter} primary={primary} />}
-            title={profile.name}
-            icon={<TraitEmblem letter={profile.letter} className="size-8" />}
+            header={<TraitMascot letter={letter} primary={primary} />}
+            title={fil ? PATHWAY_NAME_FIL[letter] : profile.name}
+            icon={<TraitEmblem letter={letter} className="size-8" />}
             className={cn("h-full", rowAligned)}
           >
-            <p className="text-sm text-muted-foreground">
-              {profile.description}
+            <p lang={fil ? "fil" : undefined} className="text-sm text-muted-foreground">
+              {fil ? PATHWAY_DESCRIPTION_FIL[letter] : profile.description}
             </p>
-            <TagList heading="College majors" items={profile.majors} />
             <TagList
-              heading="Related pathways"
-              items={profile.relatedPathways}
+              heading={fil ? t.collegeMajors : "College majors"}
+              items={fil ? PATHWAY_MAJORS_FIL[letter] : profile.majors}
+              lang={fil ? "fil" : undefined}
+            />
+            <TagList
+              heading={fil ? t.relatedPathways : "Related pathways"}
+              items={fil ? PATHWAY_RELATED_FIL[letter] : profile.relatedPathways}
+              lang={fil ? "fil" : undefined}
             />
           </BentoGridItem>
         );
@@ -70,12 +87,14 @@ export function PathwayResults({
 function TagList({
   heading,
   items,
+  lang,
 }: {
   heading: string;
   items: readonly string[];
+  lang?: string | undefined;
 }) {
   return (
-    <div className="flex flex-col gap-2">
+    <div lang={lang} className="flex flex-col gap-2">
       <h3 className="font-heading text-sm font-bold text-foreground">
         {heading}
       </h3>

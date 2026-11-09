@@ -6,7 +6,10 @@ import {
   traitForLetter,
   type HollandCode,
 } from "@/lib/riasec/scoring";
+import { TRAIT_SHADE_KEEP } from "@/lib/riasec/letter-chip-styles";
+import { TRAIT_LABEL_FIL } from "@/lib/riasec/results-fil";
 import type { RiasecLetter } from "@/lib/riasec/types";
+import type { QuestionLanguage } from "@/lib/riasec/questions";
 
 // The picture behind "Share my results" (PRD FR-12). Drawn in the browser and
 // never uploaded. The content below is the whole card, so anything added here
@@ -19,15 +22,24 @@ export interface ShareCardContent {
   footer: string;
 }
 
-export function shareCardContent(code: HollandCode): ShareCardContent {
+export function shareCardContent(
+  code: HollandCode,
+  language: QuestionLanguage = "en",
+): ShareCardContent {
+  const fil = language === "fil";
   return {
-    title: "My Holland Code",
+    title: fil ? "Aking Holland Code" : "My Holland Code",
     code: formatHollandCode(code),
-    traits: code.map((letter) => ({
-      letter,
-      label: TRAIT_META[traitForLetter(letter)].label,
-    })),
-    footer: "AlignEd · RIASEC career interests",
+    traits: code.map((letter) => {
+      const trait = traitForLetter(letter);
+      return {
+        letter,
+        label: fil ? TRAIT_LABEL_FIL[trait] : TRAIT_META[trait].label,
+      };
+    }),
+    footer: fil
+      ? "AlignEd · mga interes sa karera ng RIASEC"
+      : "AlignEd · RIASEC career interests",
   };
 }
 
@@ -90,9 +102,9 @@ export function emblemMarkup(
 
 // The emblem's darker rim: the same mix as letterArtStyle, resolved to rgb so
 // it survives being written into a standalone SVG.
-function traitShade(trait: string, ink: string): string {
+function traitShade(trait: string, ink: string, keep: number): string {
   const probe = document.createElement("span");
-  probe.style.color = `color-mix(in oklab, ${trait} 65%, ${ink})`;
+  probe.style.color = `color-mix(in oklab, ${trait} ${keep}%, ${ink})`;
   document.body.append(probe);
   const mixed = getComputedStyle(probe).color;
   probe.remove();
@@ -157,6 +169,7 @@ export function drawShareCard(
 export async function buildShareImage(
   code: HollandCode,
   badges: readonly SVGSVGElement[],
+  language: QuestionLanguage = "en",
 ): Promise<File> {
   const root = getComputedStyle(document.documentElement);
   const fonts: ShareFonts = {
@@ -181,7 +194,7 @@ export async function buildShareImage(
         emblemMarkup(badges[index]!, {
           trait,
           ink,
-          shade: traitShade(trait, ink),
+          shade: traitShade(trait, ink, TRAIT_SHADE_KEEP[letter]),
         }),
       );
     }),
@@ -192,7 +205,7 @@ export async function buildShareImage(
   canvas.height = SIZE;
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Canvas is unavailable.");
-  drawShareCard(ctx, shareCardContent(code), palette, fonts, emblems);
+  drawShareCard(ctx, shareCardContent(code, language), palette, fonts, emblems);
 
   const blob = await new Promise<Blob | null>((resolve) =>
     canvas.toBlob(resolve, "image/png"),

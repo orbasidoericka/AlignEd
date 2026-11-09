@@ -82,13 +82,12 @@ describe("AssessmentRunner hardening", () => {
   it("shows statements and answers in Filipino without touching scoring", () => {
     render(<AssessmentRunner />);
     expect(statement(0)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "English" })).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
 
-    fireEvent.click(screen.getByRole("button", { name: "Filipino" }));
-    expect(useAssessmentStore.getState().language).toBe("fil");
+    // The language switch now lives in the FocusBar, outside this
+    // component; here it only needs to react to the store.
+    act(() => {
+      useAssessmentStore.getState().setLanguage("fil");
+    });
     expect(
       screen.getByRole("heading", {
         level: 1,
@@ -109,16 +108,13 @@ describe("AssessmentRunner hardening", () => {
 
   // jsdom has no matchMedia, so the runner reads as a phone: the numbers start
   // hidden, and a choice made with the toggle wins at every width.
-  it("shows and hides only the numbers with the toggle, never the language switch", () => {
+  it("shows and hides only the numbers with the toggle", () => {
     render(<AssessmentRunner />);
     const panel = () => screen.getByRole("region", { name: "All questions" });
     const toggle = () => screen.getByRole("button", { name: "All questions" });
-    const languageSwitch = () =>
-      screen.getByRole("group", { name: "Statement language" });
 
     expect(toggle()).toHaveAttribute("aria-expanded", "false");
     expect(panel()).toHaveClass("hidden");
-    expect(languageSwitch()).toBeInTheDocument();
 
     fireEvent.click(toggle());
     expect(toggle()).toHaveAttribute("aria-expanded", "true");
@@ -129,9 +125,6 @@ describe("AssessmentRunner hardening", () => {
     expect(toggle()).toHaveAttribute("aria-expanded", "false");
     expect(panel()).toHaveClass("hidden");
     expect(panel()).not.toHaveClass("lg:flex"); // chosen: hidden at every width
-    // The language switch is untouched by hiding the numbers.
-    expect(languageSwitch()).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Filipino" })).toBeInTheDocument();
   });
 
   it("hides the numbers from the Hide button inside the panel too", () => {
@@ -146,19 +139,6 @@ describe("AssessmentRunner hardening", () => {
       "aria-expanded",
       "false",
     );
-  });
-
-  it("puts the numbers toggle just before the language switch", () => {
-    render(<AssessmentRunner />);
-    const toggle = screen.getByRole("button", { name: "All questions" });
-    const languageSwitch = screen.getByRole("group", {
-      name: "Statement language",
-    });
-    expect(toggle.parentElement).toBe(languageSwitch.parentElement);
-    expect(
-      toggle.compareDocumentPosition(languageSwitch) &
-        Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
   });
 
   it("folds the numbers away after a jump on a phone, so the statement is in view", () => {
@@ -207,13 +187,20 @@ describe("AssessmentRunner hardening", () => {
     answerFirst(QUESTIONS.length);
     render(<AssessmentRunner />);
     expect(screen.getByRole("dialog", { name: "All done!" })).toBeInTheDocument();
+    // The pop-up is the only way forward: no Finish button behind it.
+    expect(
+      screen.queryByRole("button", { name: "Finish assessment" }),
+    ).toBeNull();
 
     fireEvent.click(screen.getByRole("button", { name: /Review my answers/ }));
     wait(500);
     expect(screen.queryByRole("dialog")).toBeNull();
     expect(statement(QUESTIONS.length - 1)).toBeInTheDocument();
+
+    // Reviewing brings the button in, and it goes straight to Results.
     fireEvent.click(screen.getByRole("button", { name: "Finish assessment" }));
-    expect(screen.getByRole("dialog", { name: "All done!" })).toBeInTheDocument();
+    expect(push).toHaveBeenCalledExactlyOnceWith("/results");
+    expect(screen.queryByRole("dialog")).toBeNull();
   });
 
   it("ignores taps that land right after a statement appears", () => {
@@ -334,8 +321,12 @@ describe("AssessmentRunner hardening", () => {
     fireEvent.keyDown(document, { key: "y" });
     expect(playSound).toHaveBeenCalledWith("yes");
 
-    // Not before the advance delay: the last tap registers first.
+    // Not before the advance delay: the last tap registers first. The Finish
+    // button must not flash in during that gap either.
     expect(screen.queryByRole("dialog")).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: "Finish assessment" }),
+    ).toBeNull();
     expect(playSound).not.toHaveBeenCalledWith("celebration");
 
     // Then it opens with no click on any finish button.
@@ -343,12 +334,12 @@ describe("AssessmentRunner hardening", () => {
     expect(screen.getByRole("dialog", { name: "All done!" })).toBeInTheDocument();
     expect(playSound.mock.calls.filter(([n]) => n === "celebration")).toHaveLength(1);
 
-    // Review then re-finish: no second celebration.
+    // Review then finish: straight to Results, no second celebration.
     playSound.mockClear();
     fireEvent.click(screen.getByRole("button", { name: /Review my answers/ }));
     wait(500);
     fireEvent.click(screen.getByRole("button", { name: "Finish assessment" }));
-    expect(screen.getByRole("dialog", { name: "All done!" })).toBeInTheDocument();
+    expect(push).toHaveBeenCalledExactlyOnceWith("/results");
     expect(playSound).not.toHaveBeenCalledWith("celebration");
   });
 

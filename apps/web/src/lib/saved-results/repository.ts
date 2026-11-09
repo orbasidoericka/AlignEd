@@ -94,20 +94,6 @@ export async function saveResult(
   }
 }
 
-// True when a row was deleted.
-export async function deleteResult(
-  db: SupabaseClient,
-  resultsId: string,
-): Promise<boolean> {
-  const { data, error } = await db
-    .from(TABLE)
-    .delete()
-    .eq("results_id", resultsId)
-    .select("results_id");
-  if (error) throw error;
-  return (data ?? []).length > 0;
-}
-
 // Rows past their one-year retention. Run on admin page loads, so expired
 // data is gone even without a scheduled job; reads already skip it.
 export async function purgeExpired(db: SupabaseClient): Promise<void> {

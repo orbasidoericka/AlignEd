@@ -55,6 +55,7 @@ import { downloadResultsPdf } from "@/lib/results-pdf/download-results-pdf";
 import { resultsPdfPassword, resultsTakenOn } from "@/lib/results-pdf/password";
 import { buildShareImage } from "@/lib/results-share/build-share-image";
 import { QUESTIONS } from "@/lib/riasec/questions";
+import { RESULTS_ACTIONS_TEXT_FIL } from "@/lib/riasec/results-fil";
 import {
   computeHollandCode,
   formatHollandCode,
@@ -108,6 +109,8 @@ function RetakeDialog() {
   const router = useRouter();
   const reset = useAssessmentStore((state) => state.reset);
   const clearPhoto = useCareerLookPhoto((state) => state.setPhoto);
+  const fil = useAssessmentStore((state) => state.language) === "fil";
+  const t = fil ? RESULTS_ACTIONS_TEXT_FIL.retake : null;
 
   const handleRetake = () => {
     reset();
@@ -127,22 +130,24 @@ function RetakeDialog() {
           </AlertDialogTrigger>
         }
       >
-        Retake assessment
+        {t ? t.tooltip : "Retake assessment"}
       </IconTooltip>
-      <AlertDialogContent>
+      <AlertDialogContent lang={fil ? "fil" : undefined}>
         <AlertDialogHeader>
-          <AlertDialogTitle>Retake the assessment?</AlertDialogTitle>
+          <AlertDialogTitle>
+            {t ? t.title : "Retake the assessment?"}
+          </AlertDialogTitle>
           <AlertDialogDescription>
-            This clears your profile, answers, and current results. You
-            will start fresh from the profile setup. Note your results ID
-            first if you want to keep it.
+            {t
+              ? t.description
+              : "This clears your profile, answers, and current results. You will start fresh from the profile setup. Save your PDF first if you want to keep a copy."}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogClose
             render={<Button variant="outline" size="lg" />}
           >
-            Keep my results
+            {t ? t.keep : "Keep my results"}
           </AlertDialogClose>
           <AlertDialogClose
             render={
@@ -153,7 +158,7 @@ function RetakeDialog() {
               />
             }
           >
-            Clear and retake
+            {t ? t.confirm : "Clear and retake"}
           </AlertDialogClose>
         </AlertDialogFooter>
       </AlertDialogContent>
@@ -267,6 +272,9 @@ function DownloadPdfDialog() {
 // the tap, and the preview shows the student exactly what they would post.
 function ShareResultsDialog() {
   const scores = useAssessmentStore((state) => state.scores);
+  const language = useAssessmentStore((state) => state.language);
+  const fil = language === "fil";
+  const t = fil ? RESULTS_ACTIONS_TEXT_FIL.share : null;
   const code = computeHollandCode(scores);
   const [image, setImage] = useState<{ file: File; url: string } | null>(null);
   const [failed, setFailed] = useState(false);
@@ -285,10 +293,14 @@ function ShareResultsDialog() {
     setImage(null);
     setFailed(false);
     try {
-      const file = await buildShareImage(code, [
-        ...(badges.current?.querySelectorAll<SVGSVGElement>(":scope > svg") ??
-          []),
-      ]);
+      const file = await buildShareImage(
+        code,
+        [
+          ...(badges.current?.querySelectorAll<SVGSVGElement>(":scope > svg") ??
+            []),
+        ],
+        language,
+      );
       if (thisBuild !== latestBuild.current) return;
       setImage({ file, url: URL.createObjectURL(file) });
     } catch (error) {
@@ -308,7 +320,7 @@ function ShareResultsDialog() {
     try {
       await navigator.share({
         files: [image.file],
-        title: "My AlignEd Holland Code",
+        title: fil ? "Ang Aking Holland Code sa AlignEd" : "My AlignEd Holland Code",
       });
     } catch {
       // Closing the share menu rejects; there is nothing to report.
@@ -333,20 +345,21 @@ function ShareResultsDialog() {
           </DialogTrigger>
         }
       >
-        Share my results
+        {t ? t.tooltip : "Share my results"}
       </IconTooltip>
-      <DialogContent>
+      <DialogContent lang={fil ? "fil" : undefined}>
         <DialogHeader>
-          <DialogTitle>Share my results</DialogTitle>
+          <DialogTitle>{t ? t.title : "Share my results"}</DialogTitle>
           <DialogDescription>
-            This picture shows your Holland Code and nothing about who you are.
-            You choose whether to post it and where.
+            {t
+              ? t.description
+              : "This picture shows your Holland Code and nothing about who you are. You choose whether to post it and where."}
           </DialogDescription>
         </DialogHeader>
         {failed ? (
           <div className="flex flex-col items-start gap-3">
             <p className="text-sm font-medium text-destructive" role="alert">
-              The image could not be created. Please try again.
+              {t ? t.buildFailed : "The image could not be created. Please try again."}
             </p>
             <Button
               variant="outline"
@@ -355,7 +368,7 @@ function ShareResultsDialog() {
               className="rounded-full bg-card"
             >
               <RotateCcwIcon className="size-4" />
-              Try again
+              {t ? t.tryAgain : "Try again"}
             </Button>
           </div>
         ) : image ? (
@@ -368,7 +381,7 @@ function ShareResultsDialog() {
         ) : (
           <Skeleton
             className="mx-auto aspect-square w-full max-w-72 rounded-2xl"
-            aria-label="Creating your picture"
+            aria-label={t ? t.creating : "Creating your picture"}
           />
         )}
         {image && (
@@ -381,12 +394,12 @@ function ShareResultsDialog() {
               render={<a href={image.url} download={image.file.name} />}
             >
               <DownloadIcon className="size-4" />
-              Save image
+              {t ? t.save : "Save image"}
             </Button>
             {canShare && (
               <Button size="lg" onClick={share} className="rounded-full">
                 <Share2Icon className="size-4" />
-                Share
+                {t ? t.shareButton : "Share"}
               </Button>
             )}
           </DialogFooter>
@@ -416,6 +429,8 @@ function EmailResultsDialog() {
   const scores = useAssessmentStore((state) => state.scores);
   const completedAt = useAssessmentStore((state) => state.completedAt);
   const lastUpdated = useAssessmentStore((state) => state.lastUpdated);
+  const fil = useAssessmentStore((state) => state.language) === "fil";
+  const t = fil ? RESULTS_ACTIONS_TEXT_FIL.email : null;
   const takenOn = resultsTakenOn(completedAt, lastUpdated);
   const resultsId = useAssessmentStore((state) => state.resultsId);
   const code = computeHollandCode(scores);
@@ -468,29 +483,29 @@ function EmailResultsDialog() {
           </DialogTrigger>
         }
       >
-        Email me my results
+        {t ? t.tooltip : "Email me my results"}
       </IconTooltip>
-      <DialogContent>
+      <DialogContent lang={fil ? "fil" : undefined}>
         <DialogHeader>
-          <DialogTitle>Email my results</DialogTitle>
+          <DialogTitle>{t ? t.title : "Email my results"}</DialogTitle>
           <DialogDescription>
-            We email your results as a password-protected PDF. We send one copy
-            and don&apos;t keep your address; to stop spam, we only keep a
-            scrambled code of it for a day.
+            {t
+              ? t.description
+              : "We email your results as a password-protected PDF. We send one copy and don't keep your address; to stop spam, we only keep a scrambled code of it for a day."}
           </DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-col gap-1 rounded-2xl bg-muted p-4">
           <p className="text-sm font-medium text-muted-foreground">
-            Your PDF password
+            {t ? t.passwordLabel : "Your PDF password"}
           </p>
           <p className="font-mono text-xl font-bold tracking-wider break-all text-foreground">
             {password}
           </p>
           <p className="text-sm text-muted-foreground">
-            Your nickname, then your three-letter RIASEC code. Password is
-            CASE-SENSITIVE. It isn&apos;t written in the email, so keep it
-            somewhere safe.
+            {t
+              ? t.passwordHint
+              : "Your nickname, then your three-letter RIASEC code. Password is CASE-SENSITIVE. It isn't written in the email, so keep it somewhere safe."}
           </p>
         </div>
 
@@ -499,6 +514,7 @@ function EmailResultsDialog() {
             photo={photo}
             included={includePhoto}
             onIncludedChange={setIncludePhoto}
+            label={t ? t.attachPhoto : undefined}
           />
         )}
 
@@ -509,10 +525,17 @@ function EmailResultsDialog() {
           >
             <CheckCircle2Icon className="mt-0.5 size-5 shrink-0 text-primary-strong" />
             <p className="text-sm text-foreground">
-              Sent! Check <strong className="break-all">{email.trim()}</strong>{" "}
-              for your results PDF
-              {photo && includePhoto ? " and career look photo" : ""}. It may
-              take a minute, and it might land in your spam folder.
+              {t ? (
+                t.sent(email.trim(), Boolean(photo && includePhoto))
+              ) : (
+                <>
+                  Sent! Check{" "}
+                  <strong className="break-all">{email.trim()}</strong> for
+                  your results PDF
+                  {photo && includePhoto ? " and career look photo" : ""}. It
+                  may take a minute, and it might land in your spam folder.
+                </>
+              )}
             </p>
           </div>
         ) : (
@@ -528,7 +551,7 @@ function EmailResultsDialog() {
                 htmlFor="results-email"
                 className="text-sm font-medium text-foreground"
               >
-                Email address
+                {t ? t.emailLabel : "Email address"}
               </label>
               <Input
                 id="results-email"
@@ -545,7 +568,7 @@ function EmailResultsDialog() {
                   className="text-sm font-medium text-destructive"
                   role="alert"
                 >
-                  Enter a valid email address.
+                  {t ? t.emailInvalid : "Enter a valid email address."}
                 </p>
               )}
             </div>
@@ -557,7 +580,7 @@ function EmailResultsDialog() {
               aria-hidden
               value={website}
               onChange={(event) => setWebsite(event.target.value)}
-              className="absolute -left-[9999px] size-px opacity-0"
+              className="absolute -left-2499.75 size-px opacity-0"
             />
             <label className="flex items-start gap-3 text-sm text-muted-foreground">
               <Checkbox
@@ -566,13 +589,14 @@ function EmailResultsDialog() {
                 className="mt-0.5"
               />
               <span>
-                I consent to AlignEd sending my results to this address once, in
-                line with the Data Privacy Act of 2012.
+                {t
+                  ? t.consent
+                  : "I consent to AlignEd sending my results to this address once, in line with the Data Privacy Act of 2012."}
               </span>
             </label>
             {outcome && (
               <p className="text-sm font-medium text-destructive" role="alert">
-                {EMAIL_ERRORS[outcome]}
+                {t ? t.errors[outcome] : EMAIL_ERRORS[outcome]}
               </p>
             )}
             <DialogFooter>
@@ -587,7 +611,7 @@ function EmailResultsDialog() {
                 ) : (
                   <SendIcon className="size-4" />
                 )}
-                {sending ? "Sending…" : "Send my results"}
+                {sending ? (t ? t.sending : "Sending…") : t ? t.send : "Send my results"}
               </Button>
             </DialogFooter>
           </form>
@@ -603,10 +627,12 @@ function EmailPhotoOption({
   photo,
   included,
   onIncludedChange,
+  label,
 }: {
   photo: CareerLookPhoto;
   included: boolean;
   onIncludedChange: (included: boolean) => void;
+  label?: string | undefined;
 }) {
   return (
     <label className="flex items-center gap-3 rounded-2xl bg-muted p-3 text-sm text-foreground">
@@ -620,7 +646,7 @@ function EmailPhotoOption({
         alt={`Your career look photo: ${photo.caption}`}
         className="h-14 w-auto shrink-0 rounded-lg object-cover"
       />
-      <span>Attach my career look photo</span>
+      <span>{label ?? "Attach my career look photo"}</span>
     </label>
   );
 }

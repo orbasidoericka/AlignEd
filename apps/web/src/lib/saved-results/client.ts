@@ -8,7 +8,6 @@ import type { RiasecScores } from "@/store/useAssessmentStore";
 // strand, age and date are sent: never the nickname, school, or answers.
 
 export type SavedResultsError =
-  | "not_found"
   | "rate_limited"
   | "invalid"
   | "failed"
@@ -32,12 +31,7 @@ async function call<T>(
     unknown
   >;
   if (response.ok) return { ok: true, value: read(body) };
-  const known: SavedResultsError[] = [
-    "not_found",
-    "rate_limited",
-    "invalid",
-    "not_configured",
-  ];
+  const known: SavedResultsError[] = ["rate_limited", "invalid", "not_configured"];
   const error = known.find((code) => code === body.error) ?? "failed";
   return { ok: false, error };
 }
@@ -67,13 +61,5 @@ export function saveResults(input: {
       body: JSON.stringify({ ...input, takenOn: localDate(input.takenOn) }),
     },
     (body) => String(body.resultsId),
-  );
-}
-
-export function deleteSavedResult(resultsId: string): Promise<Outcome<true>> {
-  return call(
-    `/api/results/${encodeURIComponent(resultsId)}`,
-    { method: "DELETE" },
-    () => true as const,
   );
 }

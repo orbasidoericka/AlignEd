@@ -2,6 +2,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 import { SectionLink } from "@/components/blocks/section-link";
 import { Wordmark } from "@/components/blocks/wordmark";
@@ -11,14 +12,20 @@ import { cn } from "@/lib/utils";
 const linkClassName =
   "text-sm text-muted-foreground transition-colors hover:text-foreground";
 
-// Not the journey (that belongs to the navbar CTA): About Us, how the
+// Not the journey (that belongs to the navbar CTA): Home, About Us, how the
 // assessment works, and the legal notice, in that order.
 const footerLinks = [
+  { href: "/", label: "Home" },
   { href: "/about", label: "About Us" },
   { href: "/#how-it-works", label: "How it works" },
 ] as const;
 
 export function SiteFooter() {
+  const pathname = usePathname();
+  // The page you are on reads as current: darker, with aria-current.
+  const isCurrent = (href: string) =>
+    href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
+
   return (
     // Solid chrome so the page ends on a distinct surface instead of blending
     // into the body background. No backdrop blur: it had nothing to blur here
@@ -45,7 +52,15 @@ export function SiteFooter() {
                 {link.label}
               </SectionLink>
             ) : (
-              <Link key={link.href} href={link.href} className={linkClassName}>
+              <Link
+                key={link.href}
+                href={link.href}
+                aria-current={isCurrent(link.href) ? "page" : undefined}
+                className={cn(
+                  linkClassName,
+                  isCurrent(link.href) && "font-semibold text-foreground",
+                )}
+              >
                 {link.label}
               </Link>
             ),

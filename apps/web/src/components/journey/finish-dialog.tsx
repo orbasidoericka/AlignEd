@@ -36,6 +36,7 @@ export function FinishDialog({
     >
       <DialogContent
         showCloseButton={false}
+        overlayClassName="supports-backdrop-filter:backdrop-blur-sm"
         className="items-center gap-5 text-center"
       >
         {/* Hexi, celebrating. A plain <img>: the file carries its own CSS

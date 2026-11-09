@@ -16,8 +16,8 @@ import { TESTS_TAKEN_TAG } from "@/lib/site-counters/tests-taken";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 // POST /api/results: saves a finished assessment (scores, code, grade,
-// strand, age, date; no name or other identifier) and answers with the results ID the
-// student keeps to compare later. Rows expire after a year.
+// strand, age, date; no name or other identifier) and answers with a results
+// ID, used only for the admin stats page. Rows expire after a year.
 //
 // Server-only setting in apps/web/.env.local:
 //   SUPABASE_SERVICE_ROLE_KEY  Project Settings > API > service_role key

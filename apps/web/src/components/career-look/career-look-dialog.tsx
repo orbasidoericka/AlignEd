@@ -41,11 +41,18 @@ import {
   createSignDetector,
   type HandReading,
 } from "@/lib/career-look/hand-signs";
+import {
+  CAMERA_ERROR_FIL,
+  CAREER_LOOK_PROPS_FIL,
+  CAREER_LOOK_TEXT_FIL,
+} from "@/lib/career-look/looks-fil";
 import { CAREER_LOOKS, type CareerLook } from "@/lib/career-look/looks";
 import { useCareerLookPhoto } from "@/lib/career-look/photo-store";
 import { RIASEC_PATHWAYS } from "@/lib/riasec/career-pathways";
+import { PATHWAY_NAME_FIL } from "@/lib/riasec/career-pathways-fil";
 import { TraitEmblem } from "@/components/riasec/trait-emblem";
 import type { RiasecLetter } from "@/lib/riasec/types";
+import { useAssessmentStore } from "@/store/useAssessmentStore";
 import { cn } from "@/lib/utils";
 
 // WebAR career look: a Snapchat-style filter for the student's code. The
@@ -89,6 +96,17 @@ export function CareerLookDialog({
   const [letter, setLetter] = useState<RiasecLetter | null>(null);
   const current = letter && code.includes(letter) ? letter : code[0];
   const look = CAREER_LOOKS[current ?? "R"];
+  const fil = useAssessmentStore((state) => state.language) === "fil";
+  const t = CAREER_LOOK_TEXT_FIL;
+  // The caption drawn on the photo and read out by the camera's UI; the
+  // props' description (propsLabel) only, never `look.draw` itself.
+  const displayLook: CareerLook = fil
+    ? {
+        ...look,
+        caption: `Ikaw ay ${PATHWAY_NAME_FIL[current ?? "R"]}`,
+        propsLabel: CAREER_LOOK_PROPS_FIL[current ?? "R"],
+      }
+    : look;
 
   return (
     <Dialog>
@@ -108,20 +126,21 @@ export function CareerLookDialog({
         }
       >
         <CameraIcon aria-hidden />
-        Try your career look
+        {fil ? t.triggerLabel : "Try your career look"}
       </DialogTrigger>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl" lang={fil ? "fil" : undefined}>
         <DialogHeader>
-          <DialogTitle>Your career look</DialogTitle>
+          <DialogTitle>{fil ? t.dialogTitle : "Your career look"}</DialogTitle>
           <DialogDescription>
-            Each letter of your code has its own look. Your camera stays on
-            this device. A photo you take is added to your results email.
+            {fil
+              ? t.dialogDescription
+              : "Each letter of your code has its own look. Your camera stays on this device. A photo you take is added to your results email."}
           </DialogDescription>
         </DialogHeader>
         {code.length > 1 && (
           <div
             role="group"
-            aria-label="Choose a look"
+            aria-label={fil ? t.chooseLookLabel : "Choose a look"}
             className="flex flex-wrap gap-2"
           >
             {code.map((option) => {
@@ -140,14 +159,14 @@ export function CareerLookDialog({
                   )}
                 >
                   <TraitEmblem letter={option} className="size-7" />
-                  {RIASEC_PATHWAYS[option].name}
+                  {fil ? PATHWAY_NAME_FIL[option] : RIASEC_PATHWAYS[option].name}
                 </button>
               );
             })}
           </div>
         )}
         {/* The popup unmounts when closed, which stops the camera. */}
-        <CareerLookCamera look={look} />
+        <CareerLookCamera look={displayLook} fil={fil} />
       </DialogContent>
     </Dialog>
   );
@@ -158,7 +177,8 @@ type Status =
   | { kind: "live"; faceFound: boolean }
   | { kind: "error"; message: string };
 
-function CareerLookCamera({ look }: { look: CareerLook }) {
+function CareerLookCamera({ look, fil }: { look: CareerLook; fil: boolean }) {
+  const t = CAREER_LOOK_TEXT_FIL;
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   // While a photo is on screen the loop stops redrawing, so the canvas
@@ -169,6 +189,12 @@ function CareerLookCamera({ look }: { look: CareerLook }) {
   useEffect(() => {
     lookRef.current = look;
   }, [look]);
+  // Read by the camera-start effect below, so toggling the language never
+  // restarts the camera either.
+  const filRef = useRef(fil);
+  useEffect(() => {
+    filRef.current = fil;
+  }, [fil]);
   const [status, setStatus] = useState<Status>({ kind: "starting" });
   const [attempt, setAttempt] = useState(0);
   const [handsReady, setHandsReady] = useState(false);
@@ -420,7 +446,7 @@ function CareerLookCamera({ look }: { look: CareerLook }) {
       // The friendly message has to generalize; the console keeps the
       // browser's exact reason for whoever is debugging.
       console.warn("Career look could not start:", error);
-      setStatus({ kind: "error", message: cameraError(error) });
+      setStatus({ kind: "error", message: cameraError(error, filRef.current) });
     });
 
     return () => {
@@ -502,7 +528,11 @@ function CareerLookCamera({ look }: { look: CareerLook }) {
         <canvas
           ref={canvasRef}
           role="img"
-          aria-label={`Camera preview with ${look.propsLabel}`}
+          aria-label={
+            fil
+              ? t.cameraPreviewAlt(look.propsLabel)
+              : `Camera preview with ${look.propsLabel}`
+          }
           className={cn(
             "block h-auto max-h-[65vh] w-auto max-w-full",
             // The canvas is a blank 300×150 until the first frame lands.
@@ -513,16 +543,25 @@ function CareerLookCamera({ look }: { look: CareerLook }) {
           // eslint-disable-next-line @next/next/no-img-element -- local blob URL
           <img
             src={photo.url}
-            alt={`Your career look photo: ${look.caption}`}
+            alt={
+              fil
+                ? t.photoAlt(look.caption)
+                : `Your career look photo: ${look.caption}`
+            }
             className="absolute inset-0 size-full bg-black object-contain"
           />
         )}
-        <CameraOverlay status={status} look={look} hidden={photo !== null} />
+        <CameraOverlay status={status} look={look} hidden={photo !== null} fil={fil} />
       </div>
 
       {handsReady && live && !photo && (
-        <p className="-mt-2 text-center text-sm text-muted-foreground">
-          Try a wave, thumbs up, peace sign or the I-love-you sign.
+        <p
+          lang={fil ? "fil" : undefined}
+          className="-mt-2 text-center text-sm text-muted-foreground"
+        >
+          {fil
+            ? t.signHint
+            : "Try a wave, thumbs up, peace sign or the I-love-you sign."}
         </p>
       )}
 
@@ -536,7 +575,7 @@ function CareerLookCamera({ look }: { look: CareerLook }) {
           className="self-center rounded-full"
         >
           <RotateCcwIcon className="size-4" />
-          Try again
+          {fil ? t.tryAgain : "Try again"}
         </Button>
       ) : photo ? (
         <div className="flex flex-wrap justify-center gap-2">
@@ -547,7 +586,7 @@ function CareerLookCamera({ look }: { look: CareerLook }) {
             render={<a href={photo.url} download={photo.file.name} />}
           >
             <DownloadIcon className="size-4" />
-            Save photo
+            {fil ? t.savePhoto : "Save photo"}
           </Button>
           {canShare && (
             <Button
@@ -557,7 +596,7 @@ function CareerLookCamera({ look }: { look: CareerLook }) {
               className="rounded-full bg-card"
             >
               <Share2Icon className="size-4" />
-              Share
+              {fil ? t.share : "Share"}
             </Button>
           )}
           <Button
@@ -567,7 +606,7 @@ function CareerLookCamera({ look }: { look: CareerLook }) {
             className="rounded-full bg-card"
           >
             <RotateCcwIcon className="size-4" />
-            Retake
+            {fil ? t.retake : "Retake"}
           </Button>
         </div>
       ) : (
@@ -578,7 +617,7 @@ function CareerLookCamera({ look }: { look: CareerLook }) {
           className="self-center rounded-full font-heading font-semibold"
         >
           <CameraIcon className="size-4" />
-          Take photo
+          {fil ? t.takePhoto : "Take photo"}
         </Button>
       )}
     </div>
@@ -589,20 +628,29 @@ function CameraOverlay({
   status,
   look,
   hidden,
+  fil,
 }: {
   status: Status;
   look: CareerLook;
   hidden: boolean;
+  fil: boolean;
 }) {
+  const t = CAREER_LOOK_TEXT_FIL;
   let message: string | null = null;
-  if (status.kind === "starting") message = "Starting your camera…";
-  else if (status.kind === "error") message = status.message;
-  else if (!status.faceFound)
-    message = `Look at the camera to try on ${look.propsLabel}.`;
+  if (status.kind === "starting") {
+    message = fil ? t.starting : "Starting your camera…";
+  } else if (status.kind === "error") {
+    message = status.message;
+  } else if (!status.faceFound) {
+    message = fil
+      ? t.lookAtCamera(look.propsLabel)
+      : `Look at the camera to try on ${look.propsLabel}.`;
+  }
 
   return (
     <div
       aria-live="polite"
+      lang={fil ? "fil" : undefined}
       className="pointer-events-none absolute inset-0 flex items-center justify-center p-6"
     >
       {message && !hidden && (
@@ -751,8 +799,24 @@ async function requestCamera(): Promise<MediaStream> {
   }
 }
 
-function cameraError(error: unknown): string {
+function cameraError(error: unknown, fil: boolean): string {
   const name = error instanceof DOMException ? error.name : "";
+  if (fil) {
+    switch (name) {
+      case "NotAllowedError":
+        return CAMERA_ERROR_FIL.NotAllowedError;
+      case "NotFoundError":
+      case "OverconstrainedError":
+        return CAMERA_ERROR_FIL.NotFoundError;
+      case "NotReadableError":
+      case "AbortError":
+        return CAMERA_ERROR_FIL.NotReadableError;
+      case "SecurityError":
+        return CAMERA_ERROR_FIL.SecurityError;
+      default:
+        return CAMERA_ERROR_FIL.default;
+    }
+  }
   switch (name) {
     case "NotAllowedError":
       return "Camera access was blocked. Allow the camera for this site in your browser settings, then try again.";

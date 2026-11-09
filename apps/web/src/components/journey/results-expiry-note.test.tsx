@@ -40,22 +40,6 @@ describe("ResultsExpiryNote", () => {
     expect(note.textContent).toContain("24:57");
   });
 
-  it("mentions the Results ID only once one exists", () => {
-    stamp(0);
-    const { rerender } = render(<ResultsExpiryNote />);
-    expect(screen.getByTestId("results-expiry-note").textContent).not.toContain(
-      "Results ID",
-    );
-
-    act(() => {
-      useAssessmentStore.setState({ resultsId: "ALGN-ABCD-EFGH" });
-    });
-    rerender(<ResultsExpiryNote />);
-    expect(screen.getByTestId("results-expiry-note").textContent).toContain(
-      "Keep your Results ID",
-    );
-  });
-
   it("renders nothing before hydration", () => {
     hydrated.current = false;
     stamp(0);

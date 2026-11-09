@@ -26,10 +26,10 @@ const MASCOT_ART: Readonly<
       <polygon points="150.0,148.0 169.1,159.0 169.1,181.0 150.0,192.0 130.9,181.0 130.9,159.0" fill="var(--trait-shade)" opacity=".9"/>
       <polygon points="660.0,124.0 673.9,132.0 673.9,148.0 660.0,156.0 646.1,148.0 646.1,132.0" fill="var(--trait-shade)" opacity=".9"/>
       <path d="M232,640 L232,520 Q232,446 300,434 L500,434 Q568,446 568,520 L568,640 Z" fill="var(--trait-shade)"/>
-      <rect x="330" y="470" width="140" height="170" rx="18" fill="#2c5f9e"/>
+      <rect x="330" y="470" width="140" height="170" rx="18" fill="#7a3d4e"/>
       <rect x="345" y="485" width="110" height="60" rx="10" fill="currentColor"/>
-      <path d="M300,434 L340,640" stroke="#2c5f9e" strokeWidth="26"/>
-      <path d="M500,434 L460,640" stroke="#2c5f9e" strokeWidth="26"/>
+      <path d="M300,434 L340,640" stroke="#7a3d4e" strokeWidth="26"/>
+      <path d="M500,434 L460,640" stroke="#7a3d4e" strokeWidth="26"/>
       <clipPath id={`${uid}-neckclip`}>
       <rect x="372" y="352" width="56" height="96" rx="24"/>
       </clipPath>
@@ -51,17 +51,17 @@ const MASCOT_ART: Readonly<
       <path d="M396,306 Q392,322 402,322" stroke="#9c6d4a" strokeWidth="5" fill="none" strokeLinecap="round"/>
       <path d="M380,340 Q400,356 420,340" stroke="#0d192f" strokeWidth="6" fill="none" strokeLinecap="round"/>
       <g transform="translate(0,-14)">
-      <path d="M318,262 Q318,176 400,172 Q482,176 482,262 Z" fill="#eec96c"/>
-      <rect x="300" y="252" width="200" height="22" rx="11" fill="#d9ad45"/>
-      <rect x="390" y="174" width="20" height="80" rx="8" fill="#d9ad45"/>
+      <path d="M318,262 Q318,176 400,172 Q482,176 482,262 Z" fill="#ffd6da"/>
+      <rect x="300" y="252" width="200" height="22" rx="11" fill="#e0707c"/>
+      <rect x="390" y="174" width="20" height="80" rx="8" fill="#e0707c"/>
       </g>
       <path d="M270,474 L248,560" stroke="var(--trait-shade)" strokeWidth="46" strokeLinecap="round"/>
       <path d="M248,560 L252,660" stroke="var(--trait-shade)" strokeWidth="40" strokeLinecap="round"/>
-      <path d="M231,639 L271,637" stroke="#33629a" strokeWidth="8" strokeLinecap="round"/>
+      <path d="M231,639 L271,637" stroke="#80404f" strokeWidth="8" strokeLinecap="round"/>
       <circle cx="252" cy="660" r="25" fill="#c98d60"/>
       <path d="M530,466 L606,420" stroke="var(--trait-shade)" strokeWidth="46" strokeLinecap="round"/>
       <path d="M606,420 L618,330" stroke="var(--trait-shade)" strokeWidth="40" strokeLinecap="round"/>
-      <path d="M635,354 L595,349" stroke="#33629a" strokeWidth="8" strokeLinecap="round"/>
+      <path d="M635,354 L595,349" stroke="#80404f" strokeWidth="8" strokeLinecap="round"/>
       <circle cx="618" cy="330" r="25" fill="#c98d60"/>
       <defs>
       <mask id={`${uid}-wr`}>
@@ -142,8 +142,8 @@ const MASCOT_ART: Readonly<
       <polygon points="400.0,56.0 626.9,187.0 626.9,449.0 400.0,580.0 173.1,449.0 173.1,187.0" fill="currentColor"/>
       <polygon points="400.0,86.0 600.9,202.0 600.9,434.0 400.0,550.0 199.1,434.0 199.1,202.0" fill="none" stroke="#fff" strokeOpacity=".55" strokeWidth="5"/>
       <path d="M150,230 q40,-50 90,-20" stroke="#f7a284" strokeWidth="18" fill="none" strokeLinecap="round"/>
-      <path d="M620,150 q40,10 50,60" stroke="#7cafe8" strokeWidth="18" fill="none" strokeLinecap="round"/>
-      <circle cx="676" cy="250" r="12" fill="#9ed691"/>
+      <path d="M620,150 q40,10 50,60" stroke="#ff9aa2" strokeWidth="18" fill="none" strokeLinecap="round"/>
+      <circle cx="676" cy="250" r="12" fill="#a6c8e2"/>
       <path d="M332,236 C300,300 300,400 290,478 L510,478 C500,400 500,300 468,236 Z" fill="#231a15"/>
       <path d="M232,640 L232,520 Q232,446 300,434 L500,434 Q568,446 568,520 L568,640 Z" fill="#f7f0dc"/>
       <path d="M368,434 L400,486 L432,434 Z" fill="#c98d60"/>
@@ -172,8 +172,8 @@ const MASCOT_ART: Readonly<
       <circle cx="256" cy="520" r="25" fill="#c98d60"/>
       <path d="M150,500 q-10,-60 60,-70 q90,-6 110,40 q10,30 -30,34 q-26,2 -18,22 q8,22 -40,22 q-74,0 -82,-48Z" fill="#fff6e0"/>
       <circle cx="190" cy="470" r="11" fill="#f7a284"/>
-      <circle cx="226" cy="452" r="11" fill="#7cafe8"/>
-      <circle cx="266" cy="456" r="11" fill="#9ed691"/>
+      <circle cx="226" cy="452" r="11" fill="#ff9aa2"/>
+      <circle cx="266" cy="456" r="11" fill="#a6c8e2"/>
       <circle cx="190" cy="508" r="11" fill="#b59be6"/>
       <circle cx="256" cy="520" r="25" fill="#c98d60"/>
       <path d="M528,468 L598,440" stroke="#f7f0dc" strokeWidth="46" strokeLinecap="round"/>
@@ -219,12 +219,12 @@ const MASCOT_ART: Readonly<
       <path d="M386,348 Q400,360 414,348 Q400,354 386,348Z" fill="#e8737a"/>
       <path d="M530,466 L610,440" stroke="var(--trait-shade)" strokeWidth="46" strokeLinecap="round"/>
       <path d="M610,440 L640,350" stroke="var(--trait-shade)" strokeWidth="40" strokeLinecap="round"/>
-      <path d="M652,377 L614,365" stroke="#4d8143" strokeWidth="8" strokeLinecap="round"/>
+      <path d="M652,377 L614,365" stroke="#48708f" strokeWidth="8" strokeLinecap="round"/>
       <circle cx="640" cy="350" r="25" fill="#c98d60"/>
       <rect x="616" y="300" width="50" height="62" rx="22" fill="#c98d60" transform="rotate(12 641 331)"/>
       <rect x="600" y="334" width="16" height="34" rx="8" fill="#c98d60" transform="rotate(-40 608 351)"/>
-      <path d="M272,470 L300,560" stroke="#4f8444" strokeWidth="46" strokeLinecap="round"/>
-      <path d="M300,560 L380,520" stroke="#4f8444" strokeWidth="40" strokeLinecap="round"/>
+      <path d="M272,470 L300,560" stroke="#4a7396" strokeWidth="46" strokeLinecap="round"/>
+      <path d="M300,560 L380,520" stroke="#4a7396" strokeWidth="40" strokeLinecap="round"/>
       <path d="M369,548 L351,512" stroke="#406c37" strokeWidth="8" strokeLinecap="round"/>
       <circle cx="380" cy="520" r="25" fill="#c98d60"/>
       <path d="M380,526.4 C357.6,512 367.2,496 380,507.2 C392.8,496 402.4,512 380,526.4Z" fill="#f7a284"/>

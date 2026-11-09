@@ -18,6 +18,7 @@ import {
   type NavItem,
 } from "@/components/aceternity/resizable-navbar";
 import { Wordmark } from "@/components/blocks/wordmark";
+import { LanguageToggle } from "@/components/journey/language-toggle";
 import { SoundToggle } from "@/components/sound-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { buttonVariants } from "@/components/ui/button";
@@ -57,6 +58,9 @@ export function SiteHeader() {
   // On the results page the CTA would be a button to where you already are.
   // Nav links still mark position there; a call to action has nothing to call.
   const showCta = !(resultsUnlocked && isActive("/results"));
+  // Only the results page, in this header, has anything that follows the
+  // language switch; the landing and About pages are English-only.
+  const showLanguageToggle = isActive("/results");
 
   const ctaHref = resultsUnlocked ? "/results" : "/assessment/profile";
   // Each surface gets its own CTA wording: nav is the plain utility label,
@@ -80,6 +84,7 @@ export function SiteHeader() {
           </NavbarLogo>
           <NavItems items={items} />
           <div className="relative z-20 flex shrink-0 items-center gap-2">
+            {showLanguageToggle && <LanguageToggle />}
             <SoundToggle />
             <ThemeToggle />
             {showCta && (
@@ -100,6 +105,7 @@ export function SiteHeader() {
               <Wordmark className="h-8" priority />
             </NavbarLogo>
             <div className="flex items-center gap-1">
+              {showLanguageToggle && <LanguageToggle />}
               <SoundToggle />
               <ThemeToggle />
               <MobileNavToggle

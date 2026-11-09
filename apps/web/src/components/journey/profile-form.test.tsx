@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { GRADE_LEVELS, SHS_STRANDS } from "@/lib/riasec/types";
 import { useAssessmentStore } from "@/store/useAssessmentStore";
 
 import { ProfileForm } from "./profile-form";
@@ -13,15 +14,16 @@ function fillProfile() {
     target: { value: "MARI" },
   });
   fireEvent.click(screen.getByRole("radio", { name: /Grade 12/i }));
-  fireEvent.click(
-    screen.getByRole("radio", {
-      name: /Science, Technology, Engineering, and Mathematics/i,
-    }),
-  );
+  fireEvent.change(strandSelect(), {
+    target: { value: SHS_STRANDS.find((strand) => strand.startsWith("Science"))! },
+  });
   fireEvent.change(screen.getByLabelText(/How old are you/i), {
     target: { value: "17" },
   });
 }
+
+const strandSelect = () =>
+  screen.getByLabelText(/What is your SHS strand/i) as HTMLSelectElement;
 
 const consentBox = () =>
   screen.getByRole("checkbox", { name: /Terms and Conditions/i });
@@ -44,6 +46,46 @@ describe("ProfileForm layout and Others strand", () => {
     }
   });
 
+  it("offers the strands in a dropdown, not as cards", () => {
+    render(<ProfileForm />);
+
+    const select = strandSelect();
+    expect(select.tagName).toBe("SELECT");
+    expect(select.value).toBe("");
+    const options = [...select.options].map((option) => option.value);
+    expect(options).toEqual(["", ...SHS_STRANDS]);
+    // Grade is still the two cards; the strands are no longer radios.
+    expect(screen.getAllByRole("radio")).toHaveLength(GRADE_LEVELS.length);
+
+    fireEvent.change(select, { target: { value: "Sports" } });
+    expect(useAssessmentStore.getState().profile.strand).toBe("Sports");
+  });
+
+  it("stars every required question and says what the star means", () => {
+    render(<ProfileForm />);
+
+    expect(screen.getByText(/Questions marked with/i)).toHaveTextContent(
+      "Questions marked with * are required.",
+    );
+    for (const label of [
+      /What should we call you/i,
+      /What is your SHS strand/i,
+      /How old are you/i,
+    ]) {
+      const control = screen.getByLabelText(label);
+      expect(control).toHaveAttribute("aria-required", "true");
+      expect(document.querySelector(`label[for="${control.id}"]`)).toHaveTextContent("*");
+    }
+    expect(screen.getByRole("radiogroup", { name: "Grade level" })).toHaveAttribute(
+      "aria-required",
+      "true",
+    );
+    expect(screen.getByText("What grade are you in?")).toHaveTextContent("*");
+    // School is the one optional field, and carries no star.
+    expect(document.querySelector('label[for="school"]')).not.toHaveTextContent("*");
+    expect(consentBox().closest("label")).toHaveTextContent("*");
+  });
+
   it("the consent blurb no longer mentions comparing or one year", () => {
     render(<ProfileForm />);
 
@@ -57,7 +99,7 @@ describe("ProfileForm layout and Others strand", () => {
     fireEvent.click(screen.getByRole("checkbox", { name: /Terms and Conditions/i }));
     expect(screen.queryByLabelText("Type your strand")).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("radio", { name: "Others" }));
+    fireEvent.change(strandSelect(), { target: { value: "Others" } });
     const field = screen.getByLabelText("Type your strand");
     fireEvent.click(screen.getByRole("button", { name: /Continue/i }));
     expect(push).not.toHaveBeenCalled();
@@ -68,9 +110,14 @@ describe("ProfileForm layout and Others strand", () => {
     fireEvent.click(screen.getByRole("button", { name: /Continue/i }));
     expect(push).toHaveBeenCalledExactlyOnceWith("/assessment");
 
-    fireEvent.click(screen.getByRole("radio", { name: /Sports/i }));
+    // The inline row replaces the dropdown; its X brings the dropdown back.
+    fireEvent.click(screen.getByRole("button", { name: "Change strand" }));
     expect(screen.queryByLabelText("Type your strand")).not.toBeInTheDocument();
     expect(useAssessmentStore.getState().profile.strandOther).toBe("");
+    expect(useAssessmentStore.getState().profile.strand).toBeNull();
+
+    fireEvent.change(strandSelect(), { target: { value: "Sports" } });
+    expect(useAssessmentStore.getState().profile.strand).toBe("Sports");
   });
 });
 

@@ -16,6 +16,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Wordmark } from "@/components/blocks/wordmark";
+import { LanguageToggle } from "@/components/journey/language-toggle";
 import { SoundToggle } from "@/components/sound-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
@@ -37,9 +38,14 @@ export function FocusBar() {
   // never causes a hydration mismatch.
   const hydrated = useHydrated();
   const reset = useAssessmentStore((state) => state.reset);
+  const pathname = usePathname();
   // Start over belongs to the quiz only; on Profile Setup there is nothing
   // answered to discard yet, and the form already starts from scratch.
-  const onAssessment = usePathname() === "/assessment";
+  const onAssessment = pathname === "/assessment";
+  // The language switch applies to both steps: it sets the statements'
+  // language for the quiz ahead, and Profile Setup's own copy follows it too.
+  const showLanguageToggle =
+    pathname === "/assessment" || pathname === "/assessment/profile";
 
   const saved = hydrated && lastUpdated !== null && answeredCount > 0;
 
@@ -73,6 +79,7 @@ export function FocusBar() {
             </span>
           )}
 
+          {showLanguageToggle && <LanguageToggle />}
           <SoundToggle />
           <ThemeToggle />
 

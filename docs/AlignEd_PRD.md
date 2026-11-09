@@ -23,7 +23,7 @@ AlignEd addresses this decision point directly: students discover their Holland 
 ### Goals
 - G1. Deliver a complete, trustworthy RIASEC assessment that a student can finish in one sitting (~5 minutes) on a low-end mobile phone.
 - G2. Recommend careers and college degree programs matched to the student's Holland Code.
-- G3. Let students keep their results via PDF download, email delivery, and a results ID for comparing a later retake — without creating an account.
+- G3. Let students keep their results via PDF download and email delivery — without creating an account.
 - G4. Protect student data: anonymous by design, compliant with the Data Privacy Act of 2012 (RA 10173).
 
 ### Non-Goals (explicitly out of scope)
@@ -51,7 +51,7 @@ The product is a strict linear journey. Every route, component, and data model s
                                                                         ├─ Career suggestions
                                                                         ├─ College majors + related pathways per letter
                                                                         ├─ Career-look photo (optional)
-                                                                        └─ Keep: PDF · Email · Results ID
+                                                                        └─ Keep: PDF · Email
 ```
 
 ### Route map
@@ -139,13 +139,12 @@ Captured before the assessment begins; stored client-side only (localStorage via
 - FR-8.4. Rate limiting: 3 sends per address per rolling day and 20 per network per rolling hour, keyed by salted SHA-256 hashes held in server memory (per-process random salt, reset on restart). A filled `website` honeypot field is answered with a fake success and nothing is sent. Limit-exceeded responses (HTTP 429) show a friendly "try again later" message.
 - FR-8.5. Delivery failure surfaces a toast with a retry action; success surfaces a confirmation toast.
 
-### FR-9 Saved Results
+### FR-9 Saved Results (server-side only, no UI)
 - FR-9.1. On reaching Results, the client calls `POST /api/results` once per session. The server stores one row in `saved_results`: the six trait scores, the score ceiling, the Holland code, grade level, age, and test date. No name, nickname, school, email, photo, or individual answers.
-- FR-9.2. The server answers with a random results ID (`ALGN-XXXX-XXXX`, 8 characters from a 32-letter alphabet without 0/O/1/I, 2^40 possibilities). The student keeps it as a record of this result; it is the only key to the row and works like a password.
-- FR-9.3. A student can delete their saved copy (`DELETE /api/results/[id]`, any case, with or without dashes or prefix).
-- FR-9.4. Rows expire one year after creation.
-- FR-9.5. Limits: 200 saves and 60 deletes per network per hour (in-memory), generous because a school lab shares one IP.
-- FR-9.6. A failed save never blocks the results: the panel says so and offers "Try again".
+- FR-9.2. The server answers with a random results ID (`ALGN-XXXX-XXXX`, 8 characters from a 32-letter alphabet without 0/O/1/I, 2^40 possibilities), stored client-side and printed in the PDF (FR-7) as a record of the result. There is no on-screen display of it, no lookup, and no delete; the row exists only to feed the admin stats page (FR-10).
+- FR-9.3. Rows expire one year after creation.
+- FR-9.4. Limits: 200 saves per network per hour (in-memory), generous because a school lab shares one IP.
+- FR-9.5. A failed save never blocks the results; it is silent and never retried from the UI.
 
 ### FR-10 Admin Page
 - FR-10.1. `/admin/<ADMIN_TOKEN>` shows aggregate statistics over saved results (count, average age, strongest interest area, most common codes, age distribution) and a table of the latest results. Rows carry no identity, so neither does the page.
@@ -180,7 +179,7 @@ Captured before the assessment begins; stored client-side only (localStorage via
 | E2 | All six traits equal (flat profile) | Code computed per FR-4.2 (`R-I-A`); dashboard adds an insight note that the profile is balanced and results should be read as exploratory. |
 | E3 | Student answers No to all 42 items | Every trait scores 0 — a valid flat profile, not an error. Handled as E2: deterministic `R-I-A` code plus the exploratory insight note. Results, export, and email all remain available. |
 | E4 | Student refreshes / closes tab mid-quiz | Resume from localStorage at first unanswered question (FR-3.5). |
-| E4a | Student closes the tab after finishing, then reopens the site | Finished session is wiped; the student starts at Profile. A Results ID still opens the saved copy (FR-3.9). |
+| E4a | Student closes the tab after finishing, then reopens the site | Finished session is wiped; the student starts at Profile (FR-3.9). |
 | E5 | Student navigates to `/results` without completing | Redirect to the correct earlier step (§5 navigation rules). |
 | E6 | Student uses Back and changes an earlier answer | Prior contribution replaced, never double-counted; a Yes→No change decrements the trait (FR-3.2, FR-3.4). |
 | E7 | Stored answers predate the current question bank or answer scale | Discarded on load: the quiz restarts from question 1 with zeroed scores; the student's profile is preserved. |
@@ -188,8 +187,8 @@ Captured before the assessment begins; stored client-side only (localStorage via
 | E8 | Invalid email submitted | Client-side validation blocks the request; inline field error (FR-8.2). |
 | E9 | Email send fails (network / provider) | Toast with retry; results remain on screen; PDF download offered as fallback (FR-8.5). |
 | E10 | Email rate limit exceeded | Friendly "try again later" message; no address stored (FR-8.4). |
-| E11 | Saved-results call fails | Results still render (computed client-side); the panel reports the failure and offers "Try again"; the save is never blocking (FR-9.6). |
-| E11b | Email or saved-results server not configured | Route answers `not_configured`; the UI says the feature is not set up and the rest of the results keep working. |
+| E11 | Saved-results call fails | Results still render (computed client-side); the save fails silently with no retry, never blocking the page (FR-9.5). |
+| E11b | Email or saved-results server not configured | Route answers `not_configured`; the rest of Results keeps working either way (the save has no UI to report it). |
 | E12 | localStorage unavailable (private mode edge cases) | Journey still works within the session in memory; a notice warns that refresh will lose progress. |
 
 ## 9. Acceptance Criteria (Definition of Done)
@@ -236,8 +235,7 @@ Captured before the assessment begins; stored client-side only (localStorage via
 - **Given** the honeypot field is filled, **then** the route answers success and sends nothing.
 
 ### Saved Results & Admin
-- **Given** a student reaches Results, **then** one results ID is shown, and a refresh or a second render does not create a second row.
-- **Given** a valid results ID, **then** the student can delete it; a deleted or unknown ID returns not-found.
+- **Given** a student reaches Results, **then** one row is saved server-side with no UI shown for it, and a refresh or a second render does not create a second row.
 - **Given** `ADMIN_TOKEN` is unset or under 32 characters, or the URL token does not match, **then** the admin page shows nothing.
 
 ### Share Image
@@ -276,7 +274,7 @@ AlignEd ships as a mostly-static, anonymous-first Next.js application.
 - There are **no** `users` or `student_profiles` tables.
 
 ### Testing strategy (summary — full protocol in the Implementation Plan)
-- **Unit (Vitest):** scoring library incl. determinism and tie-break tests; store re-answer correction; route handlers (`api/**/route.test.ts`) with the Supabase client and mailer mocked; results ID, admin access, rate limiters, career-look anchoring.
+- **Unit (Vitest):** scoring library incl. determinism and tie-break tests; store re-answer correction; route handlers (`api/**/route.test.ts`) with the Supabase client and mailer mocked; admin access, rate limiters, career-look anchoring.
 - **E2E (Playwright, `apps/web/tests/e2e`):** land → profile → full quiz → results → PDF + email (mailer mocked); mid-quiz refresh/resume; invalid-email and rate-limit paths. Not written yet.
 - **Visual regression:** key pages, light + dark, `reducedMotion: 'reduce'`.
 
@@ -291,7 +289,6 @@ AlignEd ships as a mostly-static, anonymous-first Next.js application.
 | :--- | :--- | :--- |
 | Assessment abandonment | Low completion rates | Focus Mode UI, progress indication, localStorage resume, ~5-minute length, single-tap binary answers with auto-advance, milestone encouragement (see Design Vision). |
 | Email abuse / privacy exposure | Legal and trust damage | No accounts; send-and-discard; hashed-email + per-IP rate limits; consent checkbox with DPA copy; honeypot; Gmail App Password kept server-side; PDF encrypted. |
-| Results ID guessed | Someone reads a stranger's scores | 2^40 IDs, lookups rate-limited per network, rows carry no identity, rows expire in a year. |
 | Admin link leaks | Aggregate stats exposed | Rows carry no identity; token ≥32 chars, constant-time compare; revoke by rotating `ADMIN_TOKEN`. |
 | In-memory limiters on several instances | Limits multiply per instance | Acceptable at one school's traffic; move to a shared store before scaling out. |
 | Stale program/career data | Loss of trust | Versioned CSV → seed pipeline; data edits ship as reviewed PRs. |
@@ -303,6 +300,7 @@ AlignEd ships as a mostly-static, anonymous-first Next.js application.
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 
+- 2026-11-09 · results · Removed the entire "Your results ID" panel and its backend (`DELETE /api/results/[id]`, `getResult`/`deleteResult`, the store's `resultsDeleted` flag). FR-9 is now server-side only: `POST /api/results` still saves one row per session for the admin stats page (FR-10), but the ID is never shown, looked up, or deleted from the UI. · Requested removal of the results-ID feature from the Results page.
 - 2026-11-09 · results · Removed FR-9.3 compare-by-ID (`GET /api/results/[id]`, the "Compare with past results" dialog); FR-9 renamed "Saved Results". The results ID is now kept only as a record, with save and delete unchanged. · Comparing was cut from the results page.
 - 2026-11-08 · results · Added FR-12 share image: on-device picture of the code, trait badges and labels, shared via the device menu or saved · students asked to post their result
 - 2026-11-05 · landing · Added FR-1.6: a plain-language scoring section with a worked example, linked from the navbar. · Students understand how their answers become a code.
