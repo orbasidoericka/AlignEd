@@ -94,21 +94,6 @@ export async function saveResult(
   }
 }
 
-// The saved result, or null when there is none or it has expired.
-export async function getResult(
-  db: SupabaseClient,
-  resultsId: string,
-): Promise<SavedResult | null> {
-  const { data, error } = await db
-    .from(TABLE)
-    .select(COLUMNS)
-    .eq("results_id", resultsId)
-    .gt("expires_at", new Date().toISOString())
-    .maybeSingle<Row>();
-  if (error) throw error;
-  return data ? fromRow(data) : null;
-}
-
 // True when a row was deleted.
 export async function deleteResult(
   db: SupabaseClient,

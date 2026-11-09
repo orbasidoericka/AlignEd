@@ -135,7 +135,7 @@ function RetakeDialog() {
           <AlertDialogDescription>
             This clears your profile, answers, and current results. You
             will start fresh from the profile setup. Note your results ID
-            first if you want to compare later.
+            first if you want to keep it.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

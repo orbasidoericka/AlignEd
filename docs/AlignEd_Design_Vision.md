@@ -68,7 +68,7 @@ under the CTA.
 Runs inside the Focus Mode shell so the transition into the assessment feels
 like one continuous corridor, not a form then a quiz.
 - **Grade level:** six tappable cards (shadcn `RadioGroup` restyled) —
-  "Grade 7" through "Grade 12". Nothing else.
+  "Grade 11" through "Grade 12". Nothing else.
 - **School (optional):** single shadcn `Input`, character counter at 120,
   clearly labeled optional — visually quieter than the required field.
 - Continue button disabled until grade is set; missing field indicated

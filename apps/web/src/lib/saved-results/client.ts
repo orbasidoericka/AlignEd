@@ -4,8 +4,6 @@ import type { HollandCode } from "@/lib/riasec/scoring";
 import type { GradeLevel, ShsStrand } from "@/lib/riasec/types";
 import type { RiasecScores } from "@/store/useAssessmentStore";
 
-import type { SavedResult } from "./repository";
-
 // Browser calls to the saved-results routes. Only scores, the code, grade,
 // strand, age and date are sent: never the nickname, school, or answers.
 
@@ -69,14 +67,6 @@ export function saveResults(input: {
       body: JSON.stringify({ ...input, takenOn: localDate(input.takenOn) }),
     },
     (body) => String(body.resultsId),
-  );
-}
-
-export function loadSavedResult(resultsId: string): Promise<Outcome<SavedResult>> {
-  return call(
-    `/api/results/${encodeURIComponent(resultsId)}`,
-    { cache: "no-store" },
-    (body) => body.result as SavedResult,
   );
 }
 

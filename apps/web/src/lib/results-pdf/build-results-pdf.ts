@@ -34,7 +34,7 @@ export interface ResultsPdfInput {
   code: HollandCode;
   maxScore: number;
   takenOn: Date;
-  // The saved-results ID, so the student can compare a later retake.
+  // The saved-results ID, as a record of this result.
   resultsId?: string | null;
   password: string;
   // Guards the permissions below. Nobody needs to know it: pass a random
@@ -267,7 +267,7 @@ export function buildResultsPdf(input: ResultsPdfInput): TDocumentDefinitions {
                 { text: "Results ID: ", color: MUTED },
                 { text: input.resultsId, bold: true },
                 {
-                  text: " (keep this to compare your results next time)",
+                  text: " (a record of this result)",
                   color: MUTED,
                 },
               ],

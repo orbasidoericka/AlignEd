@@ -9,7 +9,7 @@ Server routes, data, secrets, and privacy controls. Client code lives in `FRONTE
 | Route | Method | Does | Limits |
 | :--- | :--- | :--- | :--- |
 | `/api/results` | POST | Save a finished result (six scores, code, grade, age, date). Returns a results ID (`ALGN-XXXX-XXXX`). | 200 / hour per network |
-| `/api/results/[id]` | GET, DELETE | Fetch or delete a saved result by results ID. | per-network window limiter |
+| `/api/results/[id]` | DELETE | Delete a saved result by results ID. | per-network window limiter |
 | `/api/send-results` | POST | Email the encrypted results PDF (+ optional career-look photo) via Gmail SMTP (nodemailer), then discard the address and photo. | per hashed email + per hashed IP |
 
 - Rate limiters (`lib/results-email/rate-limiter.ts`, `lib/saved-results/ip-limiter.ts`) are in-memory, keyed by salted hashes with a per-process random salt. They reset on restart and count per server instance.
@@ -61,6 +61,7 @@ Set in `apps/web/next.config.ts` for every path: `X-Frame-Options: DENY`, `nosni
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 
+- 2026-11-09 · api · Removed `GET /api/results/[id]` and `getResult` from the repository; the compare-by-ID feature is gone, `DELETE /api/results/[id]` is unchanged. · Comparing was cut from the results page.
 - 2026-11-04 · database · Migration 0007 allows `'Others'` in `saved_results.strand`; `parseStrand` accepts it via `SHS_STRANDS`. · Students with an unlisted strand can still be saved, with no free text on the server.
 - 2026-10-27 · docs · PRD and Implementation Plan aligned to this file; Known gaps corrected (grades 11–12 are intended: SHS only). · Code is the plan of record.
 - 2026-10-27 · docs · Created this file from the current code. · Split backend notes out of the PRD and Implementation Plan.

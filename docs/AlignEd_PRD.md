@@ -51,7 +51,7 @@ The product is a strict linear journey. Every route, component, and data model s
                                                                         ├─ Career suggestions
                                                                         ├─ College majors + related pathways per letter
                                                                         ├─ Career-look photo (optional)
-                                                                        └─ Keep: PDF · Email · Results ID (compare later)
+                                                                        └─ Keep: PDF · Email · Results ID
 ```
 
 ### Route map
@@ -139,13 +139,13 @@ Captured before the assessment begins; stored client-side only (localStorage via
 - FR-8.4. Rate limiting: 3 sends per address per rolling day and 20 per network per rolling hour, keyed by salted SHA-256 hashes held in server memory (per-process random salt, reset on restart). A filled `website` honeypot field is answered with a fake success and nothing is sent. Limit-exceeded responses (HTTP 429) show a friendly "try again later" message.
 - FR-8.5. Delivery failure surfaces a toast with a retry action; success surfaces a confirmation toast.
 
-### FR-9 Saved Results and Compare
+### FR-9 Saved Results
 - FR-9.1. On reaching Results, the client calls `POST /api/results` once per session. The server stores one row in `saved_results`: the six trait scores, the score ceiling, the Holland code, grade level, age, and test date. No name, nickname, school, email, photo, or individual answers.
-- FR-9.2. The server answers with a random results ID (`ALGN-XXXX-XXXX`, 8 characters from a 32-letter alphabet without 0/O/1/I, 2^40 possibilities). The student keeps it; it is the only key to the row and works like a password.
-- FR-9.3. A student can enter an earlier results ID (any case, with or without dashes or prefix) to compare their current results against that saved copy (`GET /api/results/[id]`), or delete their saved copy (`DELETE /api/results/[id]`).
+- FR-9.2. The server answers with a random results ID (`ALGN-XXXX-XXXX`, 8 characters from a 32-letter alphabet without 0/O/1/I, 2^40 possibilities). The student keeps it as a record of this result; it is the only key to the row and works like a password.
+- FR-9.3. A student can delete their saved copy (`DELETE /api/results/[id]`, any case, with or without dashes or prefix).
 - FR-9.4. Rows expire one year after creation.
-- FR-9.5. Limits: 200 saves and 60 lookups per network per hour (in-memory), generous because a school lab shares one IP.
-- FR-9.6. A failed save never blocks the results: the panel says so and offers "Try again". If the server is not configured, the compare panel says comparing is not set up.
+- FR-9.5. Limits: 200 saves and 60 deletes per network per hour (in-memory), generous because a school lab shares one IP.
+- FR-9.6. A failed save never blocks the results: the panel says so and offers "Try again".
 
 ### FR-10 Admin Page
 - FR-10.1. `/admin/<ADMIN_TOKEN>` shows aggregate statistics over saved results (count, average age, strongest interest area, most common codes, age distribution) and a table of the latest results. Rows carry no identity, so neither does the page.
@@ -188,8 +188,7 @@ Captured before the assessment begins; stored client-side only (localStorage via
 | E8 | Invalid email submitted | Client-side validation blocks the request; inline field error (FR-8.2). |
 | E9 | Email send fails (network / provider) | Toast with retry; results remain on screen; PDF download offered as fallback (FR-8.5). |
 | E10 | Email rate limit exceeded | Friendly "try again later" message; no address stored (FR-8.4). |
-| E11 | Saved-results call fails | Results still render (computed client-side); the compare panel reports the failure and offers "Try again"; the save is never blocking (FR-9.6). |
-| E11a | Results ID mistyped or expired | Lookup answers not-found; the student sees a plain message and their current results are untouched. |
+| E11 | Saved-results call fails | Results still render (computed client-side); the panel reports the failure and offers "Try again"; the save is never blocking (FR-9.6). |
 | E11b | Email or saved-results server not configured | Route answers `not_configured`; the UI says the feature is not set up and the rest of the results keep working. |
 | E12 | localStorage unavailable (private mode edge cases) | Journey still works within the session in memory; a notice warns that refresh will lose progress. |
 
@@ -238,7 +237,7 @@ Captured before the assessment begins; stored client-side only (localStorage via
 
 ### Saved Results & Admin
 - **Given** a student reaches Results, **then** one results ID is shown, and a refresh or a second render does not create a second row.
-- **Given** a valid results ID, **then** the student can compare against it and delete it; a deleted or unknown ID returns not-found.
+- **Given** a valid results ID, **then** the student can delete it; a deleted or unknown ID returns not-found.
 - **Given** `ADMIN_TOKEN` is unset or under 32 characters, or the URL token does not match, **then** the admin page shows nothing.
 
 ### Share Image
@@ -304,6 +303,7 @@ AlignEd ships as a mostly-static, anonymous-first Next.js application.
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 
+- 2026-11-09 · results · Removed FR-9.3 compare-by-ID (`GET /api/results/[id]`, the "Compare with past results" dialog); FR-9 renamed "Saved Results". The results ID is now kept only as a record, with save and delete unchanged. · Comparing was cut from the results page.
 - 2026-11-08 · results · Added FR-12 share image: on-device picture of the code, trait badges and labels, shared via the device menu or saved · students asked to post their result
 - 2026-11-05 · landing · Added FR-1.6: a plain-language scoring section with a worked example, linked from the navbar. · Students understand how their answers become a code.
 - 2026-11-04 · privacy · "Students under 18" and "Agreeing to these terms" (v2.3) now say a parent or legal guardian should read the notice and tick the box themselves to consent for a minor, since AlignEd has no separate parent account or flow. · User asked this spelled out; same single checkbox, clearer about who is meant to click it.

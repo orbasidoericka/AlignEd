@@ -60,7 +60,7 @@ Design language and page-level wireframes live in `docs/AlignEd_Design_Vision.md
 | **Results — majors & pathways** (FR-5) | `riasec/pathway-results.tsx`: one card per code letter (mascot cover, description, all majors, all pathways as equal-weight tags). No ranking, badges or university links anywhere. |
 | **PDF export** (FR-7) | pdfmake document built in the browser (`lib/results-pdf/build-results-pdf.ts` + `download-results-pdf.ts`), encrypted with nickname + code. A4, grayscale-legible. |
 | **Email-my-results** (FR-8) | `Dialog` + `Input` + consent `Checkbox` (Data Privacy Act copy) + `Sonner` toasts, posting to `/api/send-results`. Honeypot `website` field included. |
-| **Saved results** (FR-9) | `journey/saved-results-panel.tsx`: auto-save once per session, results ID display, compare by ID, delete, retry on failure. |
+| **Saved results** (FR-9) | `journey/saved-results-panel.tsx`: auto-save once per session, results ID display, delete, retry on failure. |
 | **Admin** (FR-10) | `app/admin/[token]/page.tsx`: server-rendered stats, token-gated. |
 | **Career look** (FR-11) | `components/career-look` + `lib/career-look`: MediaPipe face landmarks, memory-only photo. |
 
@@ -175,4 +175,5 @@ Design language and page-level wireframes live in `docs/AlignEd_Design_Vision.md
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 
+- 2026-11-09 · frontend/backend · Task 3.5's compare-by-ID is removed (saved results now auto-save + delete only). · Comparing was cut from the results page.
 - 2026-10-27 · backend · Architecture, stack, database plan and component map rewritten to the shipped code (Next route handlers, `saved_results`, Gmail SMTP, pdfmake, admin page, career look). Tasks 1.6, 3.2, 3.3 marked superseded; 2.6, 4.1–4.3, 5.4–5.6 rewritten; 3.5, 4.5, 5.7 added; QA protocol updated. · The codebase is the plan of record.

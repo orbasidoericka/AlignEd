@@ -17,8 +17,8 @@ export { parseTakenOn } from "@/lib/riasec/validate-results";
 
 export interface ResultsPayload extends ScoredResults {
   nickname: string;
-  // The saved-results ID, printed on the PDF so the student can compare
-  // later; null when the results were not saved.
+  // The saved-results ID, printed on the PDF as a record of this result;
+  // null when the results were not saved.
   resultsId: string | null;
 }
 

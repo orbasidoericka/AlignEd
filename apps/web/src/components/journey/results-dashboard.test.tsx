@@ -13,7 +13,6 @@ vi.mock("next/navigation", () => ({
 const saveResults = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/saved-results/client", () => ({
   saveResults,
-  loadSavedResult: vi.fn(),
   deleteSavedResult: vi.fn(),
 }));
 

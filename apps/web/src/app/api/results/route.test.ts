@@ -2,13 +2,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const saveResult = vi.fn();
-const getResult = vi.fn();
 const deleteResult = vi.fn();
 const createSupabaseAdminClient = vi.fn();
 
 vi.mock("@/lib/saved-results/repository", () => ({
   saveResult,
-  getResult,
   deleteResult,
 }));
 vi.mock("@/lib/supabase/admin", () => ({ createSupabaseAdminClient }));
@@ -136,8 +134,8 @@ describe("/api/results", () => {
     const saved = await collection.POST(request("POST", "/api/results", results));
     expect(saved.status).toBe(500);
     expect(await saved.json()).toEqual({ error: "not_configured" });
-    const loaded = await item.GET(request("GET", "/api/results/x"), context("ALGN-7KQ2-MX9P"));
-    expect(await loaded.json()).toEqual({ error: "not_configured" });
+    const deleted = await item.DELETE(request("DELETE", "/api/results/x"), context("ALGN-7KQ2-MX9P"));
+    expect(await deleted.json()).toEqual({ error: "not_configured" });
   });
 
   it("reports a database failure", async () => {
@@ -145,26 +143,6 @@ describe("/api/results", () => {
     const { collection } = await load();
     const response = await collection.POST(request("POST", "/api/results", results));
     expect(response.status).toBe(502);
-  });
-
-  it("loads a saved result by ID, however the student typed it", async () => {
-    getResult.mockResolvedValue({ resultsId: "ALGN-7KQ2-MX9P" });
-    const { item } = await load();
-    const response = await item.GET(
-      request("GET", "/api/results/x"),
-      context(encodeURIComponent("algn 7kq2 mx9p")),
-    );
-    expect(response.status).toBe(200);
-    expect(getResult).toHaveBeenCalledWith({}, "ALGN-7KQ2-MX9P");
-    expect(response.headers.get("Cache-Control")).toBe("no-store");
-  });
-
-  it("answers 404 for unknown or malformed IDs", async () => {
-    getResult.mockResolvedValue(null);
-    const { item } = await load();
-    expect((await item.GET(request("GET", "/x"), context("ALGN-7KQ2-MX9P"))).status).toBe(404);
-    expect((await item.GET(request("GET", "/x"), context("nope"))).status).toBe(404);
-    expect(getResult).toHaveBeenCalledTimes(1);
   });
 
   it("deletes a saved result", async () => {
@@ -175,15 +153,15 @@ describe("/api/results", () => {
   });
 
   it("rate-limits ID lookups per network, so IDs cannot be guessed", async () => {
-    getResult.mockResolvedValue(null);
+    deleteResult.mockResolvedValue(false);
     const { item } = await load();
     for (let i = 0; i < 60; i++) {
-      await item.GET(request("GET", "/x"), context("ALGN-7KQ2-MX9P"));
+      await item.DELETE(request("DELETE", "/x"), context("ALGN-7KQ2-MX9P"));
     }
-    const blocked = await item.GET(request("GET", "/x"), context("ALGN-7KQ2-MX9P"));
+    const blocked = await item.DELETE(request("DELETE", "/x"), context("ALGN-7KQ2-MX9P"));
     expect(blocked.status).toBe(429);
-    const otherNetwork = await item.GET(
-      request("GET", "/x", undefined, "198.51.100.1"),
+    const otherNetwork = await item.DELETE(
+      request("DELETE", "/x", undefined, "198.51.100.1"),
       context("ALGN-7KQ2-MX9P"),
     );
     expect(otherNetwork.status).toBe(404);

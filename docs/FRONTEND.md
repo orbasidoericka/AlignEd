@@ -15,7 +15,7 @@ Next.js 16.2.5 App Router, React 19, TypeScript, Tailwind v4 (tokens in `apps/we
 | `/` | `(site)` | Landing. Journey-aware CTA (`components/journey/hero-cta.tsx`). |
 | `/assessment/profile` | `(focus)` | Profile form (`journey/profile-form.tsx`). Focus Mode shell, no site chrome. |
 | `/assessment` | `(focus)` | Quiz (`journey/assessment-runner.tsx`, `question-navigator.tsx`: progress strip across the top; question numbers in a sticky right panel from `lg`, shown or hidden with the icon `QuestionGridToggle` beside the language switch). |
-| `/results` | `(site)` | Dashboard (`journey/results-dashboard.tsx`), exports (`results-actions.tsx`), compare (`saved-results-panel.tsx`). |
+| `/results` | `(site)` | Dashboard (`journey/results-dashboard.tsx`), exports (`results-actions.tsx`), saved results ID (`saved-results-panel.tsx`). |
 | `/dev/career-looks` | `(site)` | Dev preview of career-look props. |
 | `/admin/[token]` | — | Server-rendered admin stats; see `BACKEND.md`. |
 
@@ -63,6 +63,7 @@ Next.js 16.2.5 App Router, React 19, TypeScript, Tailwind v4 (tokens in `apps/we
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 
+- 2026-11-09 · frontend · `SavedResultsPanel` (`journey/saved-results-panel.tsx`) no longer offers compare-by-ID: `CompareDialog`/`Comparison` removed, `loadSavedResult` removed from `lib/saved-results/client.ts`; save and delete unchanged. · Comparing was cut from the results page.
 - 2026-11-08 · frontend · New `lib/results-share` and `ShareResultsDialog` in the keepsake row · share a no-identifier results image (PRD FR-12).
 - 2026-11-08 · frontend · `ResultsDashboard` renders `SavedResultsPanel` again, in its own full-width row before the majors list, with a regression test · the 2026-10-28 Results redesign dropped the panel, so no result was saved and no results ID was shown after that.
 - 2026-11-05 · frontend · New `components/riasec/scoring-example.tsx` (server component; `ScoringExample` renders scores, pips and the code via `computeHollandCode` / `formatHollandCode`, with a tie note from the first equal-score pair in the code) used by the landing `#scoring` section; navbar `items` gain "Scoring" → `/#scoring`. · scoring explainer on the landing page.

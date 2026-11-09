@@ -28,7 +28,7 @@ const HEX = "[clip-path:polygon(50%_0%,100%_25%,100%_75%,50%_100%,0%_75%,0%_25%)
 const pillars = [
   {
     title: "Who it is for",
-    body: "Students in Grades 7 to 12 across the Philippines: the Grade 12 student narrowing down a college program, and the younger explorer who still has time to choose a path. It is built to work on a budget Android phone and a slow connection.",
+    body: "Students in Grades 11 to 12 across the Philippines: the Grade 12 student narrowing down a college program, and the younger explorer who still has time to choose a path. It is built to work on a budget Android phone and a slow connection.",
     icon: Users,
   },
   {
@@ -74,7 +74,7 @@ const team: readonly TeamMember[] = [
     placement: "sm:col-start-1",
   },
   {
-    name: "Yvonne Denise D. Penamante",
+    name: "Yvonne Denise D. Peñamante",
     role: "Researcher",
     photo: "/about us/yvonne.jpg",
     placement: "sm:col-start-3",
