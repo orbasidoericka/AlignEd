@@ -442,6 +442,40 @@ describe("useAssessmentStore", () => {
     });
   });
 
+  it("resets a pre-v10 privacy acceptance so the split Terms must be re-agreed", () => {
+    const migrate = useAssessmentStore.persist.getOptions().migrate;
+    expect(migrate).toBeDefined();
+    const v9Payload = {
+      currentStep: 0,
+      totalQuestions: 42,
+      answers: {},
+      scores: {
+        realistic: 0,
+        investigative: 0,
+        artistic: 0,
+        social: 0,
+        enterprising: 0,
+        conventional: 0,
+      },
+      profile: {
+        nickname: "STAR",
+        gradeLevel: "12",
+        strand: "STEM",
+        strandOther: "",
+        age: "17",
+        privacyAccepted: true,
+        school: "",
+      },
+      lastUpdated: "2026-01-01T00:00:00.000Z",
+    };
+    const migrated = migrate!(v9Payload, 9) as {
+      profile: { privacyAccepted: boolean; nickname: string };
+    };
+
+    expect(migrated.profile.privacyAccepted).toBe(false);
+    expect(migrated.profile.nickname).toBe("STAR");
+  });
+
   it("stamps lastUpdated when the student moves through the quiz", () => {
     const { setCurrentStep, setTotalQuestions } = useAssessmentStore.getState();
     expect(useAssessmentStore.getState().lastUpdated).toBeNull();

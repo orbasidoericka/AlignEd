@@ -139,42 +139,49 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <section className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-12 sm:px-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:gap-16">
+      <section className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-12 sm:px-6 lg:gap-10">
         <BlurFade inView>
-          <h2 className="text-3xl font-bold text-balance text-foreground sm:text-4xl">
-            What AlignEd is
-          </h2>
-          <p className="mt-4 max-w-sm text-lg text-pretty text-muted-foreground">
-            Three things to know before you start: who it serves, how it works,
-            and what happens to your answers.
-          </p>
+          <div className="mx-auto flex max-w-2xl flex-col items-center gap-4 text-center">
+            <h2 className="text-3xl font-bold text-balance text-foreground sm:text-4xl">
+              What AlignEd is
+            </h2>
+            <p className="text-lg text-pretty text-muted-foreground">
+              Three things to know before you start: who it serves, how it
+              works, and what happens to your answers.
+            </p>
+          </div>
         </BlurFade>
 
-        <BlurFade inView delay={0.08}>
-          <ul className="divide-y divide-border overflow-hidden rounded-3xl border border-border bg-card shadow-bento">
-            {pillars.map((item) => (
-              <li key={item.title} className="flex gap-5 p-6 sm:p-7">
-                <span
-                  aria-hidden
-                  className={cn(
-                    "flex size-12 shrink-0 items-center justify-center bg-stage-assessment text-stage-assessment-foreground",
-                    HEX,
-                  )}
-                >
-                  <item.icon className="size-5" />
-                </span>
-                <div className="flex flex-col gap-2">
-                  <h3 className="text-xl font-bold text-foreground">
-                    {item.title}
-                  </h3>
+        {/* One panel, not three cards: hairlines divide it into rows on
+            phones and tablets and into three columns from lg, where each
+            column would otherwise be too narrow to read at md. */}
+        <ul className="grid divide-y divide-border overflow-hidden rounded-3xl border border-border bg-card shadow-bento lg:grid-cols-3 lg:divide-x lg:divide-y-0">
+          {pillars.map((item, index) => (
+            <li key={item.title}>
+              <BlurFade inView delay={index * 0.08} className="h-full">
+                <div className="flex h-full flex-col gap-4 p-6 sm:p-8">
+                  <div className="flex items-center gap-4">
+                    <span
+                      aria-hidden
+                      className={cn(
+                        "flex size-12 shrink-0 items-center justify-center bg-stage-assessment text-stage-assessment-foreground",
+                        HEX,
+                      )}
+                    >
+                      <item.icon className="size-5" />
+                    </span>
+                    <h3 className="text-xl font-bold text-balance text-foreground">
+                      {item.title}
+                    </h3>
+                  </div>
                   <p className="text-base text-pretty text-muted-foreground">
                     {item.body}
                   </p>
                 </div>
-              </li>
-            ))}
-          </ul>
-        </BlurFade>
+              </BlurFade>
+            </li>
+          ))}
+        </ul>
       </section>
 
       <section
@@ -205,31 +212,43 @@ export default function AboutPage() {
                 >
                   <BlurFade inView delay={index * 0.08} className="h-full">
                     <div className="group flex h-full flex-col items-center text-center">
-                      {/* Double hex: clip-path drops borders, so the frame is
-                          an accent hex with the photo inset inside it. */}
-                      <div
-                        className={cn(
-                          "relative aspect-square w-full max-w-44 p-1.5 transition-[translate,filter] duration-300 ease-out motion-safe:group-hover:-translate-y-1 group-hover:brightness-105",
-                          HEX,
-                          frameClass,
-                        )}
-                      >
+                      <div className="relative aspect-square w-full max-w-44 transition-transform duration-300 ease-out motion-safe:group-hover:-translate-y-1">
+                        {/* Hover glow. clip-path clips shadows, so the halo is
+                            its own layer: a static blur on an unclipped
+                            wrapper around a clipped hex, with only opacity
+                            animating. */}
+                        <div
+                          aria-hidden
+                          className="absolute inset-0 opacity-0 blur-xl transition-opacity duration-300 group-hover:opacity-80"
+                        >
+                          <div className={cn("size-full", HEX, frameClass)} />
+                        </div>
+                        {/* Double hex: clip-path drops borders, so the frame is
+                            an accent hex with the photo inset inside it. */}
                         <div
                           className={cn(
-                            "relative size-full overflow-hidden bg-card",
+                            "relative size-full p-1.5",
                             HEX,
+                            frameClass,
                           )}
                         >
-                          <Image
-                            src={member.photo}
-                            alt={`Portrait of ${member.name}`}
-                            fill
-                            sizes="(min-width: 1024px) 176px, 45vw"
+                          <div
                             className={cn(
-                              "object-cover object-top",
-                              member.imageClassName,
+                              "relative size-full overflow-hidden bg-card",
+                              HEX,
                             )}
-                          />
+                          >
+                            <Image
+                              src={member.photo}
+                              alt={`Portrait of ${member.name}`}
+                              fill
+                              sizes="(min-width: 1024px) 176px, 45vw"
+                              className={cn(
+                                "object-cover object-top",
+                                member.imageClassName,
+                              )}
+                            />
+                          </div>
                         </div>
                       </div>
                       {/* flex-1 pushes the role chip to the card's bottom, so

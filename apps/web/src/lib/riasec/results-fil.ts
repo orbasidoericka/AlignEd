@@ -30,6 +30,19 @@ export const RESULTS_TEXT_FIL = {
   codeMeaningTitle: "Ano ang Ibig Sabihin ng Iyong Code",
   collegeMajors: "Mga major sa kolehiyo",
   relatedPathways: "Mga kaugnay na landas",
+  rankBanner: [
+    "Pangunahin mong katangian",
+    "Ikalawa mong katangian",
+    "Ikatlo mong katangian",
+  ],
+  carousel: {
+    label: "Ang iyong tatlong nangungunang katangian",
+    show: (name: string) => `Ipakita ang ${name}`,
+    slideOf: (position: number, total: number) => `${position} sa ${total}`,
+  },
+  disclaimerTitle: "Paunawa",
+  disclaimer:
+    "Ang RIASEC assessment ay idinisenyo lamang upang suriin ang mga interes sa karera; hindi nito sinusukat ang kakayahan, kasanayan, o akademikong talino ng mag-aaral. Ang mga resulta ay nagbibigay ng pangkalahatang mungkahi para sa mga posibleng landas ng karera batay sa kasalukuyang kagustuhan at hindi dapat ituring na tiyak na hula ng hinaharap na trabaho o tagumpay sa karera. Pinakamainam gamitin ang imbentaryong ito bilang panimulang tool kasabay ng pagsusuri sa kasanayan, mga rekord ng akademikong pagganap, at career counseling.",
   expiry: {
     srPrefix: "Mananatili ang iyong resulta sa device na ito nang halos",
     srMoreMinute: "minuto pa",

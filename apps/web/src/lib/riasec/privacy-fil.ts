@@ -10,7 +10,7 @@ import type {
 // privacy-consent.tsx, so renderInline() and the section layout need no
 // changes. Not a lawyer-reviewed translation; mirrors the English wording's
 // meaning sentence by sentence.
-export const POLICY_SECTIONS_FIL: readonly PolicySection[] = [
+export const PRIVACY_POLICY_SECTIONS_FIL: readonly PolicySection[] = [
   {
     heading: "Sino ang nagpapatakbo ng AlignEd",
     items: [
@@ -110,15 +110,6 @@ export const POLICY_SECTIONS_FIL: readonly PolicySection[] = [
       {
         type: "para",
         text: "**Hindi kami nagpapakita ng mga ad, hindi namin ibinebenta ang iyong datos, at hindi namin ito ginagamit para sa anumang iba pa.**",
-      },
-    ],
-  },
-  {
-    heading: "Ano ang ibig sabihin ng iyong resulta",
-    items: [
-      {
-        type: "para",
-        text: "**Ang iyong resulta ay patnubay lamang.** Hindi nito pinagdedesisyunan ang iyong grado, pagtanggap sa paaralan, trabaho, o kung maaari kang kumuha ng isang kurso. Hindi ito pangwakas na sagot kung ano ang dapat mong piliin. Makipag-usap sa isang guidance counselor, guro, o pamilya bago ka magdesisyon.",
       },
     ],
   },
@@ -249,6 +240,18 @@ export const POLICY_SECTIONS_FIL: readonly PolicySection[] = [
       },
     ],
   },
+];
+
+export const TERMS_SECTIONS_FIL: readonly PolicySection[] = [
+  {
+    heading: "Ano ang ibig sabihin ng iyong resulta",
+    items: [
+      {
+        type: "para",
+        text: "**Ang iyong resulta ay patnubay lamang.** Hindi nito pinagdedesisyunan ang iyong grado, pagtanggap sa paaralan, trabaho, o kung maaari kang kumuha ng isang kurso. Hindi ito pangwakas na sagot kung ano ang dapat mong piliin. Makipag-usap sa isang guidance counselor, guro, o pamilya bago ka magdesisyon.",
+      },
+    ],
+  },
   {
     heading: "Mga mag-aaral na wala pang 18",
     items: [
@@ -313,10 +316,19 @@ export const PRIVACY_TEXT_FIL = {
   consentLinkText: "Patakaran sa Pagkapribado ng Data at Mga Tuntunin at Kundisyon",
   hint: "Sumang-ayon sa Mga Tuntunin at Kundisyon para magpatuloy.",
   dialogTitle: "Mga Tuntunin at Kundisyon at Patakaran sa Pagkapribado ng Data",
-  dialogDescriptionConsent: (version: string) =>
-    `Paano hinahawakan ng AlignEd ang iyong datos (${version}). Mangyaring basahin ito bago mo simulan ang assessment.`,
-  dialogDescriptionReadOnly: (version: string) =>
-    `Paano hinahawakan ng AlignEd ang iyong datos (${version}).`,
+  dialogDescriptionConsent: (privacyVersion: string, termsVersion: string) =>
+    `Patakaran sa Pagkapribado ng Data ${privacyVersion} at Mga Tuntunin at Kundisyon ${termsVersion}. Mangyaring basahin ang dalawa bago mo simulan ang assessment.`,
+  dialogDescriptionReadOnly: (privacyVersion: string, termsVersion: string) =>
+    `Patakaran sa Pagkapribado ng Data ${privacyVersion} at Mga Tuntunin at Kundisyon ${termsVersion}.`,
+  tabPrivacy: "Patakaran sa Pagkapribado ng Data",
+  tabTerms: "Mga Tuntunin at Kundisyon",
+  // Single-document read-only dialog (the footer's two separate links): each
+  // shows only its own title and version, no tab switcher and no mention of
+  // the other document.
+  dialogDescriptionReadOnlyPrivacy: (version: string) =>
+    `Patakaran sa Pagkapribado ng Data ${version}.`,
+  dialogDescriptionReadOnlyTerms: (version: string) =>
+    `Mga Tuntunin at Kundisyon ${version}.`,
   close: "Isara",
   agree: "Sumasang-ayon ako",
 } as const;

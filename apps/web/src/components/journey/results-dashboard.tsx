@@ -271,6 +271,31 @@ export function ResultsDashboard() {
               stats (PRD FR-9, BACKEND.md), so it must stay on the page. */}
           <SavedResultsPanel />
 
+          {/* Scope disclaimer, in its own box just above the trait cards. */}
+          <BlurFade
+            inView
+            delay={0.12}
+            className={cn("md:col-span-3", printSingle)}
+          >
+            <section
+              aria-labelledby="disclaimer-heading"
+              lang={fil ? "fil" : undefined}
+              className="flex flex-col gap-2 rounded-2xl border border-border bg-card p-5 shadow-bento sm:p-6 print:shadow-none"
+            >
+              <h2
+                id="disclaimer-heading"
+                className="font-heading text-lg font-bold text-foreground"
+              >
+                {fil ? t.disclaimerTitle : "Disclaimer"}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+              {fil
+                ? t.disclaimer
+                : "The RIASEC assessment is designed solely to evaluate career interests; it does not measure a student’s skills, abilities, or academic aptitudes. Results provide general suggestions for potential career pathways based on current preferences and should not be interpreted as a definitive prediction of future employment or career success. This inventory is best used as an exploratory tool alongside skill evaluations, academic performance records, and career counseling."}
+              </p>
+            </section>
+          </BlurFade>
+
           {/* Majors and related pathways for each code letter (official
               RIASEC sheet). Every item listed, no ranking or match labels. */}
           <BlurFade

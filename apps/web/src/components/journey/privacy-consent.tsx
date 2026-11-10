@@ -16,7 +16,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { POLICY_SECTIONS_FIL, PRIVACY_TEXT_FIL } from "@/lib/riasec/privacy-fil";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  PRIVACY_POLICY_SECTIONS_FIL,
+  TERMS_SECTIONS_FIL,
+  PRIVACY_TEXT_FIL,
+} from "@/lib/riasec/privacy-fil";
 import type { QuestionLanguage } from "@/lib/riasec/questions";
 import { useAssessmentStore } from "@/store/useAssessmentStore";
 import { cn } from "@/lib/utils";
@@ -31,7 +36,10 @@ import { cn } from "@/lib/utils";
 // private admin page, the email route with its optional photo, the in-memory
 // abuse limiters, and PostHog analytics.
 // Change the code and this changes too: keep claims accurate.
-export const PRIVACY_POLICY_VERSION = "v2.3";
+export const PRIVACY_POLICY_VERSION = "v3.0";
+
+// First standalone version: split out of the combined notice above at v3.0.
+export const TERMS_VERSION = "v1.0";
 
 export const PRIVACY_CONTACT_EMAIL = "aligned.career.support@gmail.com";
 
@@ -47,7 +55,7 @@ export interface PolicySection {
   items: PolicyItem[];
 }
 
-const POLICY_SECTIONS: PolicySection[] = [
+const PRIVACY_POLICY_SECTIONS: PolicySection[] = [
   {
     heading: "Who runs AlignEd",
     items: [
@@ -147,15 +155,6 @@ const POLICY_SECTIONS: PolicySection[] = [
       {
         type: "para",
         text: "**We do not show ads, we do not sell your data, and we do not use it for anything else.**",
-      },
-    ],
-  },
-  {
-    heading: "What your results mean",
-    items: [
-      {
-        type: "para",
-        text: "**Your results are guidance only.** They do not decide your grades, school admission, job, or whether you can take a course. They are not a final answer on what you must choose. Talk with a guidance counselor, teacher, or family before you decide.",
       },
     ],
   },
@@ -286,6 +285,18 @@ const POLICY_SECTIONS: PolicySection[] = [
       },
     ],
   },
+];
+
+const TERMS_SECTIONS: PolicySection[] = [
+  {
+    heading: "What your results mean",
+    items: [
+      {
+        type: "para",
+        text: "**Your results are guidance only.** They do not decide your grades, school admission, job, or whether you can take a course. They are not a final answer on what you must choose. Talk with a guidance counselor, teacher, or family before you decide.",
+      },
+    ],
+  },
   {
     heading: "Students under 18",
     items: [
@@ -353,49 +364,83 @@ function renderInline(text: string) {
   );
 }
 
-// The section content, shared by the profile step's consent dialog and the
-// footer's read-only dialog, so the notice can only ever say one thing.
-function PolicyBody({ language }: { language: QuestionLanguage }) {
-  const sections = language === "fil" ? POLICY_SECTIONS_FIL : POLICY_SECTIONS;
-  return (
-    <div
-      lang={language === "fil" ? "fil" : undefined}
-      className="flex max-h-[55vh] flex-col gap-5 overflow-y-auto p-6"
-    >
-      {sections.map((section) => (
-        <div key={section.heading} className="flex flex-col gap-2">
-          <h3 className="font-heading text-base font-bold text-foreground">
-            {section.heading}
-          </h3>
-          {section.items.map((item, i) => {
-            if (item.type === "subheading") {
-              return (
-                <p key={i} className="text-sm font-semibold text-foreground">
-                  {item.text}
-                </p>
-              );
-            }
-            if (item.type === "list") {
-              return (
-                <ul
-                  key={i}
-                  className="list-disc space-y-0.5 pl-5 text-sm text-muted-foreground"
-                >
-                  {item.items.map((li, j) => (
-                    <li key={j}>{renderInline(li)}</li>
-                  ))}
-                </ul>
-              );
-            }
-            return (
-              <p key={i} className="text-sm text-pretty text-muted-foreground">
-                {renderInline(item.text)}
-              </p>
-            );
-          })}
-        </div>
-      ))}
+// Renders one document's sections. Shared by both tabs below, and by both
+// the profile step's consent dialog and the footer's read-only dialog, so
+// each document can only ever say one thing.
+function renderSections(sections: readonly PolicySection[]) {
+  return sections.map((section) => (
+    <div key={section.heading} className="flex flex-col gap-2">
+      <h3 className="font-heading text-base font-bold text-foreground">
+        {section.heading}
+      </h3>
+      {section.items.map((item, i) => {
+        if (item.type === "subheading") {
+          return (
+            <p key={i} className="text-sm font-semibold text-foreground">
+              {item.text}
+            </p>
+          );
+        }
+        if (item.type === "list") {
+          return (
+            <ul
+              key={i}
+              className="list-disc space-y-0.5 pl-5 text-sm text-muted-foreground"
+            >
+              {item.items.map((li, j) => (
+                <li key={j}>{renderInline(li)}</li>
+              ))}
+            </ul>
+          );
+        }
+        return (
+          <p key={i} className="text-sm text-pretty text-muted-foreground">
+            {renderInline(item.text)}
+          </p>
+        );
+      })}
     </div>
+  ));
+}
+
+// The two documents as separate tabs, shared by the profile step's consent
+// dialog and the footer's read-only dialog, so the notice can only ever say
+// one thing. One checkbox and one "I agree" still cover both tabs.
+function PolicyTabs({
+  language,
+  defaultTab = "privacy",
+}: {
+  language: QuestionLanguage;
+  defaultTab?: "privacy" | "terms";
+}) {
+  const fil = language === "fil";
+  const t = fil ? PRIVACY_TEXT_FIL : null;
+  const privacySections = fil ? PRIVACY_POLICY_SECTIONS_FIL : PRIVACY_POLICY_SECTIONS;
+  const termsSections = fil ? TERMS_SECTIONS_FIL : TERMS_SECTIONS;
+
+  return (
+    <Tabs defaultValue={defaultTab} lang={fil ? "fil" : undefined} className="p-6 pb-0">
+      <TabsList>
+        <TabsTrigger value="privacy">
+          {t ? t.tabPrivacy : "Data Privacy Policy"}
+        </TabsTrigger>
+        <TabsTrigger value="terms">
+          {t ? t.tabTerms : "Terms and Conditions"}
+        </TabsTrigger>
+      </TabsList>
+      <TabsContent
+        value="privacy"
+        className="flex max-h-[50vh] flex-col gap-5 overflow-y-auto pb-6"
+      >
+        {renderSections(privacySections)}
+      </TabsContent>
+      <TabsContent
+        value="terms"
+        className="flex max-h-[50vh] flex-col gap-5 overflow-y-auto pb-6"
+      >
+        {renderSections(termsSections)}
+      </TabsContent>
+    </Tabs>
   );
 }
 
@@ -507,16 +552,16 @@ export function PrivacyConsent({
             className="border-b border-border p-6 pr-14"
           >
             <DialogTitle className="text-xl">
-              {t ? t.dialogTitle : "Terms and Conditions and Data Privacy Policy"}
+              {t ? t.dialogTitle : "Data Privacy Policy & Terms and Conditions"}
             </DialogTitle>
             <DialogDescription>
               {t
-                ? t.dialogDescriptionConsent(PRIVACY_POLICY_VERSION)
-                : `How AlignEd handles your data (${PRIVACY_POLICY_VERSION}). Please read this before you start the assessment.`}
+                ? t.dialogDescriptionConsent(PRIVACY_POLICY_VERSION, TERMS_VERSION)
+                : `Data Privacy Policy ${PRIVACY_POLICY_VERSION} and Terms and Conditions ${TERMS_VERSION}. Please read both before you start the assessment.`}
             </DialogDescription>
           </DialogHeader>
 
-          <PolicyBody language={language} />
+          <PolicyTabs language={language} />
 
           <DialogFooter
             lang={fil ? "fil" : undefined}
@@ -545,19 +590,31 @@ export function PrivacyConsent({
   );
 }
 
-// Read-only dialog for anyone outside the consent flow (the footer link):
-// same notice, same version, no checkbox and no "I agree", because there is
-// nothing here for a visitor to consent to.
+// Read-only dialog for anyone outside the consent flow (the footer's two
+// links): each shows only its own document, no tab switcher and no mention
+// of the other one, because a visitor who opened "Terms and Conditions"
+// should not be shown the Data Privacy Policy on the way in (or the reverse).
 export function PrivacyPolicyDialog({
   trigger,
   children,
+  defaultTab,
 }: {
   trigger: React.ReactElement;
   children: React.ReactNode;
+  /** Which single document this dialog shows. */
+  defaultTab: "privacy" | "terms";
 }) {
   const language = useAssessmentStore((state) => state.language);
   const fil = language === "fil";
   const t = fil ? PRIVACY_TEXT_FIL : null;
+  const isPrivacy = defaultTab === "privacy";
+  const sections = isPrivacy
+    ? fil
+      ? PRIVACY_POLICY_SECTIONS_FIL
+      : PRIVACY_POLICY_SECTIONS
+    : fil
+      ? TERMS_SECTIONS_FIL
+      : TERMS_SECTIONS;
 
   return (
     <Dialog>
@@ -568,16 +625,31 @@ export function PrivacyPolicyDialog({
           className="border-b border-border p-6 pr-14"
         >
           <DialogTitle className="text-xl">
-            {t ? t.dialogTitle : "Terms and Conditions and Data Privacy Policy"}
+            {isPrivacy
+              ? t
+                ? t.tabPrivacy
+                : "Data Privacy Policy"
+              : t
+                ? t.tabTerms
+                : "Terms and Conditions"}
           </DialogTitle>
           <DialogDescription>
-            {t
-              ? t.dialogDescriptionReadOnly(PRIVACY_POLICY_VERSION)
-              : `How AlignEd handles your data (${PRIVACY_POLICY_VERSION}).`}
+            {isPrivacy
+              ? t
+                ? t.dialogDescriptionReadOnlyPrivacy(PRIVACY_POLICY_VERSION)
+                : `Data Privacy Policy ${PRIVACY_POLICY_VERSION}.`
+              : t
+                ? t.dialogDescriptionReadOnlyTerms(TERMS_VERSION)
+                : `Terms and Conditions ${TERMS_VERSION}.`}
           </DialogDescription>
         </DialogHeader>
 
-        <PolicyBody language={language} />
+        <div
+          lang={fil ? "fil" : undefined}
+          className="flex max-h-[55vh] flex-col gap-5 overflow-y-auto p-6"
+        >
+          {renderSections(sections)}
+        </div>
 
         <DialogFooter
           lang={fil ? "fil" : undefined}

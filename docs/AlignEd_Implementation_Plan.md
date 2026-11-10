@@ -57,7 +57,7 @@ Design language and page-level wireframes live in `docs/AlignEd_Design_Vision.md
 | **Profile Setup** (FR-2) | **shadcn**: `RadioGroup` (grade level — two cards, Grade 11–12; strand cards), `Input` (age, required, 10–30), `Input` with counter (school, optional), privacy-notice `Checkbox` (required), `Button` (unavailable until valid). Runs inside the same Focus Mode shell as the quiz. |
 | **RIASEC assessment** (FR-3) | **shadcn**: `Progress`, `Card`, `RadioGroup` (Yes/No as two tappable cards, auto-advancing; `Back` button only — no Next), `AlertDialog` on exit attempts. **MagicUI**: *Animated Circular Progress Bar* step counter; *Blur Fade* question entrance; *Confetti* on completion. **Framer Motion**: `AnimatePresence` slide transitions. **State**: existing `useAssessmentStore` (kept — it already handles re-answer score correction and localStorage resume), extended with profile fields. |
 | **Results — code reveal** (FR-4) | **MagicUI**: *Sparkles Text* Holland-code reveal; *Animated Gradient Text* trait name. **shadcn**: `Chart` (Recharts `RadarChart`) six-trait radar wrapped in Aceternity *Card Spotlight*. |
-| **Results — majors & pathways** (FR-5) | `riasec/pathway-results.tsx`: one card per code letter (mascot cover, description, all majors, all pathways as equal-weight tags). No ranking, badges or university links anywhere. |
+| **Results — majors & pathways** (FR-5) | `riasec/pathway-results.tsx` + `riasec/trait-carousel.tsx`: one swipeable card per code letter (rank banner, mascot cover, description, all majors, all pathways as equal-weight tags). Traits are ranked by code position; majors and pathways are never ranked. No university links anywhere. |
 | **PDF export** (FR-7) | pdfmake document built in the browser (`lib/results-pdf/build-results-pdf.ts` + `download-results-pdf.ts`), encrypted with nickname + code. A4, grayscale-legible. |
 | **Email-my-results** (FR-8) | `Dialog` + `Input` + consent `Checkbox` (Data Privacy Act copy) + `Sonner` toasts, posting to `/api/send-results`. Honeypot `website` field included. |
 | **Saved results** (FR-9) | `journey/saved-results-panel.tsx`: no UI, just auto-saves once per session for the admin stats page (FR-10). |
@@ -175,6 +175,7 @@ Design language and page-level wireframes live in `docs/AlignEd_Design_Vision.md
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 
+- 2026-11-10 · frontend · FR-5 row updated: top-three cards are a carousel with rank banners (PRD FR-5.4). · Requested.
 - 2026-11-09 · frontend/backend · Task 3.5's saved results is now a no-UI auto-save only: ID display, compare-by-ID, and delete are all gone from `saved-results-panel.tsx` and `/api/results/[id]`. · Requested removal of the results-ID feature from the Results page.
 - 2026-11-09 · frontend/backend · Task 3.5's compare-by-ID is removed (saved results now auto-save + delete only). · Comparing was cut from the results page.
 - 2026-10-27 · backend · Architecture, stack, database plan and component map rewritten to the shipped code (Next route handlers, `saved_results`, Gmail SMTP, pdfmake, admin page, career look). Tasks 1.6, 3.2, 3.3 marked superseded; 2.6, 4.1–4.3, 5.4–5.6 rewritten; 3.5, 4.5, 5.7 added; QA protocol updated. · The codebase is the plan of record.

@@ -6,6 +6,7 @@ import {
   Clock,
   Compass,
   Gift,
+  GraduationCap,
   PartyPopper,
   UserRoundX,
 } from "lucide-react";
@@ -138,6 +139,7 @@ const heroBadges = [
   { label: "Free to use", icon: Gift },
   { label: "No sign-up needed", icon: UserRoundX },
   { label: "About 5 minutes", icon: Clock },
+  { label: "For Senior High School Students", icon: GraduationCap },
 ] as const;
 
 export default function HomePage() {

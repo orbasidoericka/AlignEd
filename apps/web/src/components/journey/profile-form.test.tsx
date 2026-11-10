@@ -223,6 +223,27 @@ describe("ProfileForm privacy consent", () => {
     expect(dialog).not.toHaveTextContent("[");
   });
 
+  it("separates the Data Privacy Policy and Terms and Conditions into their own tabs", () => {
+    render(<ProfileForm />);
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "Data Privacy Policy and Terms and Conditions",
+      }),
+    );
+    const dialog = screen.getByRole("dialog");
+
+    expect(dialog).toHaveTextContent(/All the data we collect/i);
+    expect(dialog).not.toHaveTextContent(/Students under 18/i);
+
+    fireEvent.click(
+      screen.getByRole("tab", { name: "Terms and Conditions" }),
+    );
+
+    expect(dialog).toHaveTextContent(/Students under 18/i);
+    expect(dialog).not.toHaveTextContent(/All the data we collect/i);
+  });
+
   it("lets a student withdraw consent, which blocks the assessment again", () => {
     render(<ProfileForm />);
     fillProfile();

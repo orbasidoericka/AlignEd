@@ -41,7 +41,6 @@ export function SiteFooter() {
           </p>
         </div>
         <nav aria-label="Footer" className="flex flex-col gap-2">
-          <p className="text-sm font-semibold text-foreground">AlignEd</p>
           {footerLinks.map((link) =>
             link.href.includes("#") ? (
               <SectionLink
@@ -66,11 +65,20 @@ export function SiteFooter() {
             ),
           )}
           <PrivacyPolicyDialog
+            defaultTab="privacy"
             trigger={
               <button type="button" className={cn(linkClassName, "text-left")} />
             }
           >
-            Terms and Privacy
+            Data Privacy Policy
+          </PrivacyPolicyDialog>
+          <PrivacyPolicyDialog
+            defaultTab="terms"
+            trigger={
+              <button type="button" className={cn(linkClassName, "text-left")} />
+            }
+          >
+            Terms and Conditions
           </PrivacyPolicyDialog>
         </nav>
       </div>

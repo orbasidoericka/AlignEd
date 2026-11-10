@@ -1,7 +1,8 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { RIASEC_PATHWAYS } from "@/lib/riasec/career-pathways";
+import { useAssessmentStore } from "@/store/useAssessmentStore";
 
 import { PathwayResults } from "./pathway-results";
 
@@ -50,9 +51,9 @@ describe("PathwayResults", () => {
   });
 
   // Careers are never ranked against each other, and no fake match score is
-  // ever shown. The top-trait badge below is deliberately outside this rule:
-  // it names the student's own highest trait, which the page already reports
-  // with real numbers, and says nothing about how well a career fits them.
+  // ever shown. The rank banner below is deliberately outside this rule: it
+  // orders the student's own traits, which the page already reports with real
+  // numbers, and says nothing about how well a career fits them.
   it("never labels match strength or shows percentages", () => {
     const { container } = render(
       <PathwayResults topThreeLetters={["S", "E", "C"]} />,
@@ -112,32 +113,95 @@ describe("PathwayResults", () => {
       (card) => card.querySelector(MASCOT)!,
     );
 
-    // The top trait is marked by its badge and colored edge, never by size.
+    // The top trait is marked by its banner and colored edge, never by size.
     for (const mascot of mascots) {
       expect(mascot.parentElement!.className).toContain("h-32 sm:h-36");
     }
     expect(mascots[0]!.getAttribute("class")).toContain("drop-shadow-chip");
   });
 
-  it("aligns the cards' rows on a shared subgrid", () => {
-    const { container } = render(<PathwayResults topThreeLetters={["R", "I", "A"]} />);
-    for (const card of Array.from(container.querySelectorAll("section"))) {
-      expect(card.className).toContain("md:grid-rows-subgrid");
-      expect(card.parentElement!.className).toContain("md:grid-rows-subgrid");
+  const positions = () =>
+    [1, 2, 3].map(
+      (n) =>
+        screen
+          .getByRole("group", { name: `${n} of 3` })
+          .getAttribute("data-position"),
+    );
+
+  it("starts with the first letter in front, the second left, the third right", () => {
+    render(<PathwayResults topThreeLetters={["R", "I", "A"]} />);
+
+    expect(
+      screen.getByRole("group", { name: "Your top three traits" }),
+    ).toHaveAttribute("aria-roledescription", "carousel");
+    expect(positions()).toEqual(["front", "left", "right"]);
+    expect(screen.getByRole("button", { name: /#1/ })).toHaveAttribute(
+      "aria-current",
+      "true",
+    );
+  });
+
+  it("rotates the side card it names into the front, and keeps going around", () => {
+    render(<PathwayResults topThreeLetters={["R", "I", "A"]} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Show Investigative" }));
+    expect(positions()).toEqual(["right", "front", "left"]);
+
+    fireEvent.click(screen.getByRole("button", { name: "Show Artistic" }));
+    expect(positions()).toEqual(["left", "right", "front"]);
+
+    fireEvent.click(screen.getByRole("button", { name: "Show Realistic" }));
+    expect(positions()).toEqual(["front", "left", "right"]);
+  });
+
+  it("jumps to a trait from its rank button", () => {
+    render(<PathwayResults topThreeLetters={["R", "I", "A"]} />);
+
+    const third = screen.getByRole("button", { name: /#3/ });
+    fireEvent.click(third);
+
+    expect(third).toHaveAttribute("aria-current", "true");
+    expect(positions()).toEqual(["left", "right", "front"]);
+  });
+
+  it("rotates once per horizontal scroll gesture and ignores vertical scrolling", () => {
+    render(<PathwayResults topThreeLetters={["R", "I", "A"]} />);
+    const slide = screen.getByRole("group", { name: "1 of 3" });
+
+    fireEvent.wheel(slide, { deltaY: 80 });
+    expect(positions()).toEqual(["front", "left", "right"]);
+
+    fireEvent.wheel(slide, { deltaX: 80 });
+    fireEvent.wheel(slide, { deltaX: 60 });
+    expect(positions()).toEqual(["left", "right", "front"]);
+  });
+
+  it("banners each card with its rank, in code order", () => {
+    render(<PathwayResults topThreeLetters={["R", "I", "A"]} />);
+
+    const expected = [
+      ["Realistic", "Your top trait", "#1"],
+      ["Investigative", "Your second trait", "#2"],
+      ["Artistic", "Your third trait", "#3"],
+    ] as const;
+    for (const [name, text, rank] of expected) {
+      const banner = screen.getByText(text);
+      expect(banner.closest("section")).toBe(
+        screen.getByRole("heading", { level: 2, name }).closest("section"),
+      );
+      expect(banner.parentElement).toHaveTextContent(rank);
     }
   });
 
-  it("names the top trait in words, not only in size and color", () => {
-    render(<PathwayResults topThreeLetters={["R", "I", "A"]} />);
-
-    // One badge, and it belongs to the first letter of the code.
-    const badges = screen.getAllByText("Your top trait");
-    expect(badges).toHaveLength(1);
-    expect(badges[0]!.closest("section")).toBe(
-      screen.getByRole("heading", { level: 2, name: "Realistic" }).closest(
-        "section",
-      ),
-    );
+  it("translates the rank banner", () => {
+    useAssessmentStore.setState({ language: "fil" });
+    try {
+      render(<PathwayResults topThreeLetters={["R", "I", "A"]} />);
+      expect(screen.getByText("Pangunahin mong katangian")).toBeInTheDocument();
+      expect(screen.queryByText("Your top trait")).toBeNull();
+    } finally {
+      useAssessmentStore.setState({ language: "en" });
+    }
   });
 
   it("edges only the top card, in that letter's own color, without resizing it", () => {

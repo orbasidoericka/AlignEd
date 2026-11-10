@@ -32,6 +32,8 @@ interface BentoGridItemProps {
   className?: string;
   /** Classes for the outer glowing frame. */
   frameClassName?: string;
+  /** Inline style for the outer frame, e.g. a trait-colored glow. */
+  frameStyle?: React.CSSProperties | undefined;
   title?: React.ReactNode;
   description?: React.ReactNode;
   header?: React.ReactNode;
@@ -45,6 +47,7 @@ interface BentoGridItemProps {
 export function BentoGridItem({
   className,
   frameClassName,
+  frameStyle,
   title,
   description,
   header,
@@ -58,6 +61,7 @@ export function BentoGridItem({
         "relative h-full rounded-[1.75rem] border border-border p-1.5 md:p-2 print:break-inside-avoid print:border-0 print:p-0",
         frameClassName,
       )}
+      style={frameStyle}
     >
       <GlowingEffect
         disabled={false}

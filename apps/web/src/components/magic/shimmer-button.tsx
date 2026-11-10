@@ -62,10 +62,6 @@ export function ShimmerButton({
         "group/shimmer relative isolate z-0 inline-flex h-14 shrink-0 cursor-pointer items-center justify-center gap-2.5 overflow-hidden px-8 whitespace-nowrap select-none",
         "[background:var(--shimmer-rail)] [border-radius:var(--shimmer-radius)]",
         "font-heading text-lg font-semibold text-primary-foreground",
-        // A tight drop shadow and nothing blurred or hover-reactive: the bento
-        // frame around this button already runs a pointer-tracked
-        // GlowingEffect, and a second halo reads as a bug rather than depth.
-        "shadow-glow-primary",
         "transform-gpu transition-transform duration-150 ease-out",
         "active:not-aria-[haspopup]:translate-y-px",
         "outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
@@ -91,16 +87,6 @@ export function ShimmerButton({
       <span
         aria-hidden
         className="pointer-events-none absolute inset-[var(--shimmer-cut)] -z-20 [background:var(--shimmer-bg)] [border-radius:var(--shimmer-radius)]"
-      />
-
-      {/* Inset bloom along the bottom edge, so the flat pastel fill reads as a
-          lit surface. Opacity carries hover and press. The negative z-index is
-          load-bearing: positioned layers paint after inline content whatever
-          the DOM order, so at z-auto this cream glow would wash over the
-          label's descenders. */}
-      <span
-        aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10 opacity-45 shadow-[inset_0_-10px_14px_var(--shimmer-color)] transition-opacity duration-300 ease-in-out [border-radius:var(--shimmer-radius)] group-hover/shimmer:opacity-70 group-active/shimmer:opacity-90"
       />
 
       {children}

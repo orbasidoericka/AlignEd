@@ -109,6 +109,15 @@ export function letterBorder(letter: RiasecLetter): string {
   return letterBorderStyles[letter];
 }
 
+// A static halo in the letter's own color, for the one card that should read
+// as lit. A token mixed toward transparent, never a hex, and it never animates.
+export function letterGlow(letter: RiasecLetter): CSSProperties {
+  const color = letterVar(letter);
+  return {
+    boxShadow: `0 0 28px 4px color-mix(in srgb, ${color} 70%, transparent), 0 0 64px 8px color-mix(in srgb, ${color} 35%, transparent)`,
+  };
+}
+
 // Paired with the border above: a ring is a box-shadow, so it doubles the
 // top card's edge without changing its size.
 export const letterRingStyles: Readonly<Record<RiasecLetter, string>> = {

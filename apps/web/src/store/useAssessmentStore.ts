@@ -363,7 +363,7 @@ export const useAssessmentStore = create<AssessmentStore>()(
     }),
     {
       name: STORAGE_KEY,
-      version: 9,
+      version: 10,
       storage: createJSONStorage(() => ssrSafeStorage()),
       // 30-minute TTL. zustand calls this after `merge` has set the rehydrated state
       // but *before* it flips `hasHydrated`, so JourneyGuard — which gates on
@@ -453,7 +453,19 @@ export const useAssessmentStore = create<AssessmentStore>()(
         // v9 added the statement language; merge keeps the "en" default.
         // strandOther (the typed "Others" strand) needed no bump: merge's
         // spread over emptyProfile gives older blobs an empty string.
-        return withNickname;
+
+        // v10 split the combined notice into separate Data Privacy Policy and
+        // Terms and Conditions tabs: an older accept never saw that split, so
+        // force the checkbox unticked again rather than carry it forward.
+        const withPrivacyReset =
+          version < 10
+            ? {
+                ...withNickname,
+                profile: { ...withNickname.profile, privacyAccepted: false },
+              }
+            : withNickname;
+
+        return withPrivacyReset;
       },
     },
   ),

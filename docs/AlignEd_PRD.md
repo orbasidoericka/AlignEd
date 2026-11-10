@@ -121,7 +121,8 @@ Captured before the assessment begins; stored client-side only (localStorage via
 ### FR-5 Majors and Related Pathways
 - FR-5.1. Source is the official RIASEC results sheet ("Which Career Pathway is right for you?"), stored as static data in `apps/web/src/lib/riasec/career-pathways.ts`: for each letter, its description, college majors, and related pathways, transcribed in full (only two obvious source typos corrected).
 - FR-5.2. For each of the student's top 3 letters, in code order, the dashboard shows that letter's description, **all** of its majors, and **all** of its related pathways. Lists are never truncated.
-- FR-5.3. No ranking is shown. Items appear as equal-weight tags in the sheet's own order; there are no "strongest/weakest match", "top choice", match-strength badges, or percentages, because there is no validated basis for ranking items within a letter.
+- FR-5.3. Majors and pathways are never ranked. Items appear as equal-weight tags in the sheet's own order; there are no "strongest/weakest match", "top choice", match-strength badges, or percentages, because there is no validated basis for ranking items within a letter.
+- FR-5.4. The three letter cards are shown as a rotating three-card carousel, starting on the first letter with the second letter peeking on the left and the third on the right. Swiping, side arrows, or tapping a peeking card rotates the ring in either direction with no end. Each card carries a banner stating that trait's position in the student's own code (#1 "Your top trait", #2 "Your second trait", #3 "Your third trait"). The banner ranks the student's traits by score only and says nothing about careers. All three cards stack in full when printed.
 
 ### FR-6 Recommended College Programs (superseded)
 - FR-6.1. Superseded by FR-5. The ranked program list (`match_courses(p_code)` with Exact / Strong badges) is no longer displayed. `data/careers.csv`, `data/courses.csv`, and the Supabase seed remain as backend reference data.
@@ -223,7 +224,7 @@ Captured before the assessment begins; stored client-side only (localStorage via
 - **Given** tied trait scores, **then** ranking follows `R → I → A → S → E → C`.
 
 ### Majors & Pathways
-- **Given** a computed code, **then** each of the three letters shows its description and **all** its majors and related pathways in sheet order, with no ranking, match badge or percentage, and nothing displays or links to any university.
+- **Given** a computed code, **then** each of the three letters shows its description and **all** its majors and related pathways in sheet order, with no ranking of those items, no match badge or percentage, and nothing displays or links to any university.
 
 ### PDF Export
 - **Given** the results dashboard, **when** "Download PDF" is used, **then** the browser produces an A4 PDF without any upload, it opens only with the nickname + code password, and it contains the code, all six scores, and every major and pathway for each code letter.
@@ -301,6 +302,9 @@ AlignEd ships as a mostly-static, anonymous-first Next.js application.
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 
+- 2026-11-10 · results · FR-5.4 carousel is now a rotating ring: #2 peeks left, #3 peeks right, both tilted and dimmed, arrows on the sides. · Requested design.
+- 2026-11-10 · results · Added FR-5.4: the three letter cards are a swipeable carousel with a rank banner per trait; FR-5.3 and its acceptance line now say explicitly that the no-ranking rule covers majors and pathways. · Requested: swipe through the top three and see the rank at a glance.
+- 2026-11-10 · profile · The combined notice behind FR-2.1's privacy acceptance now presents the Data Privacy Policy and the Terms and Conditions as two separate tabs within the same dialog (profile step and footer), instead of one scrolled document; the single checkbox/acceptance field is unchanged, but any session that had already ticked it before this change has that acceptance reset so the split content is seen and agreed to again. · Requested separation of the two documents for legal clarity.
 - 2026-11-10 · profile · Added FR-2.3: a scoring-procedure notice (four steps, English and Filipino) opens over a blurred Profile Setup and is acknowledged with "I understand", once per tab. · Requested: students should know how the code is counted before they start.
 - 2026-11-09 · results · Removed the entire "Your results ID" panel and its backend (`DELETE /api/results/[id]`, `getResult`/`deleteResult`, the store's `resultsDeleted` flag). FR-9 is now server-side only: `POST /api/results` still saves one row per session for the admin stats page (FR-10), but the ID is never shown, looked up, or deleted from the UI. · Requested removal of the results-ID feature from the Results page.
 - 2026-11-09 · results · Removed FR-9.3 compare-by-ID (`GET /api/results/[id]`, the "Compare with past results" dialog); FR-9 renamed "Saved Results". The results ID is now kept only as a record, with save and delete unchanged. · Comparing was cut from the results page.
