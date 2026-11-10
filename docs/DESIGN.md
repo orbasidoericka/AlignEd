@@ -252,6 +252,7 @@ Dark values are black-based with no blue tint and a faint inset top highlight, b
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 
+- 2026-11-10 · design · Profile Setup scoring notice: `max-w-4xl` dialog, two-column numbered steps (hexagon badges in the Profile yellow, `stage-profile` with its foreground ink, the same badge shape as the landing's scoring section), Hexi beside the title from `sm`, a `stage-profile-soft` note, and a yellow "I understand" pill in a fixed footer. The page behind is dimmed (`foreground/20`) and `backdrop-blur-md`, the one place the blur is wider than the finish dialog's `blur-sm`, because the form must not be readable behind it. · Requested; keeps one stage accent (yellow) and reuses existing badge, note and pill vocabulary.
 - 2026-11-10 · design · Career look dialog is compact on phones (16px padding, camera preview capped at 50dvh) and every dialog scrolls inside the viewport when taller than it. · The buttons below the camera were pushed off-screen on small phones.
 - 2026-11-10 · design · Language toggle (Profile FocusBar, Assessment FocusBar, Results navbar) shows "EN"/"FIL" text instead of a flag icon. · Requested; flag imagery read as nationality branding rather than a language control.
 - 2026-11-09 · design · Quiz: the "All questions" icon button sits to the right of the progress bar/count, vertically centred against it, instead of on its own row above the statement. · Requested; reads as part of the progress chrome rather than a separate control floating above the question.

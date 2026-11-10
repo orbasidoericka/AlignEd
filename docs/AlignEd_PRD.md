@@ -95,6 +95,7 @@ Captured before the assessment begins; stored client-side only (localStorage via
 
 - FR-2.1. The "Continue to assessment" action is unavailable until all required fields (nickname, grade level, SHS strand, age, privacy acceptance) are set.
 - FR-2.2. Profile values are editable by returning to this step before completing the assessment.
+- FR-2.3. **Scoring notice.** On arrival the step opens with a blocking notice, "How your code is scored" (the same four steps as the landing page's scoring section), over a blurred profile. It is dismissed with "I understand" (or Escape / an outside click), once per browser tab (`sessionStorage`), so a refresh or a return from the quiz does not bring it back. It follows the English / Filipino toggle and carries its own toggle. It collects nothing and gates nothing beyond being read first.
 
 ### FR-3 RIASEC Assessment Engine
 - FR-3.1. **Question bank:** the 42 statements of the source RIASEC instrument, statically defined, balanced at exactly 7 items per trait across the six Holland types (Realistic, Investigative, Artistic, Social, Enterprising, Conventional). Statement text is reproduced **verbatim** from the instrument — including its original punctuation — and is not subject to editorial rewriting. Items are presented in the instrument's printed order (traits interleaved, never grouped), and each item's trait assignment is fixed by the instrument's answer key.
@@ -300,6 +301,7 @@ AlignEd ships as a mostly-static, anonymous-first Next.js application.
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 
+- 2026-11-10 · profile · Added FR-2.3: a scoring-procedure notice (four steps, English and Filipino) opens over a blurred Profile Setup and is acknowledged with "I understand", once per tab. · Requested: students should know how the code is counted before they start.
 - 2026-11-09 · results · Removed the entire "Your results ID" panel and its backend (`DELETE /api/results/[id]`, `getResult`/`deleteResult`, the store's `resultsDeleted` flag). FR-9 is now server-side only: `POST /api/results` still saves one row per session for the admin stats page (FR-10), but the ID is never shown, looked up, or deleted from the UI. · Requested removal of the results-ID feature from the Results page.
 - 2026-11-09 · results · Removed FR-9.3 compare-by-ID (`GET /api/results/[id]`, the "Compare with past results" dialog); FR-9 renamed "Saved Results". The results ID is now kept only as a record, with save and delete unchanged. · Comparing was cut from the results page.
 - 2026-11-08 · results · Added FR-12 share image: on-device picture of the code, trait badges and labels, shared via the device menu or saved · students asked to post their result

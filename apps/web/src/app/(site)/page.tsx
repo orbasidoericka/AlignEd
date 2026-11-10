@@ -22,6 +22,7 @@ import { ClosingCta } from "@/components/blocks/closing-cta";
 import { TestsTaken } from "@/components/blocks/tests-taken";
 import { RIASEC_PATHWAYS } from "@/lib/riasec/career-pathways";
 import { letterHoverWash } from "@/lib/riasec/letter-chip-styles";
+import { SCORING_NOTICE_EN } from "@/lib/riasec/scoring-notice";
 import { ScoringExample } from "@/components/riasec/scoring-example";
 import { TraitEmblem } from "@/components/riasec/trait-emblem";
 import type { RiasecScores } from "@/store/useAssessmentStore";
@@ -120,24 +121,7 @@ const heroCells = scatterHexagons({
 
 // The scoring procedure (lib/riasec/scoring.ts, PRD FR-4.1/4.2) in plain
 // words. Change the scoring and this changes too.
-const scoringSteps = [
-  {
-    title: "Answer 42 statements",
-    body: "Each statement belongs to one of the six traits. There are 7 for every trait, mixed together.",
-  },
-  {
-    title: "Yes earns 1 point, No earns 0",
-    body: "The point goes to the trait that statement belongs to.",
-  },
-  {
-    title: "Add up the points",
-    body: "Each trait ends with a score from 0 to 7.",
-  },
-  {
-    title: "Your top three make your code",
-    body: "Highest score first. If two scores tie, the trait that comes first in R, I, A, S, E, C goes first, so the same answers always give the same code.",
-  },
-] as const;
+const scoringSteps = SCORING_NOTICE_EN.steps;
 
 // Steph's example: Artistic leads, and Investigative and Social tie for the
 // next two places, so the example shows the tie rule at work.
@@ -415,9 +399,7 @@ export default function HomePage() {
               ))}
             </ol>
             <p className="mt-8 rounded-2xl bg-stage-assessment-soft px-5 py-4 text-base text-pretty text-foreground">
-              Scores show what you enjoy, not how smart you are. Every major
-              and pathway for your three letters is shown, and none is ranked
-              above another.
+              {SCORING_NOTICE_EN.note}
             </p>
           </BlurFade>
 

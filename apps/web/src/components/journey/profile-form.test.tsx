@@ -28,8 +28,48 @@ const strandSelect = () =>
 const consentBox = () =>
   screen.getByRole("checkbox", { name: /Terms and Conditions/i });
 
+describe("ProfileForm scoring notice", () => {
+  beforeEach(() => {
+    window.sessionStorage.clear();
+    useAssessmentStore.getState().reset();
+  });
+
+  it("opens on arrival and shows the four steps", () => {
+    render(<ProfileForm />);
+
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toHaveTextContent("How your code is scored");
+    expect(dialog.querySelectorAll("ol > li")).toHaveLength(4);
+  });
+
+  it("closes on 'I understand' and stays closed after a remount", () => {
+    const { unmount } = render(<ProfileForm />);
+
+    fireEvent.click(screen.getByRole("button", { name: "I understand" }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+
+    unmount();
+    render(<ProfileForm />);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("is told in Filipino when the language is Filipino", () => {
+    useAssessmentStore.getState().setLanguage("fil");
+    render(<ProfileForm />);
+
+    expect(screen.getByRole("dialog")).toHaveTextContent(
+      "Sagutan ang 42 pahayag",
+    );
+    expect(
+      screen.getByRole("button", { name: "Naiintindihan ko" }),
+    ).toBeInTheDocument();
+  });
+});
+
 describe("ProfileForm layout and Others strand", () => {
   beforeEach(() => {
+    // The scoring notice has its own tests; here it is already acknowledged.
+    window.sessionStorage.setItem("aligned.scoring-notice", "1");
     useAssessmentStore.getState().reset();
     push.mockClear();
   });

@@ -7,6 +7,8 @@ import { ArrowRight, XIcon } from "lucide-react";
 
 import { AuroraBackground } from "@/components/aceternity/aurora-background";
 import { PrivacyConsent } from "@/components/journey/privacy-consent";
+import { ScoringNoticeDialog } from "@/components/journey/scoring-notice-dialog";
+import { useHydrated } from "@/hooks/use-hydrated";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
@@ -44,6 +46,30 @@ function Required() {
   );
 }
 
+// The scoring notice shows once per tab: a refresh or a trip back from the quiz
+// does not bring it up again. sessionStorage, so a new visit starts with it.
+// Where the storage cannot be read it simply shows each time.
+const NOTICE_SEEN_KEY = "aligned.scoring-notice";
+
+function readNoticeSeen(): boolean {
+  try {
+    return (
+      typeof window !== "undefined" &&
+      window.sessionStorage.getItem(NOTICE_SEEN_KEY) !== null
+    );
+  } catch {
+    return false;
+  }
+}
+
+function markNoticeSeen(): void {
+  try {
+    window.sessionStorage.setItem(NOTICE_SEEN_KEY, "1");
+  } catch {
+    // Silent: the notice just shows again next time.
+  }
+}
+
 // Profile Setup (PRD FR-2): grade as tappable cards, strand as a dropdown,
 // optional school. Stage accent: soft yellow. Everything stays client-side in
 // the store.
@@ -54,10 +80,17 @@ export function ProfileForm() {
   const complete = useAssessmentStore(selectIsProfileComplete);
   const language = useAssessmentStore((state) => state.language);
   const [showHints, setShowHints] = useState(false);
+  const hydrated = useHydrated();
+  const [noticeDismissed, setNoticeDismissed] = useState(readNoticeSeen);
   const fil = language === "fil";
   const t = fil ? PROFILE_TEXT_FIL : null;
   const strandLabel = (strand: ShsStrand) =>
     fil ? STRAND_LABEL_FIL[strand] : strand;
+
+  const acknowledgeNotice = () => {
+    setNoticeDismissed(true);
+    markNoticeSeen();
+  };
 
   const handleContinue = () => {
     if (!complete) {
@@ -69,6 +102,10 @@ export function ProfileForm() {
 
   return (
     <AuroraBackground>
+      <ScoringNoticeDialog
+        open={hydrated && !noticeDismissed}
+        onAcknowledge={acknowledgeNotice}
+      />
       <div
         lang={fil ? "fil" : undefined}
         className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-4 py-10"

@@ -29,6 +29,7 @@ Product app with one brand surface: the landing page is brand register (identity
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 
+- 2026-11-10 · profile · Profile Setup opens with a scoring-procedure notice ("How your code is scored", English and Filipino), acknowledged with "I understand", once per tab. See PRD FR-2.3. · Requested: students should know how the code is counted before they start.
 - 2026-11-09 · results · Removed the "Your results ID" panel from Results entirely (no display, copy, or delete). The save that feeds the admin stats page still runs, silently, with nothing on screen for it. · Requested removal of the results-ID feature from the Results page.
 - 2026-11-09 · results · Removed compare-by-ID from Results (PRD FR-9.3 cut); the results ID is now kept only as a record, save and delete unchanged. · Comparing was cut from the results page.
 - 2026-11-08 · results · Results can share an image of the code, with no identifying data (PRD FR-12). · Students asked to post their result.
