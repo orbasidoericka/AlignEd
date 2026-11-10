@@ -65,6 +65,8 @@ interface QuestionNavigatorProps {
   progressClassName?: string;
   /** Placement of the question-grid panel in the runner's grid. */
   panelClassName?: string;
+  /** The QuestionGridToggle button, slotted beside the progress bar. */
+  gridToggle?: React.ReactNode;
 }
 
 interface QuestionGridToggleProps {
@@ -149,6 +151,7 @@ export function QuestionNavigator({
   gridOpen,
   progressClassName,
   panelClassName,
+  gridToggle,
 }: QuestionNavigatorProps) {
   const listRef = useRef<HTMLOListElement>(null);
   const cells = useRef<(HTMLButtonElement | null)[]>([]);
@@ -215,43 +218,50 @@ export function QuestionNavigator({
         aria-label="Assessment progress"
         className={cn("flex flex-col gap-2.5", progressClassName)}
       >
-        {/* Fixed height (BAND_HEIGHT), the same as the numbers panel's header,
-            so the two line up edge to edge when the panel is open. */}
-        <div className={cn("flex flex-col justify-between", BAND_HEIGHT)}>
-          <div className="flex items-center gap-3">
-            <p
-              className="min-w-0 flex-1 font-heading text-base font-bold whitespace-nowrap text-foreground sm:text-lg"
-              aria-live="polite"
-            >
-              Question {currentIndex + 1} of {total}
-            </p>
-            <p className="font-heading text-lg font-bold text-stage-assessment-strong tabular-nums sm:text-xl">
-              {percent}%
-            </p>
+        <div className="flex items-center gap-3">
+          {/* Fixed height (BAND_HEIGHT), the same as the numbers panel's
+              header, so the two line up edge to edge when the panel is open. */}
+          <div className={cn("flex min-w-0 flex-1 flex-col justify-between", BAND_HEIGHT)}>
+            <div className="flex items-center gap-3">
+              <p
+                className="min-w-0 flex-1 font-heading text-base font-bold whitespace-nowrap text-foreground sm:text-lg"
+                aria-live="polite"
+              >
+                Question {currentIndex + 1} of {total}
+              </p>
+              <p className="font-heading text-lg font-bold text-stage-assessment-strong tabular-nums sm:text-xl">
+                {percent}%
+              </p>
+            </div>
+
+            <div className="relative">
+              <Progress
+                value={answeredCount}
+                max={total}
+                aria-label="Assessment progress"
+                aria-valuetext={`${answeredCount} of ${total} statements answered`}
+                className="h-2.5 bg-stage-assessment/30"
+                indicatorClassName="bg-stage-assessment-strong motion-reduce:transition-none"
+              />
+              {/* Decorative: gaps cut the bar into chunks of seven. The gap is
+                  the page's own ground, since the bar sits on it, not on a card. */}
+              {milestones.map((at) => (
+                <span
+                  key={at}
+                  aria-hidden
+                  data-milestone={at}
+                  data-passed={answeredCount >= at || undefined}
+                  style={{ left: `${(at / total) * 100}%` }}
+                  className="pointer-events-none absolute inset-y-0 w-0.5 -translate-x-1/2 bg-stage-assessment-soft"
+                />
+              ))}
+            </div>
           </div>
 
-          <div className="relative">
-            <Progress
-              value={answeredCount}
-              max={total}
-              aria-label="Assessment progress"
-              aria-valuetext={`${answeredCount} of ${total} statements answered`}
-              className="h-2.5 bg-stage-assessment/30"
-              indicatorClassName="bg-stage-assessment-strong motion-reduce:transition-none"
-            />
-            {/* Decorative: gaps cut the bar into chunks of seven. The gap is
-                the page's own ground, since the bar sits on it, not on a card. */}
-            {milestones.map((at) => (
-              <span
-                key={at}
-                aria-hidden
-                data-milestone={at}
-                data-passed={answeredCount >= at || undefined}
-                style={{ left: `${(at / total) * 100}%` }}
-                className="pointer-events-none absolute inset-y-0 w-0.5 -translate-x-1/2 bg-stage-assessment-soft"
-              />
-            ))}
-          </div>
+          {/* The All-questions toggle, beside the bar rather than above the
+              statement: chrome that stays put while the statement changes,
+              not something that slides with it. */}
+          {gridToggle}
         </div>
 
         {/* Always mounted so the notice is announced when it appears. */}

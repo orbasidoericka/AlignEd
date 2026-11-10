@@ -453,6 +453,16 @@ describe("useAssessmentStore", () => {
     setTotalQuestions(42);
     expect(useAssessmentStore.getState().lastUpdated).not.toBeNull();
   });
+
+  it("switching language does not restart the session TTL", () => {
+    useAssessmentStore.setState({ lastUpdated: "2026-10-05T08:00:00.000Z" });
+
+    useAssessmentStore.getState().setLanguage("fil");
+
+    const state = useAssessmentStore.getState();
+    expect(state.language).toBe("fil");
+    expect(state.lastUpdated).toBe("2026-10-05T08:00:00.000Z");
+  });
 });
 
 describe("isSessionExpired", () => {

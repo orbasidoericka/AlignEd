@@ -120,7 +120,7 @@ export function CareerLookDialog({
             background="var(--primary-soft)"
             shimmerColor="var(--primary-spark)"
             rail="linear-gradient(145deg, var(--primary-spark), var(--primary) 55%, var(--primary-spark))"
-            className="self-start print:hidden"
+            className="h-auto min-h-14 w-full self-stretch px-5 py-3 text-center text-base whitespace-normal sm:w-auto sm:self-start sm:px-8 sm:text-lg print:hidden"
             data-print-hidden
           />
         }
@@ -128,7 +128,10 @@ export function CareerLookDialog({
         <CameraIcon aria-hidden />
         {fil ? t.triggerLabel : "Try your career look"}
       </DialogTrigger>
-      <DialogContent className="max-w-2xl" lang={fil ? "fil" : undefined}>
+      <DialogContent
+        className="max-w-2xl gap-3 p-4 sm:gap-4 sm:p-6"
+        lang={fil ? "fil" : undefined}
+      >
         <DialogHeader>
           <DialogTitle>{fil ? t.dialogTitle : "Your career look"}</DialogTitle>
           <DialogDescription>
@@ -514,10 +517,11 @@ function CareerLookCamera({ look, fil }: { look: CareerLook; fil: boolean }) {
   const live = status.kind === "live";
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-3 sm:gap-4">
       {/* Sized by the camera's own shape (landscape on laptops, portrait on
-          phones), capped so a portrait feed still fits the viewport. */}
-      <div className="relative flex min-h-64 w-full items-center justify-center overflow-hidden rounded-2xl bg-black">
+          phones), capped so a portrait feed still leaves room for the header
+          and the buttons below it. */}
+      <div className="relative flex min-h-52 w-full items-center justify-center overflow-hidden rounded-2xl bg-black">
         {/* Feeds the canvas; never shown itself. */}
         <video
           ref={videoRef}
@@ -534,7 +538,7 @@ function CareerLookCamera({ look, fil }: { look: CareerLook; fil: boolean }) {
               : `Camera preview with ${look.propsLabel}`
           }
           className={cn(
-            "block h-auto max-h-[65vh] w-auto max-w-full",
+            "block h-auto max-h-[50dvh] w-auto max-w-full sm:max-h-[65dvh]",
             // The canvas is a blank 300×150 until the first frame lands.
             status.kind !== "live" && "invisible",
           )}

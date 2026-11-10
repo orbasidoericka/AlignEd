@@ -5,16 +5,16 @@ import { Button } from "@/components/ui/button";
 import type { QuestionLanguage } from "@/lib/riasec/questions";
 import { useAssessmentStore } from "@/store/useAssessmentStore";
 
-const FLAG: Record<QuestionLanguage, { src: string; name: string }> = {
-  en: { src: "/flags/us.svg", name: "English" },
-  fil: { src: "/flags/ph.svg", name: "Filipino" },
+const LABEL: Record<QuestionLanguage, { short: string; name: string }> = {
+  en: { short: "EN", name: "English" },
+  fil: { short: "FIL", name: "Filipino" },
 };
 const OTHER: Record<QuestionLanguage, QuestionLanguage> = {
   en: "fil",
   fil: "en",
 };
 
-// Lives in the FocusBar (quiz only): one flag, the statements' current
+// Lives in the FocusBar (quiz only): text toggle, the statements' current
 // language, so a tap switches straight to the other one. Two languages need
 // no menu, just a toggle.
 export function LanguageToggle() {
@@ -25,21 +25,12 @@ export function LanguageToggle() {
   return (
     <Button
       variant="ghost"
-      size="icon"
-      aria-label={`Language: ${FLAG[language].name}. Switch to ${FLAG[next].name}`}
+      size="sm"
+      aria-label={`Language: ${LABEL[language].name}. Switch to ${LABEL[next].name}`}
       onClick={() => setLanguage(next)}
-      className="rounded-full"
+      className="rounded-full font-semibold"
     >
-      {/* eslint-disable-next-line @next/next/no-img-element -- next/image
-          cannot serve SVG without dangerouslyAllowSVG. */}
-      <img
-        src={FLAG[language].src}
-        alt=""
-        aria-hidden
-        width={60}
-        height={40}
-        className="size-5 rounded-full object-cover ring-1 ring-border"
-      />
+      {LABEL[language].short}
     </Button>
   );
 }

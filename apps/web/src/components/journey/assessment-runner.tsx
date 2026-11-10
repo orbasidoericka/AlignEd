@@ -164,9 +164,6 @@ export function AssessmentRunner() {
   // assessment" button onto the page: until then the pop-up is the only way
   // forward, so the button never flashes in behind it.
   const [reviewing, setReviewing] = useState(false);
-  const [resumed] = useState(
-    () => Object.keys(answers).length > 0 && firstUnanswered > 0,
-  );
   // Armed when the student arrives already finished, so reopening a completed
   // quiz is silent.
   const celebrated = useRef(questions.every((q) => q.id in answers));
@@ -468,7 +465,7 @@ export function AssessmentRunner() {
         aria-hidden
         width={800}
         height={600}
-        className="pointer-events-none absolute bottom-0 left-0 -z-10 hidden h-auto w-56 select-none lg:block xl:w-72 print:hidden"
+        className="pointer-events-none absolute bottom-0 left-0 -z-10 hidden h-auto w-72 select-none lg:block xl:w-96 print:hidden"
       />
       <RapidAnswerDialog open={isBlocked} onAcknowledge={acknowledge} />
       <FinishDialog
@@ -486,12 +483,13 @@ export function AssessmentRunner() {
           level with the strip, so opening it moves nothing: the strip and
           question stay exactly where they were. Between lg and 1328px there is
           no room in the margin, so the column makes way and slides left. The
-          toggle (beside the language switch) shows and hides the panel. Strip
-          and panel are z-10 so the question area's widened clip box (below)
-          can never sit over them and swallow their clicks. */}
+          toggle sits beside the bar itself (QuestionNavigator's gridToggle
+          slot) and shows or hides the panel. Strip and panel are z-10 so the
+          question area's widened clip box (below) can never sit over them
+          and swallow their clicks. */}
       <div
         data-grid={gridOpen ? "open" : "closed"}
-        className="relative mx-auto grid w-full max-w-2xl grid-cols-1 gap-5 px-4 py-6 lg:max-w-5xl lg:grid-cols-[minmax(0,1fr)_19rem] lg:gap-x-12 lg:data-[grid=closed]:max-w-2xl lg:data-[grid=closed]:grid-cols-1 min-[1328px]:data-[grid=open]:max-w-2xl min-[1328px]:data-[grid=open]:grid-cols-1"
+        className="relative mx-auto grid w-full max-w-2xl grid-cols-1 gap-8 px-4 pt-16 pb-10 sm:pt-20 lg:max-w-5xl lg:grid-cols-[minmax(0,1fr)_19rem] lg:gap-x-12 lg:data-[grid=closed]:max-w-2xl lg:data-[grid=closed]:grid-cols-1 min-[1328px]:data-[grid=open]:max-w-2xl min-[1328px]:data-[grid=open]:grid-cols-1"
       >
         <QuestionNavigator
           questions={questions}
@@ -509,15 +507,18 @@ export function AssessmentRunner() {
           onHide={() => setGridOpen(false)}
           gridOpen={gridOpen}
           progressClassName="relative z-10 lg:col-start-1 lg:row-start-1"
-          panelClassName="relative z-10 lg:max-[1327px]:col-start-2 lg:max-[1327px]:row-span-2 lg:max-[1327px]:row-start-1 lg:max-[1327px]:self-start min-[1328px]:absolute min-[1328px]:top-8 min-[1328px]:left-[calc(100%+0.5rem)] min-[1328px]:w-76"
+          panelClassName="relative z-10 lg:max-[1327px]:col-start-2 lg:max-[1327px]:row-span-2 lg:max-[1327px]:row-start-1 lg:max-[1327px]:self-start min-[1328px]:absolute min-[1328px]:top-20 min-[1328px]:left-[calc(100%+0.5rem)] min-[1328px]:w-76"
+          gridToggle={
+            <QuestionGridToggle
+              open={gridOpen}
+              onToggle={() => setGridOpen(!gridOpen)}
+              controls={gridPanelId}
+              disabled={isBlocked}
+            />
+          }
         />
 
         <div className="flex min-w-0 flex-col gap-5 lg:col-start-1 lg:row-start-2">
-          {resumed && !flagOpen && index === firstUnanswered && (
-            <p className="rounded-2xl bg-card px-4 py-3 text-sm font-medium text-foreground/80">
-              Welcome back! You are continuing right where you left off.
-            </p>
-          )}
           {allAnswered && reviewing && !finishing && (
             <p className="rounded-2xl bg-card px-4 py-3 text-sm font-medium text-foreground/80">
               All {QUESTIONS.length} statements answered! Change any answer you
@@ -548,22 +549,13 @@ export function AssessmentRunner() {
                 transition={{ duration: 0.2, ease: "easeOut" }}
                 className="flex flex-col gap-6"
               >
-                {/* Hides the numbers only; the language toggle lives in the
-                    FocusBar now. */}
-                <QuestionGridToggle
-                  open={gridOpen}
-                  onToggle={() => setGridOpen(!gridOpen)}
-                  controls={gridPanelId}
-                  disabled={isBlocked}
-                />
-
                 {/* Focus target after each advance (tabIndex -1: programmatic
                     focus only). It also names the answer group below. */}
                 <h1
                   id={statementId(question.id)}
                   tabIndex={-1}
                   lang={language === "fil" ? "fil" : undefined}
-                  className="min-h-20 text-2xl font-bold text-foreground outline-none sm:text-3xl"
+                  className="mt-4 min-h-20 text-2xl font-bold text-foreground outline-none sm:text-3xl"
                 >
                   {questionText(question, language)}
                 </h1>
@@ -693,7 +685,7 @@ export function AssessmentRunner() {
               </Button>
             ) : shownControl === "skip" ? (
               <Button
-                variant="outline"
+                variant="ghost"
                 size="lg"
                 // The locked control outlives the skip target it was computed
                 // from, so re-read it on the click.
@@ -701,7 +693,7 @@ export function AssessmentRunner() {
                   if (skipTarget !== -1) moveTo(skipTarget);
                 }}
                 disabled={isBlocked}
-                className="h-11 rounded-full bg-card px-5"
+                className="h-11 rounded-full px-4"
               >
                 Skip for now
                 <ArrowRight className="size-4" />

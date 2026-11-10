@@ -326,8 +326,9 @@ export const useAssessmentStore = create<AssessmentStore>()(
             lastUpdated: new Date().toISOString(),
           };
         }),
-      setLanguage: (language) =>
-        set({ language, lastUpdated: new Date().toISOString() }),
+      // A display preference, not session activity: it must not restart the
+      // 30-minute TTL, or toggling EN/FIL would keep a session alive forever.
+      setLanguage: (language) => set({ language }),
       setProfile: (patch) =>
         set((state) => ({
           profile: { ...state.profile, ...patch },

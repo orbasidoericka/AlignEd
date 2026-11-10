@@ -84,7 +84,10 @@ export function ProfileForm() {
           </p>
           <p className="text-sm text-muted-foreground">
             {t ? (
-              t.requiredNote
+              <>
+                Ang mga tanong na may{" "}
+                <span className="text-destructive">*</span> ay kinakailangan.
+              </>
             ) : (
               <>
                 Questions marked with{" "}
