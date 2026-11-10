@@ -120,19 +120,42 @@ function traitShade(trait: string, ink: string, keep: number): string {
   return `rgb(${r}, ${g}, ${b})`;
 }
 
-async function loadEmblem(markup: string): Promise<HTMLImageElement> {
-  const image = new Image();
-  image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(markup)}`;
-  await image.decode();
-  return image;
+// load/error rather than image.decode(), which is the less forgiving of the
+// two for SVG sources.
+function loadEmblem(markup: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error("An emblem could not be loaded."));
+    image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(markup)}`;
+  });
 }
 
+function hexagonPath(
+  ctx: CanvasRenderingContext2D,
+  centerX: number,
+  centerY: number,
+  radius: number,
+) {
+  ctx.beginPath();
+  for (let corner = 0; corner < 6; corner++) {
+    const angle = (Math.PI / 3) * corner - Math.PI / 2;
+    const x = centerX + radius * Math.cos(angle);
+    const y = centerY + radius * Math.sin(angle);
+    if (corner === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+}
+
+// `emblems` is null when this browser cannot draw the emblem art: each trait
+// then gets a plain hexagon with its letter, so the student still has a card.
 export function drawShareCard(
   ctx: CanvasRenderingContext2D,
   content: ShareCardContent,
   palette: SharePalette,
   fonts: ShareFonts,
-  emblems: readonly CanvasImageSource[],
+  emblems: readonly CanvasImageSource[] | null,
 ) {
   ctx.fillStyle = palette.card;
   ctx.fillRect(0, 0, SIZE, SIZE);
@@ -145,15 +168,28 @@ export function drawShareCard(
   ctx.font = `800 168px ${fonts.heading}`;
   ctx.fillText(content.code, SIZE / 2, 310);
 
-  content.traits.forEach(({ label }, index) => {
+  content.traits.forEach(({ letter, label }, index) => {
     const x = BADGE_CENTERS[index]!;
-    ctx.drawImage(
-      emblems[index]!,
-      x - BADGE_WIDTH / 2,
-      435,
-      BADGE_WIDTH,
-      BADGE_HEIGHT,
-    );
+    if (emblems) {
+      ctx.drawImage(
+        emblems[index]!,
+        x - BADGE_WIDTH / 2,
+        435,
+        BADGE_WIDTH,
+        BADGE_HEIGHT,
+      );
+    } else {
+      hexagonPath(ctx, x, 585, 130);
+      ctx.fillStyle = palette.traits[letter];
+      ctx.strokeStyle = palette.traits[letter];
+      ctx.lineWidth = 16;
+      ctx.lineJoin = "round";
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = palette.traitInk;
+      ctx.font = `800 120px ${fonts.heading}`;
+      ctx.fillText(letter, x, 589);
+    }
 
     ctx.fillStyle = palette.foreground;
     ctx.font = `700 42px ${fonts.heading}`;
@@ -177,8 +213,8 @@ export async function buildShareImage(
     body: root.getPropertyValue("--font-sans").trim(),
   };
   // A canvas does not wait for a web font: drawing before it has loaded
-  // silently uses the fallback.
-  await Promise.all([
+  // silently uses the fallback. A font that fails is only a plainer card.
+  await Promise.allSettled([
     document.fonts.load(`800 168px ${fonts.heading}`),
     document.fonts.load(`700 42px ${fonts.heading}`),
     document.fonts.load(`600 56px ${fonts.heading}`),
@@ -186,30 +222,44 @@ export async function buildShareImage(
   ]);
 
   const palette = readSharePalette(root);
-  const emblems = await Promise.all(
-    code.map((letter, index) => {
-      const trait = palette.traits[letter];
-      const ink = palette.traitInk;
-      return loadEmblem(
-        emblemMarkup(badges[index]!, {
-          trait,
-          ink,
-          shade: traitShade(trait, ink, TRAIT_SHADE_KEEP[letter]),
-        }),
-      );
-    }),
-  );
+  const content = shareCardContent(code, language);
 
-  const canvas = document.createElement("canvas");
-  canvas.width = SIZE;
-  canvas.height = SIZE;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("Canvas is unavailable.");
-  drawShareCard(ctx, shareCardContent(code, language), palette, fonts, emblems);
+  const render = async (
+    emblems: readonly HTMLImageElement[] | null,
+  ): Promise<File> => {
+    const canvas = document.createElement("canvas");
+    canvas.width = SIZE;
+    canvas.height = SIZE;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("Canvas is unavailable.");
+    drawShareCard(ctx, content, palette, fonts, emblems);
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, "image/png"),
+    );
+    if (!blob) throw new Error("The image could not be encoded.");
+    return new File([blob], "aligned-holland-code.png", { type: "image/png" });
+  };
 
-  const blob = await new Promise<Blob | null>((resolve) =>
-    canvas.toBlob(resolve, "image/png"),
-  );
-  if (!blob) throw new Error("The image could not be encoded.");
-  return new File([blob], "aligned-holland-code.png", { type: "image/png" });
+  // Some phone browsers cannot load an SVG into a canvas, or refuse to export
+  // a canvas that has one drawn on it. Neither should cost the student the
+  // whole card, so both land on the plain version.
+  try {
+    const emblems = await Promise.all(
+      code.map((letter, index) => {
+        const trait = palette.traits[letter];
+        const ink = palette.traitInk;
+        return loadEmblem(
+          emblemMarkup(badges[index]!, {
+            trait,
+            ink,
+            shade: traitShade(trait, ink, TRAIT_SHADE_KEEP[letter]),
+          }),
+        );
+      }),
+    );
+    return await render(emblems);
+  } catch (error) {
+    console.warn("Share image: drawing without emblems:", error);
+    return render(null);
+  }
 }

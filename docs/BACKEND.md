@@ -19,6 +19,8 @@ Server routes, data, secrets, and privacy controls. Client code lives in `FRONTE
 
 `/admin/[token]`: no login; the link is the key. `lib/saved-results/admin-access.ts` compares the token in constant time and locks the page if `ADMIN_TOKEN` is unset or under 32 chars. Revoke by changing `ADMIN_TOKEN` and restarting.
 
+The token is checked before anything is sent, then the dashboard streams inside a `Suspense` boundary keyed by grade. Do not add a `loading.tsx` to this route: it would send a 200 and the page frame to any token. `purgeExpired` runs in `after()`, once the page is sent, and `listResults` filters on `expires_at` so expired rows never show.
+
 ## Database (Supabase Postgres)
 
 | Migration | Contents |
@@ -60,6 +62,7 @@ Set in `apps/web/next.config.ts` for every path: `X-Frame-Options: DENY`, `nosni
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 
+- 2026-11-10 · admin · `purgeExpired` on the admin page moved to `after()`, and `listResults` filters out expired rows · the page no longer waits on a delete before showing anything.
 - 2026-11-09 · api · Removed `/api/results/[id]` entirely (GET and DELETE) and `getResult`/`deleteResult` from the repository. `POST /api/results` still saves one row per session for the admin stats page; nothing reads or deletes a row by ID anymore. · Requested removal of the results-ID feature from the Results page.
 - 2026-11-09 · api · Removed `GET /api/results/[id]` and `getResult` from the repository; the compare-by-ID feature is gone, `DELETE /api/results/[id]` is unchanged. · Comparing was cut from the results page.
 - 2026-11-04 · database · Migration 0007 allows `'Others'` in `saved_results.strand`; `parseStrand` accepts it via `SHS_STRANDS`. · Students with an unlisted strand can still be saved, with no free text on the server.

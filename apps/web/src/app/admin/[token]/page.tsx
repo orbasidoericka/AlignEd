@@ -1,8 +1,10 @@
 // Copyright (c) 2026 EdTech. All rights reserved.
 
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { after } from "next/server";
 import {
   CalendarDays,
   Cake,
@@ -17,6 +19,7 @@ import { LatestResults } from "@/components/admin/latest-results";
 import { Wordmark } from "@/components/blocks/wordmark";
 import { HexagonPattern } from "@/components/magic/hexagon-pattern";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { Skeleton } from "@/components/ui/skeleton";
 import { RIASEC_PATHWAYS } from "@/lib/riasec/career-pathways";
 import { letterChip } from "@/lib/riasec/letter-chip-styles";
 import {
@@ -64,6 +67,40 @@ export default async function AdminPage({
   const { grade } = await searchParams;
   const gradeFilter = GRADE_LEVELS.find((level) => level === grade) ?? null;
 
+  // The token is checked above, before anything is sent, so a wrong link
+  // still gets a true 404. That is also why this is a Suspense boundary and
+  // not a loading.tsx: a loading.tsx would stream a 200 and this page's frame
+  // to any token. Keyed so that changing grade shows the placeholder at once.
+  return (
+    <Suspense key={gradeFilter ?? "all"} fallback={<AdminLoading />}>
+      <AdminDashboard token={token} gradeFilter={gradeFilter} />
+    </Suspense>
+  );
+}
+
+function AdminLoading() {
+  return (
+    <AdminShell
+      headline="Loading saved results…"
+      filter={<Skeleton className="h-11 w-72 max-w-full rounded-full" />}
+    >
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4" aria-hidden>
+        <Skeleton className="col-span-2 h-56 rounded-3xl" />
+        <Skeleton className="h-56 rounded-3xl" />
+        <Skeleton className="h-56 rounded-3xl" />
+      </div>
+      <Skeleton className="h-96 rounded-3xl" aria-hidden />
+    </AdminShell>
+  );
+}
+
+async function AdminDashboard({
+  token,
+  gradeFilter,
+}: {
+  token: string;
+  gradeFilter: GradeLevel | null;
+}) {
   const db = createSupabaseAdminClient();
   if (!db) {
     return (
@@ -78,8 +115,14 @@ export default async function AdminPage({
   }
 
   let loaded: { results: SavedResult[]; total: number };
+  // Retention cleanup runs once the page has been sent, so nobody waits on
+  // it. listResults already skips expired rows.
+  after(() =>
+    purgeExpired(db).catch((error) => {
+      console.error("admin: could not purge expired results:", error);
+    }),
+  );
   try {
-    await purgeExpired(db);
     loaded = await listResults(db, SUMMARY_LIMIT);
   } catch (error) {
     console.error("admin: could not load saved results:", error);
@@ -314,7 +357,7 @@ function AdminShell({
 }) {
   return (
     <div className="flex flex-1 flex-col">
-      <header className="sticky top-0 z-30 border-b border-chrome-border bg-chrome/90 backdrop-blur supports-backdrop-filter:bg-chrome/75">
+      <header className="sticky top-0 z-30 border-b border-chrome-border bg-chrome">
         <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
           <div className="flex items-center gap-3">
             <Wordmark className="h-7" priority />

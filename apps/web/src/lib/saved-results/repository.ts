@@ -133,6 +133,7 @@ export async function listResults(
   const { data, error, count } = await db
     .from(TABLE)
     .select(COLUMNS, { count: "exact" })
+    .gt("expires_at", new Date().toISOString())
     .order("created_at", { ascending: false })
     .limit(limit)
     .returns<Row[]>();

@@ -1,12 +1,57 @@
 // Copyright (c) 2026 EdTech. All rights reserved.
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import type { HollandCode } from "@/lib/riasec/scoring";
 
-import { emblemMarkup, shareCardContent } from "./build-share-image";
+import {
+  drawShareCard,
+  emblemMarkup,
+  shareCardContent,
+  type SharePalette,
+} from "./build-share-image";
 
 const code: HollandCode = ["I", "A", "C"];
+
+describe("drawShareCard", () => {
+  const palette: SharePalette = {
+    card: "#fff",
+    foreground: "#000",
+    muted: "#333",
+    traitInk: "#000",
+    traits: { R: "#111", I: "#222", A: "#333", S: "#444", E: "#555", C: "#666" },
+  };
+  const fonts = { heading: "serif", body: "serif" };
+  const fakeContext = () =>
+    ({
+      fillRect: vi.fn(),
+      fillText: vi.fn(),
+      drawImage: vi.fn(),
+      beginPath: vi.fn(),
+      moveTo: vi.fn(),
+      lineTo: vi.fn(),
+      closePath: vi.fn(),
+      fill: vi.fn(),
+      stroke: vi.fn(),
+    }) as unknown as CanvasRenderingContext2D;
+
+  it("draws the three emblems when the browser can load them", () => {
+    const ctx = fakeContext();
+    const emblems = [{}, {}, {}] as unknown as CanvasImageSource[];
+    drawShareCard(ctx, shareCardContent(code), palette, fonts, emblems);
+    expect(ctx.drawImage).toHaveBeenCalledTimes(3);
+  });
+
+  it("still draws a full card, with each letter, when they cannot load", () => {
+    const ctx = fakeContext();
+    drawShareCard(ctx, shareCardContent(code), palette, fonts, null);
+    expect(ctx.drawImage).not.toHaveBeenCalled();
+    const drawn = vi.mocked(ctx.fillText).mock.calls.map(([text]) => text);
+    expect(drawn).toEqual(
+      expect.arrayContaining(["I", "A", "C", "I-A-C", "The Organizer"]),
+    );
+  });
+});
 
 describe("emblemMarkup", () => {
   it("leaves no colour that depends on the page's CSS", () => {

@@ -277,7 +277,9 @@ function ShareResultsDialog() {
   const t = fil ? RESULTS_ACTIONS_TEXT_FIL.share : null;
   const code = computeHollandCode(scores);
   const [image, setImage] = useState<{ file: File; url: string } | null>(null);
-  const [failed, setFailed] = useState(false);
+  // The browser's name for what went wrong, shown so a phone screenshot says
+  // why: phones have no console to read.
+  const [failure, setFailure] = useState<string | null>(null);
   const latestBuild = useRef(0);
   // The card draws these same emblems, so it can never drift from the page.
   const badges = useRef<HTMLDivElement>(null);
@@ -291,7 +293,7 @@ function ShareResultsDialog() {
   const build = async () => {
     const thisBuild = ++latestBuild.current;
     setImage(null);
-    setFailed(false);
+    setFailure(null);
     try {
       const file = await buildShareImage(
         code,
@@ -306,7 +308,7 @@ function ShareResultsDialog() {
     } catch (error) {
       if (thisBuild !== latestBuild.current) return;
       console.warn("Share image could not be created:", error);
-      setFailed(true);
+      setFailure(error instanceof Error ? error.name : "Unknown");
     }
   };
 
@@ -356,11 +358,12 @@ function ShareResultsDialog() {
               : "This picture shows your Holland Code and nothing about who you are. You choose whether to post it and where."}
           </DialogDescription>
         </DialogHeader>
-        {failed ? (
+        {failure ? (
           <div className="flex flex-col items-start gap-3">
             <p className="text-sm font-medium text-destructive" role="alert">
               {t ? t.buildFailed : "The image could not be created. Please try again."}
             </p>
+            <p className="font-mono text-xs text-muted-foreground">{failure}</p>
             <Button
               variant="outline"
               size="lg"
