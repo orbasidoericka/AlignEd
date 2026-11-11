@@ -521,16 +521,15 @@ export function PrivacyConsent({
           <button
             type="button"
             onClick={() => setOpen(true)}
-            className="cursor-pointer rounded-sm font-semibold text-stage-profile-strong underline underline-offset-2 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+            className="inline cursor-pointer rounded-sm font-semibold text-stage-profile-strong underline underline-offset-2 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
           >
             {t
               ? t.consentLinkText
               : "Data Privacy Policy and Terms and Conditions"}
+            <span aria-hidden className="ml-0.5 [text-decoration:none]">
+              <span className="text-destructive">*</span>
+            </span>
           </button>
-          .
-          <span aria-hidden className="ml-0.5 text-destructive">
-            *
-          </span>
         </span>
       </label>
 

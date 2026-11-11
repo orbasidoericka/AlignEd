@@ -67,6 +67,8 @@ interface QuestionNavigatorProps {
   panelClassName?: string;
   /** The QuestionGridToggle button, slotted beside the progress bar. */
   gridToggle?: React.ReactNode;
+  /** MilestoneCheer, hung under the strip without taking layout space. */
+  cheerSlot?: React.ReactNode;
 }
 
 interface QuestionGridToggleProps {
@@ -152,6 +154,7 @@ export function QuestionNavigator({
   progressClassName,
   panelClassName,
   gridToggle,
+  cheerSlot,
 }: QuestionNavigatorProps) {
   const listRef = useRef<HTMLOListElement>(null);
   const cells = useRef<(HTMLButtonElement | null)[]>([]);
@@ -216,7 +219,7 @@ export function QuestionNavigator({
           the tracker. Value is answers recorded, so Back never lowers it. */}
       <section
         aria-label="Assessment progress"
-        className={cn("flex flex-col gap-2.5", progressClassName)}
+        className={cn("relative flex flex-col gap-2.5", progressClassName)}
       >
         <div className="flex items-center gap-3">
           {/* Fixed height (BAND_HEIGHT), the same as the numbers panel's
@@ -230,7 +233,14 @@ export function QuestionNavigator({
                 Question {currentIndex + 1} of {total}
               </p>
               <p className="font-heading text-lg font-bold text-stage-assessment-strong tabular-nums sm:text-xl">
-                {percent}%
+                {/* Re-mounts at each notch pass (7/14/21/28/35) for a one-shot
+                    scale pop: progress the student can feel, no extra copy. */}
+                <span
+                  key={milestones.filter((at) => answeredCount >= at).length}
+                  className="inline-block motion-safe:animate-percent-pop"
+                >
+                  {percent}%
+                </span>
               </p>
             </div>
 
@@ -252,7 +262,9 @@ export function QuestionNavigator({
                   data-milestone={at}
                   data-passed={answeredCount >= at || undefined}
                   style={{ left: `${(at / total) * 100}%` }}
-                  className="pointer-events-none absolute inset-y-0 w-0.5 -translate-x-1/2 bg-stage-assessment-soft"
+                  // A passed notch fades away so the conquered chunks fuse
+                  // into one solid run while the road ahead stays segmented.
+                  className="pointer-events-none absolute inset-y-0 w-0.5 -translate-x-1/2 bg-stage-assessment-soft motion-safe:transition-opacity motion-safe:duration-500 data-passed:opacity-0"
                 />
               ))}
             </div>
@@ -278,6 +290,8 @@ export function QuestionNavigator({
             </div>
           )}
         </div>
+
+        {cheerSlot}
       </section>
 
       <section

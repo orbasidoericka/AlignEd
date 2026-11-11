@@ -13,6 +13,17 @@
   }
 }
 
+/* The inverse of `fancy:` (explicit, not `not-fancy:`: that compiles to a
+   nested `@media not (...) and (...)` Lightning CSS cannot parse). Phones and
+   any other device without a fine pointer, still motion-safe. */
+@custom-variant plain-motion {
+  @media not all and (hover: hover) and (pointer: fine) {
+    @media (prefers-reduced-motion: no-preference) {
+      @slot;
+    }
+  }
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -159,6 +170,45 @@
     }
     70% {
       opacity: 0.08;
+    }
+  }
+
+  /* Transform-only twin of hex-glow: a gentle size pulse, compositor-only so
+     it stays cheap on a budget phone. hex-glow's opacity fade re-runs the
+     polygon's blur filter every frame (fine on a mouse-capable GPU, costly on
+     cheap Android), so phones get this instead of nothing: the lit cell still
+     reads as alive, with no position change and no filter re-evaluation. */
+  --animate-hex-pulse: hex-pulse 7s ease-in-out infinite;
+
+  @keyframes hex-pulse {
+    0%,
+    100% {
+      transform: scale(1);
+    }
+    35% {
+      transform: scale(1.08);
+    }
+    70% {
+      transform: scale(1);
+    }
+  }
+}
+
+/* One-shot scale pop on the quiz percent readout as the fill passes a notch
+   (components/journey/question-navigator.tsx). Transform only, triggered by
+   the student's own answer, behind motion-safe:. */
+@theme {
+  --animate-percent-pop: percent-pop 0.3s ease-out;
+
+  @keyframes percent-pop {
+    0% {
+      transform: scale(1);
+    }
+    45% {
+      transform: scale(1.12);
+    }
+    100% {
+      transform: scale(1);
     }
   }
 }

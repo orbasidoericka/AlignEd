@@ -348,14 +348,23 @@ export function HexagonPattern({
                   filter={`url(#${glowId})`}
                   className={cn(
                     cellClassName,
-                    // Mouse devices only: each frame of the fade re-runs the
-                    // blur filter on the main thread. Phones keep the lit
-                    // cells, painted once.
-                    animated && "fancy:animate-hex-glow",
+                    animated && [
+                      // Mouse devices only: each frame of the opacity fade
+                      // re-runs the blur filter on the main thread, fine on a
+                      // capable GPU but costly on cheap Android.
+                      "fancy:animate-hex-glow",
+                      // Every other motion-safe device (including phones)
+                      // gets this instead: a transform-only size pulse, no
+                      // position change, no filter re-evaluation, so the lit
+                      // cell still reads as alive and stays cheap. The two
+                      // never stack: `fancy:` wins where it applies.
+                      "plain-motion:animate-hex-pulse",
+                    ],
                   )}
                   style={{
                     animationDuration: `${roundCoord(duration)}s`,
                     animationDelay: `${roundCoord(delay)}s`,
+                    transformOrigin: `${roundCoord(cx)}px ${roundCoord(cy)}px`,
                   }}
                 />
               );

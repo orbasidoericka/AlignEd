@@ -1,13 +1,14 @@
 // Copyright (c) 2026 EdTech. All rights reserved.
 "use client";
 
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useId, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, CheckIcon } from "lucide-react";
 
 import { BackgroundGradient } from "@/components/aceternity/background-gradient";
 import { FinishDialog } from "@/components/journey/finish-dialog";
+import { MilestoneCheer } from "@/components/journey/milestone-cheer";
 import {
   dismissRapidAnswerToast,
   RapidAnswerDialog,
@@ -45,13 +46,13 @@ export const INPUT_GUARD_MS = 350;
 const LAST_INDEX = QUESTIONS.length - 1;
 const statementId = (questionId: string) => `statement-${questionId}`;
 
-// Keyboard shortcuts: first letter of each answer label in either language
-// (Y / N, O / H), so a shortcut works whichever language is showing.
-const SHORTCUTS = new Map(
-  ANSWER_OPTIONS.flatMap((option) => [
-    [option.label[0]!.toLowerCase(), option.value] as const,
-    [option.labelFil[0]!.toLowerCase(), option.value] as const,
-  ]),
+// Keyboard shortcuts: first letter of each answer label, only for the language
+// showing (Y / N in English, O / H in Filipino).
+const SHORTCUTS_EN = new Map(
+  ANSWER_OPTIONS.map((option) => [option.label[0]!.toLowerCase(), option.value] as const),
+);
+const SHORTCUTS_FIL = new Map(
+  ANSWER_OPTIONS.map((option) => [option.labelFil[0]!.toLowerCase(), option.value] as const),
 );
 
 // Each answer has its own sound, keyed off the answer's value (1 = agree), so
@@ -88,22 +89,52 @@ function playAnswerSound(value: number) {
   if (name) playSound(name);
 }
 
-// Focus Mode texture: static, faint hexagon grid with two corner cells that
-// glow in and out slowly, faded out before the answer cards so nothing
-// competes with the question.
-function FocusBackground() {
+// The four cells, in the order they brighten: top-left first (the only one a
+// phone sees), then the two right-margin cells and the second top-left cell
+// that balance Hexi on wide screens. All rows 0-3, inside the top-fade mask.
+const LIT_CELL_ORDER: [col: number, row: number][] = [
+  [0, 0],
+  [17, 1],
+  [5, 1],
+  [19, 3],
+];
+
+// The quiz's answer counts at which the next cell lights: the first answer,
+// then a quarter, half and three quarters of the 42 statements.
+export const LIT_CELL_THRESHOLDS = [1, 11, 21, 32] as const;
+
+// Focus Mode texture: static, faint hexagon grid with four cells that start
+// as part of the texture and brighten one by one as the student's answers
+// pass each progress band (Design Vision's constellation, expressed through
+// the one allowed texture). Faded out before the answer cards so nothing
+// competes with the question. Memoized: it repaints at the four band
+// crossings, not on all 42 answers.
+const FocusBackground = memo(function FocusBackground({
+  litCells,
+}: {
+  litCells: number;
+}) {
   return (
     <HexagonPattern
       radius={48}
       gap={6}
-      hexagons={[
-        [0, 0, "fill-stage-assessment/40"],
-        [5, 1, "fill-stage-assessment/40"],
-      ]}
-      className="-z-10 stroke-stage-assessment-strong/20 mask-[radial-gradient(ellipse_at_top,white,transparent_75%)] print:hidden dark:stroke-stage-assessment-strong/10"
+      hexagons={LIT_CELL_ORDER.map(([col, row], i) => [
+        col,
+        row,
+        cn(
+          "motion-safe:transition-[fill] motion-safe:duration-700 motion-safe:ease-out",
+          i < litCells
+            ? "fill-stage-assessment/40"
+            : "fill-stage-assessment/15",
+        ),
+      ])}
+      // Two mask layers (union): the top ellipse clears out before the answer
+      // cards, and a faint band rises from the bottom edge so the lower half
+      // of the viewport is not a dead flat colour. No reading text sits there.
+      className="-z-10 stroke-stage-assessment-strong/30 mask-[radial-gradient(ellipse_at_top,white,transparent_75%),linear-gradient(to_top,rgb(255_255_255/0.45),transparent_28%)] print:hidden dark:stroke-stage-assessment-strong/15"
     />
   );
-}
+});
 
 // The control in the bottom-right corner: move on from an answered statement,
 // leave an unanswered one for later, or — on the only statement still open —
@@ -191,6 +222,19 @@ export function AssessmentRunner() {
 
   const question = questions[index];
   const allAnswered = questions.every((q) => q.id in answers);
+  const answeredCount = useMemo(
+    () => questions.reduce((n, q) => (q.id in answers ? n + 1 : n), 0),
+    [questions, answers],
+  );
+  // How many backdrop cells have earned their light. Held at its high-water
+  // mark (render-phase state adjustment): the rapid-answer guard clearing an
+  // answer can dip the count back under a threshold, and a cell going dark
+  // again would read as punishment.
+  const litDerived = LIT_CELL_THRESHOLDS.filter(
+    (at) => answeredCount >= at,
+  ).length;
+  const [litCells, setLitCells] = useState(litDerived);
+  if (litDerived > litCells) setLitCells(litDerived);
   const showFinish = finishing && allAnswered;
   const currentAnswer = question ? answers[question.id]?.value : undefined;
   const currentAnswered = currentAnswer !== undefined;
@@ -400,7 +444,9 @@ export function AssessmentRunner() {
       if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) {
         return;
       }
-      const value = SHORTCUTS.get(event.key.toLowerCase());
+      const value = (language === "fil" ? SHORTCUTS_FIL : SHORTCUTS_EN).get(
+        event.key.toLowerCase(),
+      );
       if (value === undefined) return;
       // The target can be the document itself when nothing is focused.
       const target = event.target;
@@ -419,7 +465,7 @@ export function AssessmentRunner() {
     };
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
-  }, [showFinish]);
+  }, [showFinish, language]);
 
   // Unreachable: index always stays inside the bank's bounds.
   if (!question) return null;
@@ -450,7 +496,7 @@ export function AssessmentRunner() {
     // overflow-clip, not -hidden: it clips the glows and Hexi the same way but
     // is not a scroll container, so the question panel can stay sticky.
     <div className="relative isolate flex flex-1 flex-col overflow-clip bg-stage-assessment-soft">
-      <FocusBackground />
+      <FocusBackground litCells={litCells} />
       {/* Hexi keeps the student company through the 42 statements, parked in
           the dead space under the question column. Same <img> reasoning as the
           finish screen: the file animates itself and respects reduced motion.
@@ -514,6 +560,13 @@ export function AssessmentRunner() {
               onToggle={() => setGridOpen(!gridOpen)}
               controls={gridPanelId}
               disabled={isBlocked}
+            />
+          }
+          cheerSlot={
+            <MilestoneCheer
+              answeredCount={answeredCount}
+              language={language}
+              suppressed={flagOpen && !allAnswered}
             />
           }
         />
@@ -608,7 +661,7 @@ export function AssessmentRunner() {
           // place. --highlight-soft is a pale fill in BOTH themes, so the
           // checked card sets its own ink and everything inside follows it.
                           className={cn(
-                            "relative h-full min-h-28 w-full flex-col justify-center gap-2 rounded-3xl bg-card",
+                            "relative h-full min-h-28 w-full flex-col justify-center gap-2 rounded-3xl bg-card shadow-bento",
                             ANSWER_TONE[option.value].card,
                           )}
                         >
