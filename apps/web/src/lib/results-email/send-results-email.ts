@@ -1,14 +1,12 @@
 // Copyright (c) 2026 EdTech. All rights reserved.
 
-import { photoToBase64 } from "@/lib/career-look/photo-store";
 import type { HollandCode } from "@/lib/riasec/scoring";
 import type { GradeLevel } from "@/lib/riasec/types";
 import type { RiasecScores } from "@/store/useAssessmentStore";
 
 // Calls the app's own /api/send-results route. Only letters, numbers, the
-// nickname, grade, a date and (if the student took one) their career-look
-// photo are sent: the server builds the email and its locked PDF itself,
-// and never stores the address or the photo.
+// nickname, grade and a date are sent: the server builds the email and its
+// locked PDF itself, and never stores the address.
 
 export type SendOutcome =
   | "sent"
@@ -31,8 +29,6 @@ export interface SendResultsInput {
   takenOn: Date;
   // The saved-results ID, printed on the PDF; null when not saved.
   resultsId: string | null;
-  // The career-look photo to attach, a JPEG.
-  photo?: Blob | null;
 }
 
 // The student's own calendar date, so the emailed PDF shows the same date
@@ -48,7 +44,6 @@ export async function sendResultsEmail(
 ): Promise<SendOutcome> {
   let response: Response;
   try {
-    const photo = input.photo ? await photoToBase64(input.photo) : undefined;
     response = await fetch("/api/send-results", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -65,7 +60,6 @@ export async function sendResultsEmail(
           takenOn: localDate(input.takenOn),
           resultsId: input.resultsId,
         },
-        photo,
       }),
     });
   } catch {

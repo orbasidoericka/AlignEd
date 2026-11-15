@@ -33,10 +33,11 @@ import { cn } from "@/lib/utils";
 // the saved-results record (grade, strand, age, RIASEC scores and code, date,
 // results ID; no name, nickname, school or answers; see
 // supabase/migrations/0003 to 0007), the site-wide tests-taken counter, the
-// private admin page, the email route with its optional photo, the in-memory
+// private admin page, the email route (PDF only), the in-memory
 // abuse limiters, and PostHog analytics.
 // Change the code and this changes too: keep claims accurate.
-export const PRIVACY_POLICY_VERSION = "v3.0";
+// v3.1: the career-look photo is no longer sent with the results email.
+export const PRIVACY_POLICY_VERSION = "v3.1";
 
 // First standalone version: split out of the combined notice above at v3.0.
 export const TERMS_VERSION = "v1.0";
@@ -122,9 +123,9 @@ const PRIVACY_POLICY_SECTIONS: PolicySection[] = [
       {
         type: "list",
         items: [
-          "**Stays on your device only:** your nickname, school, answers, language, theme, sound choice, session timing, and any strand you type under Others (it also prints in your own PDF).",
+          "**Stays on your device only:** your nickname, school, answers, language, theme, sound choice, session timing, any strand you type under Others (it also prints in your own PDF), and any career look photo you take.",
           "**Saved on our server (no name):** your grade level, SHS strand (only the word Others if you typed your own), age, six scores, three-letter code, date, and results ID.",
-          "**Sent once, then thrown away:** your email address and photo.",
+          "**Sent once, then thrown away:** your email address.",
           "**Sent to our analytics provider:** website visit data, if analytics is on.",
         ],
       },
@@ -224,7 +225,6 @@ const PRIVACY_POLICY_SECTIONS: PolicySection[] = [
         type: "list",
         items: [
           "**Your email address is used once** to send your results, then thrown away. It is not added to your saved record.",
-          "If you took a career look photo, it is attached to the email unless you untick it. **The photo is never stored** by AlignEd.",
           "The results PDF is protected with a password.",
           "We will not use your address for ads or marketing.",
           "To block spam, our server keeps a scrambled (one-way hash) version of your address and your IP in memory for a short time. It cannot be turned back into your address.",

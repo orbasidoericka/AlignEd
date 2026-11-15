@@ -17,7 +17,7 @@ Next.js 16.2.5 App Router, React 19, TypeScript, Tailwind v4 (tokens in `apps/we
 | `/assessment` | `(focus)` | Quiz (`journey/assessment-runner.tsx`, `question-navigator.tsx`: progress strip above the question, compact (no vertical centring, `py-6`/`gap-5`); the question numbers panel docks in the right margin from 1328px (top level with the strip, nothing else moves when it opens), shown or hidden with the icon `QuestionGridToggle`. The English/Filipino switch moved out of the quiz body into `journey/language-toggle.tsx` (`LanguageToggle`), a flag-only icon button in the FocusBar, quiz pages only). |
 | `/results` | `(site)` | Dashboard (`journey/results-dashboard.tsx`), exports (`results-actions.tsx`); `saved-results-panel.tsx` is a no-UI auto-save trigger only, for admin stats. |
 | `/dev/career-looks` | `(site)` | Dev preview of career-look props. |
-| `/admin/[token]` | — | Server-rendered admin stats; see `BACKEND.md`. |
+| `/admin` | — | Server-rendered admin stats behind a shared password: `components/admin/admin-login-form.tsx` (`useActionState(signIn)`) when signed out, the dashboard and a Log out button when signed in. `/admin/export` downloads the Excel file. See `BACKEND.md`. |
 
 `(focus)/layout.tsx` renders `FocusBar`; `(site)/layout.tsx` renders site header + footer.
 
@@ -27,7 +27,6 @@ Next.js 16.2.5 App Router, React 19, TypeScript, Tailwind v4 (tokens in `apps/we
 - Session TTL: 30 min after last change. Wiped on rehydrate by the store and live by `components/session-expiry-guard.tsx`.
 - Tab-close wipe: every load sets `sessionStorage` `aligned.tab`; a rehydrated session with `completedAt` set and no marker is wiped (`isOrphanedFinishedSession`). Unfinished quizzes keep resuming. Unreadable `sessionStorage` = no wipe (TTL only).
 - `components/journey/results-expiry-note.tsx`: countdown under the Results h1, from `sessionRemainingMs(lastUpdated)`; ticks 1 s, hidden in print, screen readers get a per-minute sentence.
-- `lib/career-look/photo-store.ts`: last career-look photo, memory only, never persisted.
 - `hooks/use-hydrated.ts`: gate anything that reads persisted state, so the server render never depends on it.
 - Persist writes are coalesced (`coalescedStorage` in the store, `STORAGE_WRITE_DELAY_MS` = 250): the latest state lands after a short pause, at once on `pagehide` / tab hidden; `removeItem` (Start over, expiry) is never delayed and cancels any pending write. Reads see the pending value.
 - `hooks/use-fancy-motion.ts`: JS twin of the `fancy:` CSS variant (mouse device, no reduced motion). `GlowingEffect` attaches its scroll/pointer listeners only when true.
@@ -65,6 +64,9 @@ Next.js 16.2.5 App Router, React 19, TypeScript, Tailwind v4 (tokens in `apps/we
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 
+- 2026-11-15 · email · Removed `lib/career-look/photo-store.ts`, the email dialog's "Attach my career look photo" option, the JPEG copy in the camera dialog, and the `photo` field in `sendResultsEmail`; privacy notice v3.1 (photo listed as on-device only, both languages) · requested: the email carries only the results PDF.
+- 2026-11-15 · admin · `/admin/[token]` replaced by `/admin` with `AdminLoginForm` (password field with show/hide, error as an alert tied to the field, disabled while signing in) and a Log out button in the admin header · password sign-in.
+- 2026-11-11 · admin · Latest results table pages ten rows at a time with Previous/Next and "Page n of m", replacing "See more" that kept appending rows · the list grew without end.
 - 2026-11-11 · frontend · New `milestone-cheer.tsx` + `lib/riasec/encouragement.ts`; `QuestionNavigator` gains `cheerSlot` and a notch-heal/percent-pop treatment; `FocusBackground` memoized and takes `litCells` to brighten four backdrop cells at 1/11/21/32 answers · assessment enrichment (Vision milestone beats + constellation).
 
 - 2026-11-11 · frontend · `assessment-runner` answer shortcuts split per language (`SHORTCUTS_EN` / `SHORTCUTS_FIL`), picked by store `language` · only the displayed key pair answers.

@@ -81,9 +81,8 @@ export const RESULTS_ACTIONS_TEXT_FIL = {
     passwordLabel: "Ang iyong PDF password",
     passwordHint:
       "Ang iyong palayaw, pagkatapos ang iyong tatlong-titik na RIASEC code. CASE-SENSITIVE ang password. Hindi ito nakasulat sa email, kaya itago ito sa ligtas na lugar.",
-    attachPhoto: "Isama ang aking career look photo",
-    sent: (email: string, withPhoto: boolean) =>
-      `Naipadala na! Tingnan ang ${email} para sa iyong results PDF${withPhoto ? " at career look photo" : ""}. Maaaring tumagal ito ng isang minuto, at posibleng mapunta ito sa iyong spam folder.`,
+    sent: (email: string) =>
+      `Naipadala na! Tingnan ang ${email} para sa iyong results PDF. Maaaring tumagal ito ng isang minuto, at posibleng mapunta ito sa iyong spam folder.`,
     emailLabel: "Email address",
     emailInvalid: "Maglagay ng wastong email address.",
     consent:

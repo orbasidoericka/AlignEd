@@ -27,7 +27,7 @@ AlignEd addresses this decision point directly: students discover their Holland 
 - G4. Protect student data: anonymous by design, compliant with the Data Privacy Act of 2012 (RA 10173).
 
 ### Non-Goals (explicitly out of scope)
-- User accounts, authentication, or login of any kind.
+- Student accounts, authentication, or login of any kind. The admin page (FR-10) is gated by one shared server-side password, with no accounts or stored identities.
 - A browsable university/HEI directory or university-to-program mapping.
 - Simulations, forums, counselor dashboards, scholarship/financial modules, labor-market feeds, or native mobile apps. (The in-browser career-look camera preview, FR-11, is in scope; nothing else AR is.)
 - Server-side persistence of personally identifiable information (raw emails, names, nicknames, schools, photos, individual answers).
@@ -62,7 +62,7 @@ The product is a strict linear journey. Every route, component, and data model s
 | Profile Setup | `/assessment/profile` | Client component, Focus Mode shell |
 | Assessment | `/assessment` | Client component, Focus Mode shell |
 | Results | `/results` | Client-computed from local state; majors/pathways from static data |
-| Admin (not part of the journey) | `/admin/[token]` | Server-rendered; secret-link access (FR-10) |
+| Admin (not part of the journey) | `/admin` | Server-rendered; shared-password sign-in (FR-10) |
 
 Server routes (Next.js route handlers, Node runtime): `POST /api/results`, `GET`/`DELETE /api/results/[id]` (FR-9), `POST /api/send-results` (FR-8).
 
@@ -137,7 +137,7 @@ Captured before the assessment begins; stored client-side only (localStorage via
 ### FR-8 Export — Send to Email
 - FR-8.1. "Email me my results" opens a dialog: email input + mandatory consent checkbox (Data Privacy Act copy) + send button.
 - FR-8.2. Email format is validated client-side with inline errors before any request is made; the server validates again.
-- FR-8.3. Sending calls `POST /api/send-results`, a Next.js route that renders the same encrypted PDF as FR-7 on the server (`lib/results-pdf/render-results-pdf.ts`) and sends it, plus the career-look photo if the student took one (JPEG, ≤3 MB), from the program's Gmail account over SMTP (nodemailer, `GMAIL_USER` + `GMAIL_APP_PASSWORD`). The address and photo are then discarded. **Raw email addresses are never persisted.**
+- FR-8.3. Sending calls `POST /api/send-results`, a Next.js route that renders the same encrypted PDF as FR-7 on the server (`lib/results-pdf/render-results-pdf.ts`) and sends it, and nothing else, from the program's Gmail account over SMTP (nodemailer, `GMAIL_USER` + `GMAIL_APP_PASSWORD`). The address is then discarded. A `photo` field sent by an older page is ignored. **Raw email addresses are never persisted.**
 - FR-8.4. Rate limiting: 3 sends per address per rolling day and 20 per network per rolling hour, keyed by salted SHA-256 hashes held in server memory (per-process random salt, reset on restart). A filled `website` honeypot field is answered with a fake success and nothing is sent. Limit-exceeded responses (HTTP 429) show a friendly "try again later" message.
 - FR-8.5. Delivery failure surfaces a toast with a retry action; success surfaces a confirmation toast.
 
@@ -149,12 +149,13 @@ Captured before the assessment begins; stored client-side only (localStorage via
 - FR-9.5. A failed save never blocks the results; it is silent and never retried from the UI.
 
 ### FR-10 Admin Page
-- FR-10.1. `/admin/<ADMIN_TOKEN>` shows aggregate statistics over saved results (count, average age, strongest interest area, most common codes, age distribution) and a table of the latest results. Rows carry no identity, so neither does the page.
-- FR-10.2. There is no login: the link is the key. The token is compared in constant time; if `ADMIN_TOKEN` is unset or shorter than 32 characters the page stays locked. Revoking means changing `ADMIN_TOKEN` and restarting.
+- FR-10.1. `/admin` shows aggregate statistics over saved results (count, average age, strongest interest area, most common codes, age distribution) and a table of the latest results. Rows carry no identity, so neither does the page.
+- FR-10.2. The page asks for one shared password, `ADMIN_PASSWORD` (server only, at least 16 characters), compared in constant time; if it is unset or shorter the page stays locked. A correct password sets an 8-hour session cookie (HttpOnly, SameSite=Strict, Secure in production) signed with a key derived from the password, so changing the password signs everyone out. A Log out button ends the session. There are no admin accounts and nothing about the session is stored server-side.
+- FR-10.3. Sign-in attempts are limited to 5 per network per 15 minutes and 30 across all networks per hour (in memory). The Excel export (`/admin/export`) needs the same session. Old `/admin/<token>` links return 404.
 
 ### FR-11 Career Look (optional photo)
 - FR-11.1. From Results, a student may open the camera and try on career-themed props anchored to their face (MediaPipe face landmarks, in-browser). Camera access is the only browser permission the site requests.
-- FR-11.2. The last photo is kept in memory only (never persisted, gone on refresh) and can be attached to the results email (FR-8.3). It is never stored on the server.
+- FR-11.2. The photo stays on the device: the student can save or share it from the camera dialog. It is never sent with the results email and never stored on the server.
 - FR-11.3. Hand signs in front of the camera set off short decorative effects themed to the look being worn (Realistic gears, Investigative atoms and bubbles, Artistic paint, Social hearts and smileys, Enterprising coins and arrows, Conventional checkmarks and tiles); the sign sets how the burst moves (wave: a falling fan, thumbs up and peace: a ring, I-love-you: floating up, pointing up: one big emblem rising), tracked in-browser with MediaPipe's gesture recognizer like the face. They are silent, change nothing (switching looks and taking photos stay button-only), and nothing about the hands is recorded or stored. Under reduced motion each effect is one still icon that fades. If the hand model cannot load, the looks work without effects.
 
 ### FR-12 Share Image
@@ -232,13 +233,14 @@ Captured before the assessment begins; stored client-side only (localStorage via
 ### Email Delivery
 - **Given** an invalid email, **when** send is attempted, **then** no network request is made and an inline error shows.
 - **Given** an unchecked consent box, **then** the send action is disabled.
-- **Given** a successful send, **then** the student sees a confirmation toast, the email carries the encrypted PDF (and the photo if one was taken), and nothing about the address is written to the database (the route writes no rows).
+- **Given** a successful send, **then** the student sees a confirmation toast, the email carries only the encrypted PDF, and nothing about the address is written to the database (the route writes no rows).
 - **Given** the rate limit is exceeded, **then** the student sees the "try again later" message and no email is sent.
 - **Given** the honeypot field is filled, **then** the route answers success and sends nothing.
 
 ### Saved Results & Admin
 - **Given** a student reaches Results, **then** one row is saved server-side with no UI shown for it, and a refresh or a second render does not create a second row.
-- **Given** `ADMIN_TOKEN` is unset or under 32 characters, or the URL token does not match, **then** the admin page shows nothing.
+- **Given** `ADMIN_PASSWORD` is unset or under 16 characters, or no valid session cookie is present, **then** `/admin` shows only the sign-in form and `/admin/export` returns 404.
+- **Given** a wrong password, **then** the form says so without revealing anything; the 6th attempt from one network within 15 minutes is refused.
 
 ### Share Image
 - **Given** a student opens Share my results, **then** the preview shows only the Holland Code, its three trait badges and labels, and AlignEd branding, and no network request is made to build it.
@@ -259,7 +261,7 @@ AlignEd ships as a mostly-static, anonymous-first Next.js application.
 - **Styling/UI:** Tailwind **v4** (`@theme` tokens in `globals.css`; no `tailwind.config.ts`), shadcn/ui on **Base UI** for all foundational controls, MagicUI/Aceternity/Efferd vendored for motion and structure (see Design Vision).
 - **Backend:** Next.js route handlers (Node runtime) in `apps/web/src/app/api` are the only server code. They reach Supabase Postgres with the service-role key (`lib/supabase/admin.ts`, server only). **No Supabase Edge Functions; Supabase Auth is deliberately unused.** Email via Gmail SMTP (nodemailer) from `/api/send-results`; PDFs via pdfmake (browser for download, server for the email attachment).
 - **Hosting/CI:** Vercel + Supabase Cloud; GitHub Actions on every PR: lint, typecheck, Vitest, seed-pipeline determinism check, build. PostHog analytics, optional (no-op unless `NEXT_PUBLIC_POSTHOG_KEY` is set). Lighthouse gate and error monitoring are not wired yet.
-- **Configuration** (`apps/web/.env.local`): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `GMAIL_USER`, `GMAIL_APP_PASSWORD`, `ADMIN_TOKEN`, optional `NEXT_PUBLIC_POSTHOG_KEY` / `NEXT_PUBLIC_POSTHOG_HOST`. Full detail in `docs/BACKEND.md`.
+- **Configuration** (`apps/web/.env.local`): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `GMAIL_USER`, `GMAIL_APP_PASSWORD`, `ADMIN_PASSWORD`, optional `NEXT_PUBLIC_POSTHOG_KEY` / `NEXT_PUBLIC_POSTHOG_HOST`. Full detail in `docs/BACKEND.md`.
 
 ### Database design
 
@@ -291,7 +293,7 @@ AlignEd ships as a mostly-static, anonymous-first Next.js application.
 | :--- | :--- | :--- |
 | Assessment abandonment | Low completion rates | Focus Mode UI, progress indication, localStorage resume, ~5-minute length, single-tap binary answers with auto-advance, milestone encouragement (see Design Vision). |
 | Email abuse / privacy exposure | Legal and trust damage | No accounts; send-and-discard; hashed-email + per-IP rate limits; consent checkbox with DPA copy; honeypot; Gmail App Password kept server-side; PDF encrypted. |
-| Admin link leaks | Aggregate stats exposed | Rows carry no identity; token ≥32 chars, constant-time compare; revoke by rotating `ADMIN_TOKEN`. |
+| Admin password leaks or is guessed | Aggregate stats exposed | Rows carry no identity; password ≥16 chars, constant-time compare, rate-limited attempts, 8-hour sessions; rotating `ADMIN_PASSWORD` signs everyone out. |
 | In-memory limiters on several instances | Limits multiply per instance | Acceptable at one school's traffic; move to a shared store before scaling out. |
 | Stale program/career data | Loss of trust | Versioned CSV → seed pipeline; data edits ship as reviewed PRs. |
 | Low-end mobile performance | Primary audience bounces | Reduced-motion gate, LazyMotion, viewport-triggered animation only, CI Lighthouse gate with CPU throttling. |
@@ -302,6 +304,8 @@ AlignEd ships as a mostly-static, anonymous-first Next.js application.
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 
+- 2026-11-15 · email · The results email no longer attaches the career-look photo (FR-8.3, FR-11.2, §9); the route ignores a `photo` field; privacy notice v3.1 · requested: the email carries only the results PDF.
+- 2026-11-15 · admin · `/admin` now uses one shared password (`ADMIN_PASSWORD`) with an 8-hour signed cookie, rate-limited attempts and Log out; the secret-link token is removed; the Non-Goal is narrowed to student accounts · a link-as-key leaks through browser history, logs and forwarding.
 - 2026-11-10 · results · FR-5.4 carousel is now a rotating ring: #2 peeks left, #3 peeks right, both tilted and dimmed, arrows on the sides. · Requested design.
 - 2026-11-10 · results · Added FR-5.4: the three letter cards are a swipeable carousel with a rank banner per trait; FR-5.3 and its acceptance line now say explicitly that the no-ranking rule covers majors and pathways. · Requested: swipe through the top three and see the rank at a glance.
 - 2026-11-10 · profile · The combined notice behind FR-2.1's privacy acceptance now presents the Data Privacy Policy and the Terms and Conditions as two separate tabs within the same dialog (profile step and footer), instead of one scrolled document; the single checkbox/acceptance field is unchanged, but any session that had already ticked it before this change has that acceptance reset so the split content is seen and agreed to again. · Requested separation of the two documents for legal clarity.

@@ -3,22 +3,24 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import { after } from "next/server";
 import {
   CalendarDays,
   Cake,
   Download,
   Inbox,
+  LogOut,
   ShieldCheck,
   TriangleAlert,
 } from "lucide-react";
 
+import { AdminLoginForm } from "@/components/admin/admin-login-form";
 import { InterestHexagon } from "@/components/admin/interest-hexagon";
 import { LatestResults } from "@/components/admin/latest-results";
 import { Wordmark } from "@/components/blocks/wordmark";
 import { HexagonPattern } from "@/components/magic/hexagon-pattern";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RIASEC_PATHWAYS } from "@/lib/riasec/career-pathways";
 import { letterChip } from "@/lib/riasec/letter-chip-styles";
@@ -28,7 +30,7 @@ import {
   type GradeLevel,
   type RiasecLetter,
 } from "@/lib/riasec/types";
-import { isAdminToken } from "@/lib/saved-results/admin-access";
+import { hasAdminSession } from "@/lib/saved-results/admin-session";
 import {
   listResults,
   purgeExpired,
@@ -38,10 +40,12 @@ import { summarize, type ResultsSummary } from "@/lib/saved-results/summary";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { cn } from "@/lib/utils";
 
+import { signOut } from "./actions";
+
 // Private admin page: saved results, with no names or other identifiers.
-// No login; the secret link /admin/<ADMIN_TOKEN> is the key (see
-// admin-access.ts). Any other token gets the ordinary 404 page, so the
-// page's existence is not revealed.
+// One shared password signs an admin in for 8 hours (PRD FR-10, see
+// admin-access.ts and actions.ts). Without a valid session the page is
+// only the sign-in form.
 
 export const metadata: Metadata = {
   title: "Admin",
@@ -54,26 +58,29 @@ const SUMMARY_LIMIT = 5000;
 const TABLE_LIMIT = 200;
 
 export default async function AdminPage({
-  params,
   searchParams,
 }: {
-  params: Promise<{ token: string }>;
   searchParams: Promise<{ grade?: string | string[] }>;
 }) {
-  const { token } = await params;
-  if (!isAdminToken(decodeURIComponent(token))) notFound();
+  if (!(await hasAdminSession())) {
+    return (
+      <AdminShell headline="Enter the admin password to see saved results." signedIn={false}>
+        <AdminLoginForm />
+      </AdminShell>
+    );
+  }
   // ?grade=11 or ?grade=12 narrows every total and list to that grade;
   // anything else shows the overall view.
   const { grade } = await searchParams;
   const gradeFilter = GRADE_LEVELS.find((level) => level === grade) ?? null;
 
-  // The token is checked above, before anything is sent, so a wrong link
-  // still gets a true 404. That is also why this is a Suspense boundary and
-  // not a loading.tsx: a loading.tsx would stream a 200 and this page's frame
-  // to any token. Keyed so that changing grade shows the placeholder at once.
+  // The session is checked above, before anything is sent, so a visitor
+  // without one never gets a byte of the dashboard. That is also why this is
+  // a Suspense boundary and not a loading.tsx: a loading.tsx would stream
+  // this page's frame before the check. Keyed so that changing grade shows the placeholder at once.
   return (
     <Suspense key={gradeFilter ?? "all"} fallback={<AdminLoading />}>
-      <AdminDashboard token={token} gradeFilter={gradeFilter} />
+      <AdminDashboard gradeFilter={gradeFilter} />
     </Suspense>
   );
 }
@@ -95,10 +102,8 @@ function AdminLoading() {
 }
 
 async function AdminDashboard({
-  token,
   gradeFilter,
 }: {
-  token: string;
   gradeFilter: GradeLevel | null;
 }) {
   const db = createSupabaseAdminClient();
@@ -158,8 +163,8 @@ async function AdminDashboard({
       headline={<Headline summary={summary} gradeFilter={gradeFilter} />}
       filter={
         <div className="flex flex-wrap items-center gap-3">
-          <GradeFilter token={token} current={gradeFilter} options={filterOptions} />
-          <ExportLink token={token} gradeFilter={gradeFilter} />
+          <GradeFilter current={gradeFilter} options={filterOptions} />
+          <ExportLink gradeFilter={gradeFilter} />
         </div>
       }
     >
@@ -349,10 +354,12 @@ function Headline({
 function AdminShell({
   headline,
   filter,
+  signedIn = true,
   children,
 }: {
   headline?: React.ReactNode;
   filter?: React.ReactNode;
+  signedIn?: boolean;
   children: React.ReactNode;
 }) {
   return (
@@ -365,7 +372,17 @@ function AdminShell({
               Admin
             </span>
           </div>
-          <ThemeToggle />
+          <div className="flex items-center gap-1">
+            {signedIn && (
+              <form action={signOut}>
+                <Button type="submit" variant="ghost" size="lg" className="rounded-full px-3">
+                  <LogOut data-icon="inline-start" aria-hidden />
+                  Log out
+                </Button>
+              </form>
+            )}
+            <ThemeToggle />
+          </div>
         </div>
       </header>
 
@@ -399,8 +416,8 @@ function AdminShell({
               />
               <span>
                 No names or other identifiers are stored: only scores, code,
-                grade, strand, age and date. This link is the key to this page,
-                so share it only with program admins.
+                grade, strand, age and date. Share the admin password only with
+                program admins.
               </span>
             </p>
           </div>
@@ -453,11 +470,9 @@ interface FilterOption {
 // Overall, Grade 11 and Grade 12 views of the same page, as links so the
 // choice lives in the URL and survives a reload.
 function GradeFilter({
-  token,
   current,
   options,
 }: {
-  token: string;
   current: GradeLevel | null;
   options: FilterOption[];
 }) {
@@ -473,8 +488,8 @@ function GradeFilter({
             key={option.label}
             href={
               option.grade
-                ? `/admin/${token}?grade=${option.grade}`
-                : `/admin/${token}`
+                ? `/admin?grade=${option.grade}`
+                : "/admin"
             }
             aria-current={active ? "page" : undefined}
             className={cn(
@@ -500,24 +515,22 @@ function GradeFilter({
   );
 }
 
-// The data itself, not a picture of it: a CSV of every saved result in the
-// current view (see export/route.ts). A plain <a>, so the browser downloads
-// the file instead of the router trying to render it.
+// The data itself, not a picture of it: an Excel workbook of every saved
+// result in the current view (see export/route.ts). A plain <a>, so the
+// browser downloads the file instead of the router trying to render it.
 function ExportLink({
-  token,
   gradeFilter,
 }: {
-  token: string;
   gradeFilter: GradeLevel | null;
 }) {
   return (
     <a
-      href={`/admin/${token}/export${gradeFilter ? `?grade=${gradeFilter}` : ""}`}
+      href={`/admin/export${gradeFilter ? `?grade=${gradeFilter}` : ""}`}
       download
       className="inline-flex h-10 items-center gap-2 rounded-full bg-accent-strong px-4 text-sm font-bold whitespace-nowrap text-accent-strong-foreground shadow-bento transition-[filter,translate] duration-200 outline-none hover:brightness-95 focus-visible:ring-3 focus-visible:ring-ring/50 active:translate-y-px"
     >
       <Download className="size-4" aria-hidden />
-      Export CSV
+      Export to Excel
       <span className="sr-only">
         {gradeFilter ? `, Grade ${gradeFilter} only` : ", all grades"}
       </span>

@@ -9,7 +9,7 @@ Server routes, data, secrets, and privacy controls. Client code lives in `FRONTE
 | Route | Method | Does | Limits |
 | :--- | :--- | :--- | :--- |
 | `/api/results` | POST | Save a finished result (six scores, code, grade, age, date). Returns a results ID (`ALGN-XXXX-XXXX`), stored client-side and printed in the PDF; no route exposes a lookup or delete by ID, and the client has no UI for either. | 200 / hour per network |
-| `/api/send-results` | POST | Email the encrypted results PDF (+ optional career-look photo) via Gmail SMTP (nodemailer), then discard the address and photo. | per hashed email + per hashed IP |
+| `/api/send-results` | POST | Email the encrypted results PDF, and nothing else, via Gmail SMTP (nodemailer), then discard the address. A `photo` field from an older page is ignored. | per hashed email + per hashed IP |
 
 - Rate limiters (`lib/results-email/rate-limiter.ts`, `lib/saved-results/ip-limiter.ts`) are in-memory, keyed by salted hashes with a per-process random salt. They reset on restart and count per server instance.
 - Inputs validated server-side with `lib/riasec/validate-results.ts`; email content in `lib/results-email/email-content.ts`.
@@ -17,9 +17,11 @@ Server routes, data, secrets, and privacy controls. Client code lives in `FRONTE
 
 ## Admin
 
-`/admin/[token]`: no login; the link is the key. `lib/saved-results/admin-access.ts` compares the token in constant time and locks the page if `ADMIN_TOKEN` is unset or under 32 chars. Revoke by changing `ADMIN_TOKEN` and restarting.
+`/admin`: one shared password, no accounts (PRD FR-10). The form posts to the `signIn` server action (`app/admin/actions.ts`), which first counts the attempt against two in-memory `createWindowLimiter`s (5 per network per 15 min, keyed by `callerKey`, a salted IP hash; 30 per hour across all networks), then compares against `ADMIN_PASSWORD` in constant time (`lib/saved-results/admin-access.ts`; locked if unset or under 16 chars). Success sets cookie `aligned_admin` = `<expiry ms>.<HMAC-SHA256>` (HttpOnly, SameSite=Strict, Secure in production, path `/admin`, 8 hours); the HMAC key is derived from the password, so changing `ADMIN_PASSWORD` signs everyone out. Nothing about a session is stored server-side, so a copied cookie stays valid until it expires or the password changes. `signOut` deletes the cookie. `hasAdminSession()` (`lib/saved-results/admin-session.ts`) gates the page and the export. Old `/admin/<token>` links are plain 404s. Because the limits are per server instance and reset on restart, the password itself must be long and random. The global limit means someone hammering the form can lock out real admins for up to an hour.
 
-The token is checked before anything is sent, then the dashboard streams inside a `Suspense` boundary keyed by grade. Do not add a `loading.tsx` to this route: it would send a 200 and the page frame to any token. `purgeExpired` runs in `after()`, once the page is sent, and `listResults` filters on `expires_at` so expired rows never show.
+The session is checked before anything is sent, then the dashboard streams inside a `Suspense` boundary keyed by grade. Do not add a `loading.tsx` to this route: it would stream the page frame before the session check. `purgeExpired` runs in `after()`, once the page is sent, and `listResults` filters on `expires_at` so expired rows never show.
+
+`/admin/export` (same session check, 404 without it) downloads the current view as an Excel workbook, built by `lib/saved-results/export-xlsx.ts` with no library, in the classic Excel table look: blue (#4472C4) header rows with white bold text, light-blue banded rows, thin grey borders on every table cell, bold Total rows, gridlines on. Sheet 1, Summary, repeats the admin page from the same `summarize()` totals: an Overview table (saved results, each grade with its share, last 30 days, average age, most common code), then strongest interest area (trait-coloured letter cells), most common codes (top 10), strand and age, each with Students and Share ("0%", same rounding as the page) and, except the codes, a Total row. Sheet 2, Latest results, is the admin table: Taken, Results ID, Code over three trait-coloured cells, Grade, Strand (short name), Age, R to C scores with the code's letters bold and the rest grey; real dates, frozen header, filters; missing values read "Not given". Styles are collected per workbook by a small `StyleSheet` class, so cells only describe how they look. The file is a hand-written zip of the OOXML parts using `node:zlib`, so the route needs the Node runtime.
 
 ## Database (Supabase Postgres)
 
@@ -43,7 +45,7 @@ The token is checked before anything is sent, then the dashboard streams inside 
 | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` | public |
 | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | server only |
 | `GMAIL_USER`, `GMAIL_APP_PASSWORD` | server only (Google App Password) |
-| `ADMIN_TOKEN` | server only, ≥32 random chars |
+| `ADMIN_PASSWORD` | server only, ≥16 random chars; changing it signs every admin out |
 | `NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_POSTHOG_HOST` | public, optional |
 
 Server secrets never take the `NEXT_PUBLIC_` prefix.
@@ -62,6 +64,13 @@ Set in `apps/web/next.config.ts` for every path: `X-Frame-Options: DENY`, `nosni
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 
+- 2026-11-15 · admin · Excel export restyled as classic Excel tables (blue header, banded rows, cell borders, Total rows, Overview table) with a per-workbook style registry · admins found the earlier layout hard to scan in Sheets/Excel.
+- 2026-11-15 · admin · Excel export keeps Excel's gridlines and gives table cells thin grey grid borders instead of blue row lines and white gaps · it should still look like a spreadsheet.
+- 2026-11-15 · admin · Excel export adds a first "Summary" sheet built from `summarize()` (the page's cards and charts as numbers); the table moves to a second "Latest results" sheet · admins wanted the overview in the file too.
+- 2026-11-15 · email · `/api/send-results` attaches only the PDF; `parsePhoto`/`MAX_PHOTO_BYTES` and the photo attachment removed · requested: the email carries only the results PDF.
+- 2026-11-15 · admin · Excel export laid out like the admin table (trait-coloured code cells, short strands, R to C score columns, letter key, no gridlines) · the first version was readable but did not match the page.
+- 2026-11-15 · admin · Password sign-in replaces the secret-link token: `signIn`/`signOut` server actions, stateless HMAC session cookie (8 h), 5 per 15 min per network and 30 per hour global attempt limits, `ADMIN_PASSWORD` replaces `ADMIN_TOKEN`, export moved to `/admin/export` · a link-as-key leaks through history, logs and forwarding.
+- 2026-11-15 · admin · Export is now a formatted Excel workbook (`export-xlsx.ts`, `.xlsx`) instead of a CSV; "Saved at (UTC)" and the constant "Max score per area" columns became a title and a note · the CSV opened in Excel as narrow columns and `########` dates.
 - 2026-11-10 · admin · `purgeExpired` on the admin page moved to `after()`, and `listResults` filters out expired rows · the page no longer waits on a delete before showing anything.
 - 2026-11-09 · api · Removed `/api/results/[id]` entirely (GET and DELETE) and `getResult`/`deleteResult` from the repository. `POST /api/results` still saves one row per session for the admin stats page; nothing reads or deletes a row by ID anymore. · Requested removal of the results-ID feature from the Results page.
 - 2026-11-09 · api · Removed `GET /api/results/[id]` and `getResult` from the repository; the compare-by-ID feature is gone, `DELETE /api/results/[id]` is unchanged. · Comparing was cut from the results page.

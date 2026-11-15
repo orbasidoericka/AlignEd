@@ -10,8 +10,11 @@ import { createHash, randomBytes } from "node:crypto";
 // Fresh per process, so the hashes mean nothing outside this server.
 const SALT = randomBytes(32).toString("hex");
 
-export function callerKey(request: Request): string {
-  const forwarded = request.headers.get("x-forwarded-for");
+// Takes the request, or just its headers where there is no Request object
+// (a server action).
+export function callerKey(source: Request | Headers): string {
+  const headers = source instanceof Headers ? source : source.headers;
+  const forwarded = headers.get("x-forwarded-for");
   const ip = forwarded?.split(",")[0]?.trim() || "local";
   return createHash("sha256").update(`${SALT}:${ip}`).digest("hex");
 }

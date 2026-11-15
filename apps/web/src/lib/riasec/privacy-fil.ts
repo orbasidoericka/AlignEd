@@ -77,9 +77,9 @@ export const PRIVACY_POLICY_SECTIONS_FIL: readonly PolicySection[] = [
       {
         type: "list",
         items: [
-          "**Nananatili lang sa iyong device:** ang iyong palayaw, paaralan, mga sagot, wika, tema, pinili mong tunog, oras ng sesyon, at anumang strand na i-type mo sa ilalim ng Others (napi-print din ito sa iyong sariling PDF).",
+          "**Nananatili lang sa iyong device:** ang iyong palayaw, paaralan, mga sagot, wika, tema, pinili mong tunog, oras ng sesyon, anumang strand na i-type mo sa ilalim ng Others (napi-print din ito sa iyong sariling PDF), at anumang career look photo na kukunin mo.",
           "**Naka-save sa aming server (walang pangalan):** ang iyong antas ng grado, SHS strand (ang salitang Others lamang kung sarili mong tinype), edad, anim na iskor, tatlong-titik na code, petsa, at results ID.",
-          "**Ipinapadala minsan, pagkatapos ay itinatapon:** ang iyong email address at larawan.",
+          "**Ipinapadala minsan, pagkatapos ay itinatapon:** ang iyong email address.",
           "**Ipinapadala sa aming analytics provider:** datos ng pagbisita sa website, kapag naka-on ang analytics.",
         ],
       },
@@ -179,7 +179,6 @@ export const PRIVACY_POLICY_SECTIONS_FIL: readonly PolicySection[] = [
         type: "list",
         items: [
           "**Ang iyong email address ay ginagamit nang isang beses lamang** para ipadala ang iyong resulta, pagkatapos ay itatapon. Hindi ito idinadagdag sa iyong naka-save na record.",
-          "Kung kumuha ka ng career look photo, isasama ito sa email maliban kung tatanggalin mo ang tsek dito. **Hindi kailanman itinatago** ng AlignEd ang larawan.",
           "Protektado ng password ang PDF ng resulta.",
           "Hindi namin gagamitin ang iyong address para sa mga ad o marketing.",
           "Para harangin ang spam, itinatago ng aming server ang isang naka-scramble (one-way hash) na bersyon ng iyong address at IP sa memory sa maikling panahon. Hindi ito maaaring ibalik sa iyong orihinal na address.",

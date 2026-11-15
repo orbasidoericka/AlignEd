@@ -29,8 +29,6 @@ export interface SendResultsRequest {
   // answered as if the email went out, and nothing is sent.
   website: string;
   results: ResultsPayload;
-  // The student's career-look photo (a JPEG), when they took one.
-  photo: Buffer | null;
 }
 
 export type Validation =
@@ -38,31 +36,6 @@ export type Validation =
   | { ok: false; error: string };
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-// Largest career-look photo the route will attach, in bytes of JPEG.
-export const MAX_PHOTO_BYTES = 3 * 1024 * 1024;
-
-// The photo arrives as base64. Only a real JPEG within the size limit is
-// accepted, so the route cannot be used to mail arbitrary files.
-export function parsePhoto(value: unknown): Buffer | null | undefined {
-  if (value === undefined || value === null) return null;
-  if (
-    typeof value !== "string" ||
-    value.length > Math.ceil(MAX_PHOTO_BYTES / 3) * 4 ||
-    !/^[A-Za-z0-9+/]+={0,2}$/.test(value)
-  ) {
-    return undefined;
-  }
-  const bytes = Buffer.from(value, "base64");
-  const isJpeg =
-    bytes.length > 4 &&
-    bytes[0] === 0xff &&
-    bytes[1] === 0xd8 &&
-    bytes[2] === 0xff &&
-    bytes[bytes.length - 2] === 0xff &&
-    bytes[bytes.length - 1] === 0xd9;
-  return isJpeg && bytes.length <= MAX_PHOTO_BYTES ? bytes : undefined;
-}
 
 export function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
@@ -96,9 +69,6 @@ export function validateRequest(body: unknown): Validation {
   const scored = validateScoredResults(results);
   if (!scored.ok) return scored;
 
-  const photo = parsePhoto(body.photo);
-  if (photo === undefined) return { ok: false, error: "Invalid photo." };
-
   return {
     ok: true,
     value: {
@@ -106,7 +76,6 @@ export function validateRequest(body: unknown): Validation {
       consent: true,
       website,
       results: { ...scored.value, nickname, resultsId },
-      photo,
     },
   };
 }
@@ -123,8 +92,8 @@ export const RATE_LIMITS = {
 } as const;
 
 // ---------------------------------------------------------------------------
-// The email: a short note with the locked results PDF attached, and the
-// career-look photo when there is one. The results themselves stay inside
+// The email: a short note with the locked results PDF attached, and
+// nothing else. The results themselves stay inside
 // the PDF, so the body never shows the Holland Code or scores, and never
 // the password: only how it is made.
 
@@ -142,20 +111,14 @@ export interface ResultsEmail {
   html: string;
   text: string;
   attachmentName: string;
-  photoName: string;
 }
 
 const NAVY = "#1b2a4a";
 const MUTED = "#5c6475";
 
-export function buildResultsEmail(
-  results: ResultsPayload,
-  { withPhoto = false }: { withPhoto?: boolean } = {},
-): ResultsEmail {
+export function buildResultsEmail(results: ResultsPayload): ResultsEmail {
   const greeting = results.nickname ? `Hi ${results.nickname},` : "Hi,";
-  const attached = withPhoto
-    ? "Your AlignEd results are attached as a PDF, along with your career look photo."
-    : "Your AlignEd results are attached as a PDF.";
+  const attached = "Your AlignEd results are attached as a PDF.";
   const passwordHint =
     "To open it, use your password: your nickname followed by your three-letter RIASEC code, in capital letters. For example, nickname JUAN and code S-E-C gives JUANSEC.";
 
@@ -188,6 +151,5 @@ export function buildResultsEmail(
     html,
     text,
     attachmentName: `AlignEd-results-${results.nickname || "student"}.pdf`,
-    photoName: `AlignEd-career-look-${results.nickname || "student"}.jpg`,
   };
 }

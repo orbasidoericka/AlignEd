@@ -3,7 +3,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, Inbox } from "lucide-react";
+import { ChevronLeft, ChevronRight, Inbox } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { RIASEC_PATHWAYS } from "@/lib/riasec/career-pathways";
@@ -13,7 +13,7 @@ import { strandShortName } from "@/lib/riasec/types";
 import type { SavedResult } from "@/lib/saved-results/repository";
 import { cn } from "@/lib/utils";
 
-// The admin page's latest results: a short list first, more on request.
+// The admin page's latest results, ten rows per page.
 
 const PAGE_SIZE = 10;
 
@@ -24,7 +24,7 @@ const dateFormat = new Intl.DateTimeFormat("en-PH", {
 });
 
 export function LatestResults({ results }: { results: SavedResult[] }) {
-  const [shown, setShown] = useState(PAGE_SIZE);
+  const [page, setPage] = useState(0);
 
   if (results.length === 0) {
     return (
@@ -34,7 +34,11 @@ export function LatestResults({ results }: { results: SavedResult[] }) {
       </div>
     );
   }
-  const visible = results.slice(0, shown);
+  const pageCount = Math.ceil(results.length / PAGE_SIZE);
+  // The list can shrink under a kept page index (a refresh after purging).
+  const current = Math.min(page, pageCount - 1);
+  const start = current * PAGE_SIZE;
+  const visible = results.slice(start, start + PAGE_SIZE);
   return (
     <>
       <div className="-mx-5 overflow-x-auto px-5 sm:-mx-6 sm:px-6">
@@ -137,23 +141,42 @@ export function LatestResults({ results }: { results: SavedResult[] }) {
         <p className="text-sm text-muted-foreground" aria-live="polite">
           Showing{" "}
           <span className="font-semibold text-foreground tabular-nums">
-            {visible.length.toLocaleString()}
+            {(start + 1).toLocaleString()}–
+            {(start + visible.length).toLocaleString()}
           </span>{" "}
           of{" "}
           <span className="font-semibold text-foreground tabular-nums">
             {results.length.toLocaleString()}
           </span>
         </p>
-        {shown < results.length && (
-          <Button
-            variant="outline"
-            size="lg"
-            className="rounded-full px-4"
-            onClick={() => setShown((count) => count + PAGE_SIZE)}
-          >
-            See more
-            <ChevronDown data-icon="inline-end" />
-          </Button>
+        {pageCount > 1 && (
+          <nav aria-label="Results pages" className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="lg"
+              className="rounded-full px-4"
+              disabled={current === 0}
+              onClick={() => setPage(current - 1)}
+            >
+              <ChevronLeft data-icon="inline-start" />
+              <span className="max-sm:sr-only">Previous</span>
+            </Button>
+            <span className="px-1 text-sm whitespace-nowrap text-muted-foreground tabular-nums">
+              Page{" "}
+              <span className="font-semibold text-foreground">{current + 1}</span>{" "}
+              of {pageCount}
+            </span>
+            <Button
+              variant="outline"
+              size="lg"
+              className="rounded-full px-4"
+              disabled={current === pageCount - 1}
+              onClick={() => setPage(current + 1)}
+            >
+              <span className="max-sm:sr-only">Next</span>
+              <ChevronRight data-icon="inline-end" />
+            </Button>
+          </nav>
         )}
       </div>
     </>

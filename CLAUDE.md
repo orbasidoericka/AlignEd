@@ -26,7 +26,7 @@ Anonymous RIASEC career guidance for PH Senior High (Grade 11–12) students. Mo
 
 ## Layout
 - Monorepo, npm workspaces. App in `apps/web`. Root scripts proxy: `npm run dev|build|lint|typecheck|test`. E2E: `npm -w apps/web run test:e2e`.
-- `src/app`: `(site)` landing/results, `(focus)/assessment` profile+quiz, `admin/[token]`, `api/{send-results,results}`.
+- `src/app`: `(site)` landing/results, `(focus)/assessment` profile+quiz, `admin` (password sign-in, `export`), `api/{send-results,results}`.
 - `src/components`: `ui` (Base UI wrappers, not Radix), `aceternity`, `magic`, `blocks`, `journey`, `riasec`, `career-look`.
 - `src/lib/riasec` (questions, scoring, career-pathways), `src/store/useAssessmentStore.ts` (Zustand + localStorage).
 - `supabase/migrations`, `data/*.csv` → `npm run seed:build`.

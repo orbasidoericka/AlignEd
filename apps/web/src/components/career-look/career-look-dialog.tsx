@@ -47,7 +47,6 @@ import {
   CAREER_LOOK_TEXT_FIL,
 } from "@/lib/career-look/looks-fil";
 import { CAREER_LOOKS, type CareerLook } from "@/lib/career-look/looks";
-import { useCareerLookPhoto } from "@/lib/career-look/photo-store";
 import { RIASEC_PATHWAYS } from "@/lib/riasec/career-pathways";
 import { PATHWAY_NAME_FIL } from "@/lib/riasec/career-pathways-fil";
 import { TraitEmblem } from "@/components/riasec/trait-emblem";
@@ -204,7 +203,6 @@ function CareerLookCamera({ look, fil }: { look: CareerLook; fil: boolean }) {
   const [photo, setPhoto] = useState<{ url: string; file: File } | null>(
     null,
   );
-  const setEmailPhoto = useCareerLookPhoto((state) => state.setPhoto);
 
   useEffect(() => {
     let cancelled = false;
@@ -484,20 +482,11 @@ function CareerLookCamera({ look, fil }: { look: CareerLook; fil: boolean }) {
       });
       setPhoto({ url: URL.createObjectURL(blob), file });
     }, "image/png");
-    // A JPEG copy for Email me my results; the PNG is too big to mail.
-    canvas.toBlob(
-      (blob) => {
-        if (blob) setEmailPhoto({ blob, caption: look.caption });
-      },
-      "image/jpeg",
-      0.85,
-    );
   };
 
   const retake = () => {
     frozenRef.current = false;
     setPhoto(null);
-    setEmailPhoto(null);
   };
 
   const canShare =

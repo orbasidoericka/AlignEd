@@ -15,8 +15,8 @@ import { renderResultsPdf } from "@/lib/results-pdf/render-results-pdf";
 
 // POST /api/send-results (PRD FR-8): emails a student their results as a
 // password-protected PDF (NICKNAME + RIASEC code, the same file and
-// password as Download PDF), plus their career-look photo if they took one,
-// from the school's Gmail account, then forgets the address and photo. Only salted hashes of the address and IP are kept, in memory,
+// password as Download PDF) from the school's Gmail account, then forgets
+// the address. Nothing else is attached. Only salted hashes of the address and IP are kept, in memory,
 // for rate limiting.
 //
 // Server-only settings in apps/web/.env.local (never NEXT_PUBLIC_):
@@ -60,7 +60,7 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   }
-  const { email, website, results, photo } = validation.value;
+  const { email, website, results } = validation.value;
 
   // Honeypot filled: look successful, send nothing, count nothing.
   if (website) return Response.json({ ok: true });
@@ -95,7 +95,7 @@ export async function POST(request: Request) {
     return Response.json({ error: "failed" }, { status: 500 });
   }
 
-  const message = buildResultsEmail(results, { withPhoto: photo !== null });
+  const message = buildResultsEmail(results);
   try {
     const transport = nodemailer.createTransport({
       service: "gmail",
@@ -113,15 +113,6 @@ export async function POST(request: Request) {
           content: pdf,
           contentType: "application/pdf",
         },
-        ...(photo
-          ? [
-              {
-                filename: message.photoName,
-                content: photo,
-                contentType: "image/jpeg",
-              },
-            ]
-          : []),
       ],
     });
   } catch (error) {
