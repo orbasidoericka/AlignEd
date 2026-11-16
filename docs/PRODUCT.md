@@ -12,7 +12,7 @@ Grade 11 and 12 (Senior High) students in the Philippines, mobile-first on budge
 
 ## The journey (strict, linear)
 
-1. **Landing** (`/`) — value proposition, ~5-minute promise, journey-aware CTA, and a plain-language "How your code is scored" section.
+1. **Landing** (`/`) — value proposition, ~5-minute promise, journey-aware CTA, a short overview of Holland's theory of career choice (the six RIASEC types on Holland's hexagon), and a plain-language "How your code is scored" section.
 2. **Profile Setup** (`/assessment/profile`) — nickname (required, up to 8 uppercase letters/hyphens, never stored server-side; sent only inside an email request), grade level (11 or 12), SHS strand (or Others with a typed strand that stays on the device and in the student's PDF), age (10–30) and acceptance of the Data Privacy Policy and Terms and Conditions (all required), and optional school (max 120 chars). Client-side only.
 3. **RIASEC Assessment** (`/assessment`) — 42 yes/no statements (English or Filipino, student's choice), one per screen, auto-advancing (no Next button) with Back to revise; localStorage resume, deterministic scoring (tie-break R→I→A→S→E→C). Finished results stay on the device 30 minutes at most and vanish when the tab closes; Results shows the countdown.
 4. **Results** (`/results`) — Holland code + trait breakdown, a rotating carousel of the three traits with a rank banner each and all majors and related pathways per code letter (traits are ranked, careers never), password-protected PDF + email export (including the selected SHS strand), optional career-look photo (face props, plus hand-sign effects; saved or shared from the device, never emailed), a share image of the code with no identifying data (device share menu or save). A results ID is saved server-side for the admin stats page, but nothing about it appears on screen.
@@ -29,6 +29,7 @@ Product app with one brand surface: the landing page is brand register (identity
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 
+- 2026-11-16 · landing · Holland theory overview section after the hero. See PRD FR-1.7. · Requested: explain the RIASEC theory before the steps.
 - 2026-11-15 · email · Results email sends only the PDF; the career-look photo is no longer attached · requested: the email carries only the results PDF.
 - 2026-11-15 · admin · Admin page moved from a secret link to `/admin` with a shared password sign-in · the link could leak.
 - 2026-11-10 · results · The trait carousel is a rotating ring: second trait peeks left, third peeks right. See PRD FR-5.4. · Requested design.

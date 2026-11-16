@@ -132,13 +132,9 @@ describe("PathwayResults", () => {
     render(<PathwayResults topThreeLetters={["R", "I", "A"]} />);
 
     expect(
-      screen.getByRole("group", { name: "Your top three traits" }),
+      screen.getByRole("group", { name: "Your top three RIASEC types" }),
     ).toHaveAttribute("aria-roledescription", "carousel");
     expect(positions()).toEqual(["front", "left", "right"]);
-    expect(screen.getByRole("button", { name: /#1/ })).toHaveAttribute(
-      "aria-current",
-      "true",
-    );
   });
 
   it("rotates the side card it names into the front, and keeps going around", () => {
@@ -152,16 +148,6 @@ describe("PathwayResults", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Show Realistic" }));
     expect(positions()).toEqual(["front", "left", "right"]);
-  });
-
-  it("jumps to a trait from its rank button", () => {
-    render(<PathwayResults topThreeLetters={["R", "I", "A"]} />);
-
-    const third = screen.getByRole("button", { name: /#3/ });
-    fireEvent.click(third);
-
-    expect(third).toHaveAttribute("aria-current", "true");
-    expect(positions()).toEqual(["left", "right", "front"]);
   });
 
   it("rotates once per horizontal scroll gesture and ignores vertical scrolling", () => {
@@ -180,9 +166,9 @@ describe("PathwayResults", () => {
     render(<PathwayResults topThreeLetters={["R", "I", "A"]} />);
 
     const expected = [
-      ["Realistic", "Your top trait", "#1"],
-      ["Investigative", "Your second trait", "#2"],
-      ["Artistic", "Your third trait", "#3"],
+      ["Realistic", "Your top RIASEC type", "#1"],
+      ["Investigative", "Your second RIASEC type", "#2"],
+      ["Artistic", "Your third RIASEC type", "#3"],
     ] as const;
     for (const [name, text, rank] of expected) {
       const banner = screen.getByText(text);
@@ -197,8 +183,8 @@ describe("PathwayResults", () => {
     useAssessmentStore.setState({ language: "fil" });
     try {
       render(<PathwayResults topThreeLetters={["R", "I", "A"]} />);
-      expect(screen.getByText("Pangunahin mong katangian")).toBeInTheDocument();
-      expect(screen.queryByText("Your top trait")).toBeNull();
+      expect(screen.getByText("Pangunahin mong uri ng RIASEC")).toBeInTheDocument();
+      expect(screen.queryByText("Your top RIASEC type")).toBeNull();
     } finally {
       useAssessmentStore.setState({ language: "en" });
     }

@@ -12,8 +12,8 @@ const ITEMS = [
 
 describe("FloatingDock", () => {
   it("names the landmark and gives each item a named link to its anchor", () => {
-    render(<FloatingDock label="The six traits" items={ITEMS} />);
-    const nav = screen.getByRole("navigation", { name: "The six traits" });
+    render(<FloatingDock label="The six RIASEC types" items={ITEMS} />);
+    const nav = screen.getByRole("navigation", { name: "The six RIASEC types" });
     // Desktop dock and the small-screen row both render; CSS shows one.
     for (const item of ITEMS) {
       const links = within(nav).getAllByRole("link", { name: item.title });

@@ -32,9 +32,9 @@ interface PathwayResultsProps {
 }
 
 const RANK_BANNER = [
-  "Your top trait",
-  "Your second trait",
-  "Your third trait",
+  "Your top RIASEC type",
+  "Your second RIASEC type",
+  "Your third RIASEC type",
 ] as const;
 
 // One card per top letter, in code order, as a swipeable carousel. The banner
@@ -105,7 +105,7 @@ export function PathwayResults({
   return (
     <TraitCarousel
       slides={slides}
-      label={fil ? t.carousel.label : "Your top three traits"}
+      label={fil ? t.carousel.label : "Your top three RIASEC types"}
       showLabel={fil ? t.carousel.show : (name) => `Show ${name}`}
       slideLabel={
         fil ? t.carousel.slideOf : (position, total) => `${position} of ${total}`

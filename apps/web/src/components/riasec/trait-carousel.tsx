@@ -5,7 +5,6 @@ import { useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { letterChip } from "@/lib/riasec/letter-chip-styles";
 import type { RiasecLetter } from "@/lib/riasec/types";
 import { cn } from "@/lib/utils";
 
@@ -156,7 +155,7 @@ export function TraitCarousel({
             >
               {slide.content}
               {/* Darkens a card that is not in front and makes it a tap target.
-                  Arrows and rank pills are the keyboard route to the same. */}
+                  The side arrows are the keyboard route to the same. */}
               <div
                 aria-hidden
                 onClick={position === "left" ? showLeft : showRight}
@@ -179,29 +178,6 @@ export function TraitCarousel({
           label={showLabel(slides[rightIndex]?.name ?? "")}
           onClick={showRight}
         />
-      </div>
-
-      <div className="flex justify-center gap-2 print:hidden" data-print-hidden>
-        {slides.map((slide, index) => (
-          <button
-            key={slide.letter}
-            type="button"
-            lang={slide.lang}
-            aria-current={index === focused ? "true" : undefined}
-            onClick={() => setFocused(index)}
-            className={cn(
-              "flex min-h-11 min-w-0 flex-1 cursor-pointer flex-col items-center justify-center rounded-2xl px-0.5 py-1 font-heading text-xs font-semibold wrap-anywhere transition-colors focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none sm:flex-none sm:flex-row sm:gap-1.5 sm:px-3 sm:text-sm sm:whitespace-nowrap",
-              index === focused
-                ? letterChip(slide.letter)
-                : "bg-muted text-muted-foreground hover:text-foreground",
-            )}
-          >
-            <span className="shrink-0 font-bold whitespace-nowrap">
-              #{index + 1}
-            </span>
-            <span>{slide.name}</span>
-          </button>
-        ))}
       </div>
     </div>
   );

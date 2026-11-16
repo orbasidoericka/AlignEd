@@ -20,6 +20,7 @@ import {
   scatterHexagons,
 } from "@/components/magic/hexagon-pattern";
 import { ClosingCta } from "@/components/blocks/closing-cta";
+import { HollandTheory } from "@/components/blocks/holland-theory";
 import { TestsTaken } from "@/components/blocks/tests-taken";
 import { RIASEC_PATHWAYS } from "@/lib/riasec/career-pathways";
 import { letterHoverWash } from "@/lib/riasec/letter-chip-styles";
@@ -242,16 +243,20 @@ export default function HomePage() {
           {/* The six traits as the hero's image: the code the student is
               about to find, in the same emblems the results page uses. A
               dock: each emblem magnifies under the pointer and jumps to its
-              row in "Six traits, one code". The journey's call to action
+              row in "Explore the six RIASEC interest types,". The journey's call to action
               lives in the navbar directly above. */}
           <div
             className="mt-9 motion-safe:animate-fade-up md:mt-6"
             style={{ "--fade-delay": "400ms" } as React.CSSProperties}
           >
-            <FloatingDock label="The six traits" items={traitDockItems} />
+            <FloatingDock label="The six RIASEC types" items={traitDockItems} />
           </div>
         </div>
       </section>
+
+      {/* Holland's theory: why a three-letter code means something, before
+          the steps explain how to get one. */}
+      <HollandTheory />
 
       {/* How it works: one card per journey stage, color-committed */}
       <section
@@ -308,7 +313,7 @@ export default function HomePage() {
       >
         <BlurFade inView>
           <h2 className="text-center text-3xl font-bold text-foreground sm:text-4xl">
-            Six traits, one code
+            Explore the six RIASEC interest types
           </h2>
         </BlurFade>
 

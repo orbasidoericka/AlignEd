@@ -47,7 +47,7 @@ export function RiasecRadar({ scores, max, className }: RiasecRadarProps) {
       <RiasecRadarChart data={data} max={safeMax} />
       <figcaption lang={fil ? "fil" : undefined} className="sr-only">
         <table>
-          <caption>{fil ? t.radarCaption : "Your RIASEC trait scores"}</caption>
+          <caption>{fil ? t.radarCaption : "Your RIASEC type scores"}</caption>
           <tbody>
             {TRAIT_ORDER.map((trait) => (
               <tr key={trait}>

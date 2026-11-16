@@ -301,7 +301,7 @@ export function buildResultsPdf(input: ResultsPdfInput): TDocumentDefinitions {
         margin: [0, 8, 0, 0],
       },
 
-      eyebrow("Your six traits"),
+      eyebrow("Your six RIASEC types"),
       {
         table: { widths: [14, "*", BAR_WIDTH, 44], body: traitRows },
         layout: {

@@ -64,6 +64,7 @@ Next.js 16.2.5 App Router, React 19, TypeScript, Tailwind v4 (tokens in `apps/we
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 
+- 2026-11-16 · frontend · New `components/blocks/holland-theory.tsx` (server component, `HollandTheory`, `#holland-theory`) rendered in `(site)/page.tsx` between the hero and `#how-it-works`; hexagon geometry computed from `TRAIT_ORDER`, names from `RIASEC_PATHWAYS`, labels from `TRAIT_META`; test in `holland-theory.test.tsx` · PRD FR-1.7.
 - 2026-11-15 · email · Removed `lib/career-look/photo-store.ts`, the email dialog's "Attach my career look photo" option, the JPEG copy in the camera dialog, and the `photo` field in `sendResultsEmail`; privacy notice v3.1 (photo listed as on-device only, both languages) · requested: the email carries only the results PDF.
 - 2026-11-15 · admin · `/admin/[token]` replaced by `/admin` with `AdminLoginForm` (password field with show/hide, error as an alert tied to the field, disabled while signing in) and a Log out button in the admin header · password sign-in.
 - 2026-11-11 · admin · Latest results table pages ten rows at a time with Previous/Next and "Page n of m", replacing "See more" that kept appending rows · the list grew without end.

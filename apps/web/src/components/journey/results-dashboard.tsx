@@ -179,7 +179,7 @@ export function ResultsDashboard() {
             <BentoGridItem
               headingId="radar-heading"
               title={
-                fil ? <span lang="fil">{t.sixTraitsTitle}</span> : "Your six traits"
+                fil ? <span lang="fil">{t.sixTraitsTitle}</span> : "Your six RIASEC types"
               }
               icon={
                 <RadarIcon className="size-5 text-primary-strong" aria-hidden />
@@ -188,7 +188,7 @@ export function ResultsDashboard() {
                 fil ? (
                   <span lang="fil">{t.sixTraitsDescription(max)}</span>
                 ) : (
-                  `Scores out of ${max} for each RIASEC trait.`
+                  `Scores out of ${max} for each RIASEC type.`
                 )
               }
               className="h-full"

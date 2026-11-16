@@ -80,6 +80,7 @@ Navigation rules:
 - FR-1.4. Journey-aware CTA: if a completed assessment exists in local storage, the primary CTA becomes "View your results".
 - FR-1.5. Shows the lifetime number of assessments taken, read from an aggregate counter (`site_counters`, key `tests_taken`) incremented once per completion. The figure is cumulative and never decreases: deleting a saved result or purging an expired one does not un-take the test. It is a count only — no identifiers, nothing per student — so it stays inside the anonymous-by-design commitment. When the count cannot be read, nothing is shown; a placeholder or estimate is never substituted.
 - FR-1.6. Explains the scoring procedure in plain language (42 statements, 7 per trait, Yes = 1 point / No = 0, scores 0 to 7, top three form the code, ties broken R→I→A→S→E→C per FR-4.2) with a worked example computed by the real scoring function; reachable from the navbar ("Scoring").
+- FR-1.7. Directly after the hero and before the journey steps, explains Holland's theory of career choice in plain, paraphrased language (John L. Holland, 1959; interests reflect personality; six RIASEC types; most people are a blend, which is why the code has three letters), with the six types drawn on Holland's hexagon in R→I→A→S→E→C order. No type is ranked or scored.
 
 ### FR-2 Student Profile Setup
 Captured before the assessment begins; stored client-side only (localStorage via the persisted store). Only grade level and age ever reach the server, inside the nameless saved-results record (FR-9).
@@ -304,6 +305,7 @@ AlignEd ships as a mostly-static, anonymous-first Next.js application.
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 
+- 2026-11-16 · landing · Added FR-1.7: a Holland theory overview section between the hero and the journey steps · students should know why a Holland Code means something before they start.
 - 2026-11-15 · email · The results email no longer attaches the career-look photo (FR-8.3, FR-11.2, §9); the route ignores a `photo` field; privacy notice v3.1 · requested: the email carries only the results PDF.
 - 2026-11-15 · admin · `/admin` now uses one shared password (`ADMIN_PASSWORD`) with an 8-hour signed cookie, rate-limited attempts and Log out; the secret-link token is removed; the Non-Goal is narrowed to student accounts · a link-as-key leaks through browser history, logs and forwarding.
 - 2026-11-10 · results · FR-5.4 carousel is now a rotating ring: #2 peeks left, #3 peeks right, both tilted and dimmed, arrows on the sides. · Requested design.

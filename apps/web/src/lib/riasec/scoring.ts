@@ -22,12 +22,12 @@ export interface TraitMeta {
 }
 
 export const TRAIT_META: Record<RiasecTrait, TraitMeta> = {
-  realistic: { letter: "R", label: "The Builder" },
-  investigative: { letter: "I", label: "The Thinker" },
-  artistic: { letter: "A", label: "The Creator" },
-  social: { letter: "S", label: "The Helper" },
-  enterprising: { letter: "E", label: "The Mover" },
-  conventional: { letter: "C", label: "The Organizer" },
+  realistic: { letter: "R", label: "Doers" },
+  investigative: { letter: "I", label: "Thinkers" },
+  artistic: { letter: "A", label: "Creators" },
+  social: { letter: "S", label: "Helpers" },
+  enterprising: { letter: "E", label: "Persuaders" },
+  conventional: { letter: "C", label: "Organizers" },
 };
 
 export type HollandCode = readonly [RiasecLetter, RiasecLetter, RiasecLetter];

@@ -7,7 +7,7 @@ import type { RiasecTrait } from "./types";
 // written to match its register.
 
 // Short friendly trait nicknames, the Filipino side of scoring.ts's
-// TRAIT_META labels ("The Builder" etc).
+// TRAIT_META labels ("Doers" etc).
 export const TRAIT_LABEL_FIL: Readonly<Record<RiasecTrait, string>> = {
   realistic: "Ang Tagapagtayo",
   investigative: "Ang Tagapag-isip",
@@ -22,21 +22,21 @@ export const RESULTS_TEXT_FIL = {
   greetingNoName: "Narito ang iyong resulta",
   hollandCodeLabel: "Ang Iyong Holland Code",
   youAre: "Ikaw ay isang",
-  sixTraitsTitle: "Ang Iyong Anim na Katangian",
+  sixTraitsTitle: "Ang Iyong Anim na Uri ng RIASEC",
   sixTraitsDescription: (max: number) =>
-    `Iskor sa labas ng ${max} para sa bawat katangiang RIASEC.`,
-  radarCaption: "Ang iyong mga iskor sa katangiang RIASEC",
+    `Iskor sa labas ng ${max} para sa bawat uri ng RIASEC.`,
+  radarCaption: "Ang iyong mga iskor sa mga uri ng RIASEC",
   outOf: (max: number) => `sa ${max}`,
   codeMeaningTitle: "Ano ang Ibig Sabihin ng Iyong Code",
   collegeMajors: "Mga major sa kolehiyo",
   relatedPathways: "Mga kaugnay na landas",
   rankBanner: [
-    "Pangunahin mong katangian",
-    "Ikalawa mong katangian",
-    "Ikatlo mong katangian",
+    "Pangunahin mong uri ng RIASEC",
+    "Ikalawa mong uri ng RIASEC",
+    "Ikatlo mong uri ng RIASEC",
   ],
   carousel: {
-    label: "Ang iyong tatlong nangungunang katangian",
+    label: "Ang iyong tatlong nangungunang uri ng RIASEC",
     show: (name: string) => `Ipakita ang ${name}`,
     slideOf: (position: number, total: number) => `${position} sa ${total}`,
   },

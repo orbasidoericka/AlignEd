@@ -48,7 +48,7 @@ describe("drawShareCard", () => {
     expect(ctx.drawImage).not.toHaveBeenCalled();
     const drawn = vi.mocked(ctx.fillText).mock.calls.map(([text]) => text);
     expect(drawn).toEqual(
-      expect.arrayContaining(["I", "A", "C", "I-A-C", "The Organizer"]),
+      expect.arrayContaining(["I", "A", "C", "I-A-C", "Organizers"]),
     );
   });
 });
@@ -78,9 +78,9 @@ describe("shareCardContent", () => {
     const content = shareCardContent(code);
     expect(content.code).toBe("I-A-C");
     expect(content.traits).toEqual([
-      { letter: "I", label: "The Thinker" },
-      { letter: "A", label: "The Creator" },
-      { letter: "C", label: "The Organizer" },
+      { letter: "I", label: "Thinkers" },
+      { letter: "A", label: "Creators" },
+      { letter: "C", label: "Organizers" },
     ]);
   });
 

@@ -9,19 +9,19 @@ export const SCORING_NOTICE_EN = {
   steps: [
     {
       title: "Answer 42 statements",
-      body: "Each statement belongs to one of the six traits. There are 7 for every trait, mixed together.",
+      body: "Each statement belongs to one of the six RIASEC types. There are 7 for every type, mixed together.",
     },
     {
       title: "Yes earns 1 point, No earns 0",
-      body: "The point goes to the trait that statement belongs to.",
+      body: "The point goes to the RIASEC type that statement belongs to.",
     },
     {
       title: "Add up the points",
-      body: "Each trait ends with a score from 0 to 7.",
+      body: "Each RIASEC type ends with a score from 0 to 7.",
     },
     {
       title: "Your top three make your code",
-      body: "Highest score first. If two scores tie, the trait that comes first in R, I, A, S, E, C goes first, so the same answers always give the same code.",
+      body: "Highest score first. If two scores tie, the type that comes first in R, I, A, S, E, C goes first, so the same answers always give the same code.",
     },
   ],
   note: "Scores show what you enjoy, not how smart you are. Every major and pathway for your three letters is shown, and none is ranked above another.",
@@ -34,19 +34,19 @@ export const SCORING_NOTICE_FIL = {
   steps: [
     {
       title: "Sagutan ang 42 pahayag",
-      body: "Ang bawat pahayag ay kabilang sa isa sa anim na katangian. May tig-7 pahayag para sa bawat katangian, at ang mga ito ay pinaghalo-halo.",
+      body: "Ang bawat pahayag ay kabilang sa isa sa anim na uri ng RIASEC. May tig-7 pahayag para sa bawat uri, at ang mga ito ay pinaghalo-halo.",
     },
     {
       title: "Ang “Oo” ay may 1 puntos, at ang “Hindi” ay may 0 puntos",
-      body: "Ang puntos ay idaragdag sa katangiang kinabibilangan ng pahayag.",
+      body: "Ang puntos ay idaragdag sa uri ng RIASEC na kinabibilangan ng pahayag.",
     },
     {
       title: "Pagsamahin ang mga puntos",
-      body: "Ang bawat katangian ay magkakaroon ng kabuuang iskor na mula 0 hanggang 7.",
+      body: "Ang bawat uri ng RIASEC ay magkakaroon ng kabuuang iskor na mula 0 hanggang 7.",
     },
     {
       title: "Ang iyong tatlong pinakamataas na iskor ang bubuo sa iyong code",
-      body: "Ayusin ang mga katangian mula sa pinakamataas na iskor pababa. Kung magkapareho ang iskor ng dalawang katangian, mauuna ang katangiang nasa unang posisyon sa pagkakasunod-sunod na R, I, A, S, E, C. Sa ganitong paraan, magiging pare-pareho ang code na makukuha mula sa parehong mga sagot.",
+      body: "Ayusin ang mga uri ng RIASEC mula sa pinakamataas na iskor pababa. Kung magkapareho ang iskor ng dalawang uri, mauuna ang uring nasa unang posisyon sa pagkakasunod-sunod na R, I, A, S, E, C. Sa ganitong paraan, magiging pare-pareho ang code na makukuha mula sa parehong mga sagot.",
     },
   ],
   note: "Ipinapakita ng mga iskor kung ano ang kinagigiliwan mo, hindi kung gaano ka katalino. Ipinapakita ang bawat major at pathway para sa iyong tatlong letra, at wala sa mga ito ang nakahanay nang mas mataas kaysa sa iba.",
