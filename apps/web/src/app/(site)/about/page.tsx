@@ -5,6 +5,7 @@ import Image from "next/image";
 import { ArrowDown, Compass, ShieldCheck, Users } from "lucide-react";
 
 import { ClosingCta } from "@/components/blocks/closing-cta";
+import { InstrumentSources } from "@/components/blocks/instrument-sources";
 import { SectionLink } from "@/components/blocks/section-link";
 import { BlurFade } from "@/components/magic/blur-fade";
 import {
@@ -16,7 +17,7 @@ import { cn } from "@/lib/utils";
 export const metadata: Metadata = {
   title: "About Us",
   description:
-    "AlignEd is a free, anonymous career-guidance tool for Filipino students, built on the Holland Code (RIASEC) interest model by a team of BSIT students from PUP Santa Maria, Bulacan.",
+    "AlignEd is a free, anonymous career-guidance tool for Filipino students, built on the Hawai'i Department of Education's 42-item RIASEC Interest Test by a team of BSIT students from PUP Santa Maria, Bulacan.",
 };
 
 const SCHOOL =
@@ -273,6 +274,8 @@ export default function AboutPage() {
           </div>
         </BlurFade>
       </section>
+
+      <InstrumentSources />
 
       <ClosingCta />
     </div>
