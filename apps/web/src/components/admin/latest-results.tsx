@@ -42,7 +42,20 @@ export function LatestResults({ results }: { results: SavedResult[] }) {
   return (
     <>
       <div className="-mx-5 overflow-x-auto px-5 sm:-mx-6 sm:px-6">
-        <table className="w-full min-w-[800px] text-sm">
+        {/* Fixed layout with set column widths, so the columns stay put from
+            page to page instead of resizing to each page's longest value.
+            Strand takes the space left over. */}
+        <table className="w-full min-w-[56rem] table-fixed text-sm">
+          <colgroup>
+            <col className="w-36" />
+            <col className="w-28" />
+            <col className="w-28" />
+            <col />
+            <col className="w-16" />
+            {TRAIT_ORDER.map((trait) => (
+              <col key={trait} className="w-12" />
+            ))}
+          </colgroup>
           <thead>
             <tr className="text-left text-muted-foreground">
               <th scope="col" className="rounded-l-lg bg-muted px-3 py-2.5 font-semibold">Taken</th>
