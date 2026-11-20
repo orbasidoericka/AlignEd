@@ -251,7 +251,7 @@ Dark values are black-based with no blue tint and a faint inset top highlight, b
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 
-- 2026-11-20 · admin · Signed-out `/admin` drops the "Saved results" hero (heading, intro, privacy line, Hexi); only the header bar and the sign-in card remain, centred in the page. The card's "Admin sign in" is now the page h1. Signed-in dashboard unchanged. · Requested: a cleaner sign-in screen.
+- 2026-11-20 · admin · Signed-out `/admin` drops the "Saved results" hero (heading, intro, privacy line); only the header bar, a smaller Hexi (`w-40`, `sm:w-48`, decorative) and the sign-in card remain, centred in the page. The card's "Admin sign in" is now the page h1. Signed-in dashboard unchanged. · Requested: a cleaner sign-in screen.
 - 2026-11-20 · docs · Corrected: nav items (adds Scoring), landing section list and names, instrument-sources panel has four rows, Magic UI/Aceternity list limited to components actually used. · Docs audit: every statement checked against the shipped site; the site was not changed.
 - 2026-11-20 · about · "Where the questions come from" panel: language options row (chips + translation review note) removed; four facts remain. · Filipino version awaiting permission.
 - 2026-11-20 · design · All language toggles (Profile FocusBar, scoring notice, Assessment FocusBar, Results navbar) hidden; UI English only. · Filipino version awaiting permission (PRD FR-3.8).

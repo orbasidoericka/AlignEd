@@ -386,9 +386,21 @@ function AdminShell({
         </div>
       </header>
 
-      {/* Signed out, the page is only the sign-in card, centred. */}
+      {/* Signed out, the page is only Hexi and the sign-in card, centred. */}
       {!signedIn ? (
-        <main className="flex flex-1 items-center justify-center px-4 py-12 sm:px-6">
+        <main className="flex flex-1 flex-col items-center justify-center gap-2 px-4 py-12 sm:px-6">
+          {/* eslint-disable-next-line @next/next/no-img-element -- Hexi animates
+              itself and respects reduced motion from inside the SVG, which only
+              an <img> keeps; the optimizer cannot serve SVG without
+              dangerouslyAllowSVG. */}
+          <img
+            src="/hexi.svg"
+            alt=""
+            aria-hidden
+            width={800}
+            height={600}
+            className="pointer-events-none h-auto w-40 shrink-0 select-none sm:w-48"
+          />
           {children}
         </main>
       ) : (
