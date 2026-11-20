@@ -36,9 +36,10 @@ export function AdminLoginForm({
         <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
           <LockKeyhole className="size-5" aria-hidden />
         </span>
-        <h2 className="font-heading text-xl font-bold text-foreground">
+        {/* The page's only heading while signed out. */}
+        <h1 className="font-heading text-xl font-bold text-foreground">
           Admin sign in
-        </h2>
+        </h1>
       </div>
 
       <div className="flex flex-col gap-2">

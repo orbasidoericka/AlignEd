@@ -64,7 +64,7 @@ export default async function AdminPage({
 }) {
   if (!(await hasAdminSession())) {
     return (
-      <AdminShell headline="Enter the admin password to see saved results." signedIn={false}>
+      <AdminShell signedIn={false}>
         <AdminLoginForm />
       </AdminShell>
     );
@@ -386,59 +386,68 @@ function AdminShell({
         </div>
       </header>
 
-      <div className="relative isolate overflow-hidden border-b border-border">
-        <HexagonPattern
-          radius={44}
-          gap={6}
-          animated={false}
-          hexagons={[
-            [1, 0, "fill-trait-r/30"],
-            [4, 1, "fill-trait-a/30"],
-            [7, 0, "fill-trait-s/30"],
-          ]}
-          className="-z-10 stroke-primary-strong/15 mask-[linear-gradient(to_bottom,white,transparent)] dark:stroke-primary-strong/10"
-        />
-        <div className="mx-auto flex w-full max-w-6xl items-end gap-6 px-4 pt-10 pb-8 sm:px-6 sm:pt-12">
-          <div className="flex min-w-0 flex-1 flex-col gap-5">
-            <div className="flex flex-col gap-3">
-              <h1 className="font-heading text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl">
-                Saved results
-              </h1>
-              {headline && (
-                <p className="max-w-2xl text-lg text-muted-foreground">{headline}</p>
-              )}
-            </div>
-            {filter}
-            <p className="flex max-w-2xl items-start gap-2 text-sm text-muted-foreground">
-              <ShieldCheck
-                className="mt-0.5 size-4 shrink-0 text-primary-strong"
-                aria-hidden
-              />
-              <span>
-                No names or other identifiers are stored: only scores, code,
-                grade, strand, age and date. Share the admin password only with
-                program admins.
-              </span>
-            </p>
-          </div>
-          {/* eslint-disable-next-line @next/next/no-img-element -- Hexi animates
-              itself and respects reduced motion from inside the SVG, which only
-              an <img> keeps; the optimizer cannot serve SVG without
-              dangerouslyAllowSVG. */}
-          <img
-            src="/hexi.svg"
-            alt=""
-            aria-hidden
-            width={800}
-            height={600}
-            className="pointer-events-none -mb-8 hidden h-auto w-64 shrink-0 select-none md:block lg:w-80 print:hidden"
+      {/* Signed out, the page is only the sign-in card, centred. */}
+      {!signedIn ? (
+        <main className="flex flex-1 items-center justify-center px-4 py-12 sm:px-6">
+          {children}
+        </main>
+      ) : (
+        <>
+        <div className="relative isolate overflow-hidden border-b border-border">
+          <HexagonPattern
+            radius={44}
+            gap={6}
+            animated={false}
+            hexagons={[
+              [1, 0, "fill-trait-r/30"],
+              [4, 1, "fill-trait-a/30"],
+              [7, 0, "fill-trait-s/30"],
+            ]}
+            className="-z-10 stroke-primary-strong/15 mask-[linear-gradient(to_bottom,white,transparent)] dark:stroke-primary-strong/10"
           />
+          <div className="mx-auto flex w-full max-w-6xl items-end gap-6 px-4 pt-10 pb-8 sm:px-6 sm:pt-12">
+            <div className="flex min-w-0 flex-1 flex-col gap-5">
+              <div className="flex flex-col gap-3">
+                <h1 className="font-heading text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl">
+                  Saved results
+                </h1>
+                {headline && (
+                  <p className="max-w-2xl text-lg text-muted-foreground">{headline}</p>
+                )}
+              </div>
+              {filter}
+              <p className="flex max-w-2xl items-start gap-2 text-sm text-muted-foreground">
+                <ShieldCheck
+                  className="mt-0.5 size-4 shrink-0 text-primary-strong"
+                  aria-hidden
+                />
+                <span>
+                  No names or other identifiers are stored: only scores, code,
+                  grade, strand, age and date. Share the admin password only with
+                  program admins.
+                </span>
+              </p>
+            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element -- Hexi animates
+                itself and respects reduced motion from inside the SVG, which only
+                an <img> keeps; the optimizer cannot serve SVG without
+                dangerouslyAllowSVG. */}
+            <img
+              src="/hexi.svg"
+              alt=""
+              aria-hidden
+              width={800}
+              height={600}
+              className="pointer-events-none -mb-8 hidden h-auto w-64 shrink-0 select-none md:block lg:w-80 print:hidden"
+            />
+          </div>
         </div>
-      </div>
 
-      <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
-        {children}
-      </main>
+        <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
+          {children}
+        </main>
+        </>
+      )}
     </div>
   );
 }
