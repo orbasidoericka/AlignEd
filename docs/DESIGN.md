@@ -252,6 +252,8 @@ Dark values are black-based with no blue tint and a faint inset top highlight, b
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 
+- 2026-11-20 · about · "Where the questions come from" panel: language options row (chips + translation review note) removed; four facts remain. · Filipino version awaiting permission.
+- 2026-11-20 · design · All language toggles (Profile FocusBar, scoring notice, Assessment FocusBar, Results navbar) hidden; UI English only. · Filipino version awaiting permission (PRD FR-3.8).
 - 2026-11-17 · about · New "Where the questions come from" panel between the team and the closing CTA: credit prose on the `stage-assessment-soft` wash beside a definition list of the instrument (assessment, source, framework, languages as chips with the translation-review note, purpose) · acknowledge the adopted instrument (PRD FR-1.8).
 - 2026-11-16 · results · Removed the row of three rank pills ("#1 Name", "#2 Name", "#3 Name") under the carousel; the side arrows, swipe, and tapping a side card remain · requested removal.
 - 2026-11-16 · copy · The six type labels shown beside Realistic … Conventional (results, radar, share image, PDF, Holland theory figure) are now Doers, Thinkers, Creators, Helpers, Persuaders, Organizers (`TRAIT_META` in `lib/riasec/scoring.ts`), replacing The Builder, The Thinker, The Creator, The Helper, The Mover, The Organizer · requested consistent terminology.

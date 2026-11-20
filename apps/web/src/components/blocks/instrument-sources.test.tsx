@@ -1,6 +1,6 @@
 // Copyright (c) 2026 EdTech. All rights reserved.
 
-import { render, screen, within } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { InstrumentSources } from "./instrument-sources";
@@ -25,7 +25,6 @@ describe("InstrumentSources", () => {
       "Assessment",
       "Original source",
       "Framework",
-      "Language options",
       "Purpose",
     ]);
     const values = Array.from(container.querySelectorAll("dd")).map(
@@ -34,22 +33,13 @@ describe("InstrumentSources", () => {
     expect(values[0]).toBe("42-item RIASEC Interest Test");
     expect(values[1]).toBe("Hawai'i Department of Education");
     expect(values[2]).toBe("Holland's RIASEC Theory");
-    expect(values[4]).toBe("Career interest exploration");
+    expect(values[3]).toBe("Career interest exploration");
   });
 
-  it("offers English and Filipino and credits the translation review", () => {
+  it("does not offer a language option while Filipino is held back", () => {
     render(<InstrumentSources />);
-    const languages = within(
-      screen.getByRole("list", { name: "Languages" }),
-    ).getAllByRole("listitem");
-    expect(languages.map((item) => item.textContent)).toEqual([
-      "English",
-      "Filipino",
-    ]);
-    expect(
-      screen.getByText(
-        "The Filipino translation was reviewed by a psychometrician and a Filipino professor.",
-      ),
-    ).toBeInTheDocument();
+    expect(screen.queryByText("Language options")).not.toBeInTheDocument();
+    expect(screen.queryByText("Filipino")).not.toBeInTheDocument();
+    expect(screen.queryByText(/psychometrician/)).not.toBeInTheDocument();
   });
 });

@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { QUESTIONS } from "@/lib/riasec/questions";
+import { FILIPINO_ENABLED, QUESTIONS } from "@/lib/riasec/questions";
 import { useAssessmentStore } from "@/store/useAssessmentStore";
 
 import { FocusBar } from "./focus-bar";
@@ -78,7 +78,20 @@ describe("FocusBar start over", () => {
     ).toBeInTheDocument();
   });
 
-  it("the language toggle is on Profile Setup and the quiz, and switches the language", () => {
+  it.runIf(!FILIPINO_ENABLED)(
+    "the language toggle is hidden on Profile Setup and the quiz while Filipino is held back",
+    () => {
+      pathname.current = "/assessment/profile";
+      const { rerender } = render(<FocusBar />);
+      expect(screen.queryByLabelText(/^Language:/)).toBeNull();
+
+      pathname.current = "/assessment";
+      rerender(<FocusBar />);
+      expect(screen.queryByLabelText(/^Language:/)).toBeNull();
+    },
+  );
+
+  it.runIf(FILIPINO_ENABLED)("the language toggle is on Profile Setup and the quiz, and switches the language", () => {
     pathname.current = "/assessment/profile";
     const { rerender } = render(<FocusBar />);
     const profileButton = screen.getByLabelText(

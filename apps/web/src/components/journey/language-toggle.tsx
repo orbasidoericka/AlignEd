@@ -2,7 +2,10 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import type { QuestionLanguage } from "@/lib/riasec/questions";
+import {
+  FILIPINO_ENABLED,
+  type QuestionLanguage,
+} from "@/lib/riasec/questions";
 import { useAssessmentStore } from "@/store/useAssessmentStore";
 
 const LABEL: Record<QuestionLanguage, { short: string; name: string }> = {
@@ -21,6 +24,9 @@ export function LanguageToggle() {
   const language = useAssessmentStore((state) => state.language);
   const setLanguage = useAssessmentStore((state) => state.setLanguage);
   const next = OTHER[language];
+
+  // Hidden everywhere while the Filipino version awaits permission.
+  if (!FILIPINO_ENABLED) return null;
 
   return (
     <Button

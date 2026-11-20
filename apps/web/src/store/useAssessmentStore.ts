@@ -8,6 +8,7 @@ import {
 } from "zustand/middleware";
 
 import {
+  FILIPINO_ENABLED,
   isValidQuestionOrder,
   QUESTIONS,
   shuffleQuestionIds,
@@ -396,6 +397,11 @@ export const useAssessmentStore = create<AssessmentStore>()(
         return {
           ...current,
           ...saved,
+          // A session saved in Filipino before the switch was hidden would
+          // otherwise stay stuck there with no toggle to leave it.
+          language: FILIPINO_ENABLED
+            ? (saved.language ?? current.language)
+            : "en",
           profile: { ...emptyProfile, ...saved.profile },
         };
       },

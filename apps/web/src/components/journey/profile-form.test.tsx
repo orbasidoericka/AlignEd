@@ -71,6 +71,8 @@ describe("ProfileForm layout and Others strand", () => {
     // The scoring notice has its own tests; here it is already acknowledged.
     window.sessionStorage.setItem("aligned.scoring-notice", "1");
     useAssessmentStore.getState().reset();
+    // Empty form reopens the notice, so start these past it.
+    useAssessmentStore.getState().setProfile({ nickname: "A" });
     push.mockClear();
   });
 

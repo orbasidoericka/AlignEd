@@ -168,6 +168,12 @@ export function shuffleQuestionIds(): string[] {
 
 export type QuestionLanguage = "en" | "fil";
 
+// Filipino is built but held back until permission to use the Filipino
+// version of the instrument is granted. While false, every language toggle
+// renders nothing and stored sessions are forced to English. Flip to true to
+// bring the switch back; the translations themselves stay in place.
+export const FILIPINO_ENABLED = false;
+
 // The statement as shown in the chosen language. English is the instrument's
 // verbatim text; Filipino falls back to it if an id has no translation.
 export function questionText(

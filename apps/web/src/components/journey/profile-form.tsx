@@ -46,9 +46,11 @@ function Required() {
   );
 }
 
-// The scoring notice shows once per tab: a refresh or a trip back from the quiz
-// does not bring it up again. sessionStorage, so a new visit starts with it.
-// Where the storage cannot be read it simply shows each time.
+// The scoring notice is not repeated to a student who has already read it and
+// started: a refresh or a trip back from the quiz does not bring it up again.
+// "Read" is kept in sessionStorage and "started" is a nickname in the store,
+// so coming back to an empty form (left to the landing page, Start over,
+// Retake) opens it afresh. Where the storage cannot be read it shows each time.
 const NOTICE_SEEN_KEY = "aligned.scoring-notice";
 
 function readNoticeSeen(): boolean {
@@ -81,7 +83,9 @@ export function ProfileForm() {
   const language = useAssessmentStore((state) => state.language);
   const [showHints, setShowHints] = useState(false);
   const hydrated = useHydrated();
-  const [noticeDismissed, setNoticeDismissed] = useState(readNoticeSeen);
+  const started = useAssessmentStore((state) => state.profile.nickname !== "");
+  const [seenBefore] = useState(readNoticeSeen);
+  const [noticeDismissed, setNoticeDismissed] = useState(false);
   const fil = language === "fil";
   const t = fil ? PROFILE_TEXT_FIL : null;
   const strandLabel = (strand: ShsStrand) =>
@@ -103,7 +107,7 @@ export function ProfileForm() {
   return (
     <AuroraBackground>
       <ScoringNoticeDialog
-        open={hydrated && !noticeDismissed}
+        open={hydrated && !noticeDismissed && !(seenBefore && started)}
         onAcknowledge={acknowledgeNotice}
       />
       <div

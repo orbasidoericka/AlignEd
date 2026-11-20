@@ -11,23 +11,19 @@ const HEX = "[clip-path:polygon(50%_0%,100%_25%,100%_75%,50%_100%,0%_75%,0%_25%)
 
 type InstrumentRow = {
   term: string;
-  /** Plain value; the language row renders chips instead (see below). */
-  value?: string;
-  languages?: readonly string[];
+  value: string;
 };
 
 // Facts about the adopted instrument, in the order a reader checks them:
-// what it is, where it comes from, what it rests on, how it is offered, why.
+// what it is, where it comes from, what it rests on, why.
+// The language row (English and Filipino, with the translation review note)
+// is held back until the Filipino version is cleared for use.
 export const instrument: readonly InstrumentRow[] = [
   { term: "Assessment", value: "42-item RIASEC Interest Test" },
   { term: "Original source", value: "Hawai'i Department of Education" },
   { term: "Framework", value: "Holland's RIASEC Theory" },
-  { term: "Language options", languages: ["English", "Filipino"] },
   { term: "Purpose", value: "Career interest exploration" },
 ];
-
-export const TRANSLATION_REVIEW_NOTE =
-  "The Filipino translation was reviewed by a psychometrician and a Filipino professor.";
 
 /**
  * About page acknowledgment of the adopted assessment instrument: a short
@@ -102,25 +98,7 @@ export function InstrumentSources() {
                   {row.term}
                 </dt>
                 <dd className="font-heading text-lg font-semibold text-pretty text-foreground">
-                  {row.languages ? (
-                    <>
-                      <ul className="flex flex-wrap gap-2" aria-label="Languages">
-                        {row.languages.map((language) => (
-                          <li
-                            key={language}
-                            className="rounded-full bg-stage-assessment-soft px-3 py-1 text-sm font-semibold text-stage-assessment-strong"
-                          >
-                            {language}
-                          </li>
-                        ))}
-                      </ul>
-                      <p className="mt-3 font-sans text-sm font-normal text-muted-foreground">
-                        {TRANSLATION_REVIEW_NOTE}
-                      </p>
-                    </>
-                  ) : (
-                    row.value
-                  )}
+                  {row.value}
                 </dd>
               </BlurFade>
             ))}

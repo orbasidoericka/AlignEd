@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 export const metadata: Metadata = {
   title: "About Us",
   description:
-    "AlignEd is a free, anonymous career-guidance tool for Filipino students, built on the Hawai'i Department of Education's 42-item RIASEC Interest Test by a team of BSIT students from PUP Santa Maria, Bulacan.",
+    "AlignEd is a free, anonymous career-guidance tool for Senior High School students, built on the Hawai'i Department of Education's 42-item RIASEC Interest Test by a team of BSIT students from PUP Santa Maria, Bulacan.",
 };
 
 const SCHOOL =
@@ -120,7 +120,7 @@ export default function AboutPage() {
           </BlurFade>
           <BlurFade delay={0.1}>
             <p className="mt-6 max-w-xl text-lg text-pretty text-muted-foreground">
-              AlignEd is a free, anonymous web tool that helps Filipino students
+              AlignEd is a free, anonymous web tool that helps Senior High School students
               see how their interests line up with careers and college programs.
               It offers options to talk over, not a verdict on your future.
             </p>
