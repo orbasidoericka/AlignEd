@@ -290,7 +290,6 @@ export function summarySheet(
 // The code takes three narrow columns under one "Code" heading.
 const COLUMNS: { header: string | null; width: number; h?: "left" | "center" }[] = [
   { header: "Taken", width: 15, h: "left" },
-  { header: "Results ID", width: 19, h: "left" },
   { header: "Code", width: 5 },
   { header: null, width: 5 },
   { header: null, width: 5 },
@@ -315,7 +314,6 @@ export function resultsSheetRows(
     COLUMNS.map((column) => text(column.header ?? "", column.h === "left" ? HEAD_LEFT : HEAD)),
     ...results.map((result, i) => [
       num(excelDate(result.takenOn), body(i, { numFmt: "mmm d, yyyy", h: "left" })),
-      text(result.resultsId, body(i, { font: "Consolas", color: GREY_INK })),
       ...result.code.map((letter) => text(letter, letterCell(letter))),
       result.gradeLevel ? num(Number(result.gradeLevel), body(i, { numFmt: '"Grade "0', h: "center" })) : missing(i, "center"),
       result.strand ? text(strandShortName(result.strand), body(i)) : missing(i),

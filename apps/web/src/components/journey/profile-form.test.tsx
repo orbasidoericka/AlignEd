@@ -42,15 +42,25 @@ describe("ProfileForm scoring notice", () => {
     expect(dialog.querySelectorAll("ol > li")).toHaveLength(4);
   });
 
-  it("closes on 'I understand' and stays closed after a remount", () => {
+  it("closes on 'I understand' and stays closed after a remount once started", () => {
     const { unmount } = render(<ProfileForm />);
 
     fireEvent.click(screen.getByRole("button", { name: "I understand" }));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
 
+    useAssessmentStore.getState().setProfile({ nickname: "MARI" });
     unmount();
     render(<ProfileForm />);
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("opens again on an empty form, e.g. after leaving and coming back", () => {
+    const { unmount } = render(<ProfileForm />);
+
+    fireEvent.click(screen.getByRole("button", { name: "I understand" }));
+    unmount();
+    render(<ProfileForm />);
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
   });
 
   it("is told in Filipino when the language is Filipino", () => {
@@ -165,7 +175,10 @@ describe("ProfileForm layout and Others strand", () => {
 
 describe("ProfileForm privacy consent", () => {
   beforeEach(() => {
+    // The scoring notice has its own tests; start past it (read, and started).
+    window.sessionStorage.setItem("aligned.scoring-notice", "1");
     useAssessmentStore.getState().reset();
+    useAssessmentStore.getState().setProfile({ nickname: "A" });
     push.mockClear();
   });
 

@@ -1,9 +1,9 @@
 // Copyright (c) 2026 EdTech. All rights reserved.
 
-// A results ID, e.g. ALGN-7KQ2-MX9P: the only key to a saved result, so it
-// works like a password. Eight random characters from 32 (no 0/O or 1/I to
-// misread) give 2^40 possibilities; the lookup route is rate-limited, so
-// guessing one is impractical.
+// A results ID, e.g. ALGN-7KQ2-MX9P: the label of a saved result, printed on
+// the student's PDF. Eight random characters from 32 (no 0/O or 1/I to
+// misread) give 2^40 possibilities, so IDs are impractical to guess. No route
+// looks a result up by ID.
 
 const ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
 const PATTERN = /^ALGN-[2-9A-HJ-NP-Z]{4}-[2-9A-HJ-NP-Z]{4}$/;

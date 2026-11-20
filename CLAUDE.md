@@ -21,12 +21,12 @@ Anonymous RIASEC career guidance for PH Senior High (Grade 11–12) students. Mo
 - Edit the doc body so it states current truth, then add one line at the top of that doc's `## Changelog` (create the section if missing): `- YYYY-MM-DD · area · what changed · why`. Newest first, absolute dates.
 - Log behaviour/contract changes only. Skip pure refactors, typo fixes, test-only changes.
 - New area (e.g. data pipeline, deploy) outgrowing these docs → new `docs/<AREA>.md` with same Changelog format, then add a row here.
-- Framework: Next.js 16.2.5 is NOT Next 15. Read `node_modules/next/dist/docs/` + `docs/Next16_Delta_Notes.md` first. Middleware = `proxy.ts`. Caching = Cache Components (`'use cache'`).
+- Framework: Next.js 16.2.5 is NOT Next 15. Read `node_modules/next/dist/docs/` + `docs/Next16_Delta_Notes.md` first. Middleware = `proxy.ts`. Caching: Cache Components exists but is off here (`cacheComponents` unset); the one cached read uses `unstable_cache`.
 - Code is the plan of record. When a doc and code disagree, code wins: fix the doc (and log it), or ask if the code looks like the bug.
 
 ## Layout
 - Monorepo, npm workspaces. App in `apps/web`. Root scripts proxy: `npm run dev|build|lint|typecheck|test`. E2E: `npm -w apps/web run test:e2e`.
-- `src/app`: `(site)` landing/results, `(focus)/assessment` profile+quiz, `admin` (password sign-in, `export`), `api/{send-results,results}`.
+- `src/app`: `(site)` landing/about/results, `(focus)/assessment` profile+quiz, `admin` (password sign-in, `export`), `api/{send-results,results}`.
 - `src/components`: `ui` (Base UI wrappers, not Radix), `aceternity`, `magic`, `blocks`, `journey`, `riasec`, `career-look`.
 - `src/lib/riasec` (questions, scoring, career-pathways), `src/store/useAssessmentStore.ts` (Zustand + localStorage).
 - `supabase/migrations`, `data/*.csv` → `npm run seed:build`.
@@ -34,21 +34,21 @@ Anonymous RIASEC career guidance for PH Senior High (Grade 11–12) students. Mo
 ## Product invariants (never break)
 - Journey strictly linear: Landing → Profile → Assessment → Results. Guards redirect to earlier step.
 - No accounts/auth. No PII at rest. Nickname, school, photo never stored server-side. Email send-and-discard; salted hash in memory only. RA 10173.
-- Only server write: one nameless `saved_results` row per session (scores, code, grade, age, date) via `/api/results`, service-role key only.
+- Only server writes: one nameless `saved_results` row per session (scores, code, grade, strand, age, date) via `/api/results`, and the anonymous `tests_taken` counter bump in the same call; service-role key only.
 - Profile: nickname 1–8 `A–Z`/`-`, normalized per keystroke; grade `11`/`12`; SHS strand enum, or "Others" with a typed strand kept on device and in the student's own PDF only (server stores just "Others"); age 10–30; privacy notice accepted — all required. School optional ≤120.
-- 42 verbatim statements, 7/trait, binary Yes=1/No=0. One question per screen, auto-advance, Back (absent on Q1). Re-answer replaces, never double-counts.
-- Code = top 3 by score, tie-break R→I→A→S→E→C. Deterministic. Flat profile → R-I-A + exploratory note.
+- 42 verbatim statements, 7/trait, binary Yes=1/No=0. One question per screen, auto-advance on each answer, Back (absent on Q1); an answered statement shows Next, an open one "Skip for now". Re-answer replaces, never double-counts.
+- Code = top 3 by score, tie-break R→I→A→S→E→C. Deterministic. Flat profile → R-I-A (no flat-specific note; the Disclaimer card frames results as exploratory).
 - Results show ALL majors + pathways per letter, sheet order. No ranking, match %, or "best match" labels (test-enforced).
-- Session expires 30 min after last change; localStorage failure degrades to memory + notice.
+- Session expires 30 min after last change; localStorage failure degrades to memory (no user notice).
 
 ## Design rules (details in docs/DESIGN.md)
 - Themes: Vivid (internal `light`, default) + Dark. No `system`. Both WCAG AA.
 - Tokens only, in `apps/web/src/app/globals.css` (`@theme inline`). No `tailwind.config.ts`. Never raw hex in components; pass `var(--token)`.
-- Neon fills (`#2192FF #38E54D #9CFF2E #FDFF00`) carry dark ink; coloured text uses `-strong`. Larger-than-chip areas use `highlight-soft`.
+- Neon fills (`#2192FF #38E54D #9CFF2E`, and mustard `#FFC000` in place of the old neon yellow) carry dark ink; coloured text uses `-strong`. Larger-than-chip areas use `highlight-soft`.
 - Blue and yellow never blend directly — pale bridge stop between.
 - One stage accent per app screen: Profile=yellow, Assessment=blue, Results=green. Controls use `currentColor`.
 - Contrast changes = re-measure numerically, never eyeball.
-- Banned: gradient text (except hero "Align"), border-left accents, identical icon-card grids, uppercase eyebrows, numbered section scaffolding, cream/beige bg, em dashes in UI copy, buzzwords, motion that gates content, `bg-current/<n>` tints (use `control-wash`).
+- Banned: gradient text (no exceptions; hero "Align" is ink with a glow), border-left accents, identical icon-card grids, uppercase eyebrows, numbered section scaffolding, cream/beige bg, em dashes in UI copy, buzzwords, motion that gates content, `bg-current/<n>` tints (use `control-wash`).
 - Type: Poppins headings, Nunito Sans body. No thin weights, no all-caps body.
 - Textures: Hexagon Pattern everywhere except Profile (Aurora). No third.
 

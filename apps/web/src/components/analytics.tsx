@@ -28,8 +28,7 @@ function whenIdle(callback: () => void): () => void {
   return () => clearTimeout(id);
 }
 
-// The admin page's URL carries its secret token, so analytics never loads
-// there and never records it.
+// The admin pages are private, so analytics never loads there.
 function isAdminPath(pathname: string): boolean {
   return pathname === "/admin" || pathname.startsWith("/admin/");
 }

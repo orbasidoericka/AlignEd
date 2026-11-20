@@ -46,7 +46,6 @@ export function LatestResults({ results }: { results: SavedResult[] }) {
           <thead>
             <tr className="text-left text-muted-foreground">
               <th scope="col" className="rounded-l-lg bg-muted px-3 py-2.5 font-semibold">Taken</th>
-              <th scope="col" className="bg-muted px-3 py-2.5 font-semibold">Results ID</th>
               <th scope="col" className="bg-muted px-3 py-2.5 font-semibold">Code</th>
               <th scope="col" className="bg-muted px-3 py-2.5 font-semibold">Grade</th>
               <th scope="col" className="bg-muted px-3 py-2.5 font-semibold">Strand</th>
@@ -74,9 +73,6 @@ export function LatestResults({ results }: { results: SavedResult[] }) {
               >
                 <td className="px-3 py-3 whitespace-nowrap text-foreground">
                   {dateFormat.format(new Date(`${result.takenOn}T00:00:00`))}
-                </td>
-                <td className="px-3 py-3 font-mono text-xs whitespace-nowrap text-muted-foreground">
-                  {result.resultsId}
                 </td>
                 <td className="px-3 py-3">
                   <span className="flex items-center gap-1">

@@ -64,7 +64,7 @@ describe("resultsSheetRows", () => {
 
   it("uses the admin table's columns under a classic blue header", () => {
     expect(values(rows[4]!)).toEqual([
-      "Taken", "Results ID", "Code", "", "", "Grade", "Strand", "Age",
+      "Taken", "Code", "", "", "Grade", "Strand", "Age",
       "R", "I", "A", "S", "E", "C",
     ]);
     for (const cell of rows[4]!) {
@@ -72,7 +72,7 @@ describe("resultsSheetRows", () => {
     }
     // 2026-10-01 as an Excel date serial; the strand by its short name.
     expect(values(rows[5]!)).toEqual([
-      46296, "ALGN-7KQ2-MX9P", "I", "R", "A", 11, "STEM", 16, 5, 7, 4, 1, 2, 0,
+      46296, "I", "R", "A", 11, "STEM", 16, 5, 7, 4, 1, 2, 0,
     ]);
   });
 
@@ -80,24 +80,24 @@ describe("resultsSheetRows", () => {
     const first = rows[5]!.map((cell) => cell?.style);
     const second = rows[6]!.map((cell) => cell?.style);
     expect(first.every((style) => style?.border)).toBe(true);
-    expect(first[1]?.fill).toBeUndefined();
-    expect(second[1]?.fill).toBe("FFD9E1F2");
+    expect(first[0]?.fill).toBeUndefined();
+    expect(second[0]?.fill).toBe("FFD9E1F2");
   });
 
   it("colours each code letter by its trait", () => {
-    const fills = rows[5]!.slice(2, 5).map((cell) => cell?.style?.fill);
+    const fills = rows[5]!.slice(1, 4).map((cell) => cell?.style?.fill);
     expect(new Set(fills).size).toBe(3);
     const other = resultsSheetRows([{ ...RESULT, code: ["R", "I", "A"] }], options)[5]!;
-    expect(other.slice(2, 5).map((cell) => cell?.style?.fill)).toEqual([fills[1], fills[0], fills[2]]);
+    expect(other.slice(1, 4).map((cell) => cell?.style?.fill)).toEqual([fills[1], fills[0], fills[2]]);
   });
 
   it("bolds only the scores for letters in the code", () => {
-    const bold = rows[5]!.slice(8).map((cell) => Boolean(cell?.style?.bold));
+    const bold = rows[5]!.slice(7).map((cell) => Boolean(cell?.style?.bold));
     expect(bold).toEqual([true, true, true, false, false, false]);
   });
 
   it("says when grade, strand or age was not given", () => {
-    expect(values(rows[6]!).slice(5, 8)).toEqual(["Not given", "Not given", "Not given"]);
+    expect(values(rows[6]!).slice(4, 7)).toEqual(["Not given", "Not given", "Not given"]);
   });
 
   it("names the grade filter in the subtitle", () => {
@@ -200,10 +200,10 @@ describe("resultsToXlsx", () => {
     const sheet = files.get("xl/worksheets/sheet2.xml")!;
     expect(sheet).not.toContain("showGridLines");
     expect(sheet).toContain('state="frozen"');
-    expect(sheet).toContain('<mergeCell ref="C5:E5"/>');
-    expect(sheet).toContain('<autoFilter ref="A5:N6"/>');
+    expect(sheet).toContain('<mergeCell ref="B5:D5"/>');
+    expect(sheet).toContain('<autoFilter ref="A5:M6"/>');
 
-    const odd = unzip(resultsToXlsx([{ ...RESULT, resultsId: "A<&>\u0001" }], options));
+    const odd = unzip(resultsToXlsx([{ ...RESULT, strand: "A<&>\u0001" as SavedResult["strand"] }], options));
     expect(odd.get("xl/worksheets/sheet2.xml")).toContain("A&lt;&amp;&gt;<");
   });
 

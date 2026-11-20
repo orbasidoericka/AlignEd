@@ -9,7 +9,7 @@
 
 ### Technical approach in one paragraph
 
-AlignEd ships as a **mostly-static, anonymous-first** Next.js 16 application. Majors and pathways are static TypeScript data (`lib/riasec/career-pathways.ts`), so the pages Filipino students hit on low-end phones over variable connections are static HTML. The profile capture and RIASEC assessment run **entirely client-side** (Zustand + localStorage store), which means the platform's only server paths are three Next.js route handlers: (a) `POST /api/results`, one nameless `saved_results` row per session, (b) `GET`/`DELETE /api/results/[id]` to compare against or delete a saved copy, and (c) `POST /api/send-results`, which emails the encrypted results PDF over Gmail SMTP and keeps nothing. Plus the server-rendered `/admin/[token]` stats page. That architecture makes the PRD's 5,000-concurrent-sessions requirement land on static pages rather than on Postgres. Current server detail lives in `docs/BACKEND.md`.
+AlignEd ships as a **mostly-static, anonymous-first** Next.js 16 application. Majors and pathways are static TypeScript data (`lib/riasec/career-pathways.ts`), so the pages Filipino students hit on low-end phones over variable connections are static HTML. The profile capture and RIASEC assessment run **entirely client-side** (Zustand + localStorage store), which means the platform's only server paths are two Next.js route handlers: (a) `POST /api/results`, one nameless `saved_results` row per session, and (b) `POST /api/send-results`, which emails the encrypted results PDF over Gmail SMTP and keeps nothing. There is no lookup, compare or delete route. Plus the server-rendered `/admin` stats page behind a shared password, and its `/admin/export` Excel download. That architecture makes the PRD's 5,000-concurrent-sessions requirement land on static pages rather than on Postgres. Current server detail lives in `docs/BACKEND.md`.
 
 ### System layers (Input–Process–Output, mapped to real components)
 
@@ -24,9 +24,9 @@ AlignEd ships as a **mostly-static, anonymous-first** Next.js 16 application. Ma
 | Frontend | **Next.js 16.2.5** App Router, React 19, TypeScript | Breaking changes vs Next 15 — read `docs/Next16_Delta_Notes.md` and the bundled docs at `node_modules/next/dist/docs/` before framework work. |
 | Styling | **Tailwind v4** (`@tailwindcss/postcss`) + `tw-animate-css` | Design tokens live in `@theme` inside `globals.css`; vendored MagicUI/Aceternity keyframes ported there once. No `tailwind.config.ts`. |
 | Components | **shadcn/ui (Base UI) + MagicUI + Aceternity + Efferd**, all vendored via the `shadcn` CLI registry system into `src/components/{ui,magic,aceternity,blocks}` | Copy-paste ownership: every animated component can be performance-tuned, reduced-motion-gated, and themed locally. |
-| Motion | framer-motion 12 (`motion/react`) behind a single `LazyMotion` provider | One orchestration layer; tree-shaken features; global `useReducedMotion` gate. |
+| Motion | framer-motion 12 behind a root `MotionConfig reducedMotion="user"` (no `LazyMotion`) | One orchestration layer; global reduced-motion gate. |
 | Backend | **Next.js route handlers** (`src/app/api`) + **Supabase Postgres** with RLS, reached only with the service-role key on the server; **no Edge Functions, Auth deliberately unused** (PRD §3 Non-Goals) | `saved_results`: RLS on, no policies, so the anon key cannot read or write. |
-| Email | **nodemailer over Gmail SMTP** from `POST /api/send-results` (`GMAIL_USER` + App Password) | Attaches the encrypted results PDF + optional career-look photo; raw address never persisted; in-memory salted-hash rate limits (PRD FR-8). |
+| Email | **nodemailer over Gmail SMTP** from `POST /api/send-results` (`GMAIL_USER` + App Password) | Attaches the encrypted results PDF only (never a photo); raw address never persisted; in-memory salted-hash rate limits (PRD FR-8). |
 | PDF | **pdfmake** | Browser build for Download PDF (lazy-loaded); server twin for the email attachment (`serverExternalPackages`). Password = nickname + code. |
 | Infra | Vercel (web) + Supabase Cloud (data); GitHub Actions CI (lint, typecheck, Vitest, seed determinism, build); PostHog optional | Sentry, Vercel Analytics and the Lighthouse gate are not wired yet. |
 
@@ -40,6 +40,9 @@ Current migrations:
 | `0002_universities.sql` | Out of scope per the PRD; still to remove (task 1.2). |
 | `0003_saved_results.sql` | `saved_results`: the live write table (results ID, six scores, `max_score`, code, `grade_level` `11`/`12`, date; one-year expiry; RLS on with no policies). |
 | `0004_saved_results_age.sql` | Adds nullable `age` (10–30). |
+| `0005_saved_results_strand.sql` | Adds nullable `strand` (the SHS list). |
+| `0006_site_counters.sql` | `site_counters` and `increment_site_counter()`: the lifetime "tests taken" tally shown on the landing hero. |
+| `0007_saved_results_strand_others.sql` | Allows `'Others'` as a strand value (the typed text never reaches the server). |
 
 `supabase/seed.sql` is generated by the schema-validated CSV pipeline (`scripts/build-seed.mjs`), checked for determinism in CI.
 
@@ -53,15 +56,15 @@ Design language and page-level wireframes live in `docs/AlignEd_Design_Vision.md
 
 | Feature (PRD ref) | Component mapping |
 |---|---|
-| **Landing page** (FR-1) | **Efferd**: Hero block + Header/Nav + Footer + FAQ skeleton. **Aceternity**: *Hero Highlight* behind the headline; *Bento Grid* for the four journey steps; *Infinite Moving Cards* testimonials. **MagicUI**: *Animated Shiny Text* eyebrow; *Shimmer Button* on the journey-aware CTA; *Number Ticker* stats. **shadcn**: `Sheet` mobile nav, `Button`. |
+| **Landing page** (FR-1) | As built: **Aceternity** *Resizable Navbar*, *Floating Dock* (trait emblems), *Text Generate Effect* (subtitle). **MagicUI** *Hexagon Pattern*, *Highlighter*, *Blur Fade*, *Shine Border* (closing panel). Plain cards for the three journey steps; no testimonials, Hero Highlight, Animated Shiny Text or Infinite Moving Cards. **shadcn** `Button`. See `docs/DESIGN.md` for the current section list. |
 | **Profile Setup** (FR-2) | **shadcn**: `RadioGroup` (grade level — two cards, Grade 11–12; strand cards), `Input` (age, required, 10–30), `Input` with counter (school, optional), privacy-notice `Checkbox` (required), `Button` (unavailable until valid). Runs inside the same Focus Mode shell as the quiz. |
-| **RIASEC assessment** (FR-3) | **shadcn**: `Progress`, `Card`, `RadioGroup` (Yes/No as two tappable cards, auto-advancing; `Back` button only — no Next), `AlertDialog` on exit attempts. **MagicUI**: *Animated Circular Progress Bar* step counter; *Blur Fade* question entrance; *Confetti* on completion. **Framer Motion**: `AnimatePresence` slide transitions. **State**: existing `useAssessmentStore` (kept — it already handles re-answer score correction and localStorage resume), extended with profile fields. |
+| **RIASEC assessment** (FR-3) | **shadcn**: `Progress`, `Card`, `RadioGroup` (Yes/No as two tappable cards, auto-advancing; `Back`, plus "Next" on an answered statement and "Skip for now" on an open one), `AlertDialog` on exit attempts. **MagicUI**: *Animated Circular Progress Bar* step counter; *Blur Fade* question entrance; *Confetti* on completion. **Framer Motion**: `AnimatePresence` slide transitions. **State**: existing `useAssessmentStore` (kept — it already handles re-answer score correction and localStorage resume), extended with profile fields. |
 | **Results — code reveal** (FR-4) | **MagicUI**: *Sparkles Text* Holland-code reveal; *Animated Gradient Text* trait name. **shadcn**: `Chart` (Recharts `RadarChart`) six-trait radar wrapped in Aceternity *Card Spotlight*. |
 | **Results — majors & pathways** (FR-5) | `riasec/pathway-results.tsx` + `riasec/trait-carousel.tsx`: one swipeable card per code letter (rank banner, mascot cover, description, all majors, all pathways as equal-weight tags). Traits are ranked by code position; majors and pathways are never ranked. No university links anywhere. |
 | **PDF export** (FR-7) | pdfmake document built in the browser (`lib/results-pdf/build-results-pdf.ts` + `download-results-pdf.ts`), encrypted with nickname + code. A4, grayscale-legible. |
 | **Email-my-results** (FR-8) | `Dialog` + `Input` + consent `Checkbox` (Data Privacy Act copy) + `Sonner` toasts, posting to `/api/send-results`. Honeypot `website` field included. |
 | **Saved results** (FR-9) | `journey/saved-results-panel.tsx`: no UI, just auto-saves once per session for the admin stats page (FR-10). |
-| **Admin** (FR-10) | `app/admin/[token]/page.tsx`: server-rendered stats, token-gated. |
+| **Admin** (FR-10) | `app/admin/page.tsx` + `app/admin/actions.ts`: server-rendered stats behind a shared-password sign-in; `app/admin/export/route.ts` for the Excel export. |
 | **Career look** (FR-11) | `components/career-look` + `lib/career-look`: MediaPipe face landmarks, memory-only photo. |
 
 **State management strategy:** Server Components own all reference data — no client-side global state mirrors server data. Zustand is scoped to the profile + assessment session store. There is no other client state.
@@ -98,8 +101,8 @@ Design language and page-level wireframes live in `docs/AlignEd_Design_Vision.md
 | 2.2 | Extend `useAssessmentStore` with profile fields (grade level, school) + validation; profile step UI per §2 mapping, inside the Focus Mode shell | 1.5 d |
 | 2.3 | Pure scoring library `src/lib/riasec/scoring.ts`: tally → deterministic R→I→A→S→E→C tie-breaking → 3-letter code; **exhaustive unit tests incl. property-based determinism and the flat-profile edge case (PRD E1–E2)** | 2 d |
 | 2.4 | Quiz UI per §2 mapping; keyboard-completable; route guards (no profile → redirect to profile; incomplete → no results) | 3 d |
-| 2.5 | Refresh-resume flow ("Welcome back — continue where you left off?") from persisted state; in-memory fallback + warning when localStorage is unavailable (PRD E12) | 1 d |
-| 2.6 | Completion flow: finish screen → results; Results saves one `saved_results` row per session via `POST /api/results` and shows the results ID (retry on failure, PRD E11); PostHog funnel events | 1.5 d |
+| 2.5 | Refresh-resume flow from persisted state (shipped without a welcome-back prompt); in-memory fallback when localStorage is unavailable (no warning notice) | 1 d |
+| 2.6 | Completion flow: finish screen → results; Results saves one `saved_results` row per session via `POST /api/results` silently (no UI, no retry, PRD E11); the ID goes into the PDF only; PostHog funnel events | 1.5 d |
 
 ### Phase 3 — Results Dashboard (Weeks 5–6)
 
@@ -110,8 +113,8 @@ Design language and page-level wireframes live in `docs/AlignEd_Design_Vision.md
 | 3.1 | Results page: Holland-code reveal, radar chart, top-3 trait explanations | 2 d |
 | 3.2 | ~~`match_courses` program cards~~ **Superseded by FR-5:** one card per code letter with all majors and pathways from `career-pathways.ts`, unranked | 1.5 d |
 | 3.3 | ~~Career suggestion ranking~~ **Superseded by FR-5** (pathways shown in sheet order) | — |
-| 3.5 | Saved results + compare (`/api/results`, `/api/results/[id]`, `saved-results-panel.tsx`) and admin page (`/admin/[token]`) (PRD FR-9, FR-10) | 2 d |
-| 3.4 | Journey-aware navigation states + landing CTA swap; retake flow (reset answers, retain profile) | 1.5 d |
+| 3.5 | Saved results (`POST /api/results`, `saved-results-panel.tsx`; compare and delete were cut) and the admin page (`/admin`, shared password) (PRD FR-9, FR-10) | 2 d |
+| 3.4 | Journey-aware navigation states + landing CTA swap; retake flow (clears the whole session, profile included, and returns to Profile Setup) | 1.5 d |
 
 ### Phase 4 — Export & Email Delivery (Weeks 7–8)
 
@@ -120,9 +123,9 @@ Design language and page-level wireframes live in `docs/AlignEd_Design_Vision.md
 | # | Task | Effort |
 |---|---|---|
 | 4.1 | Encrypted pdfmake results PDF built in the browser, lazy-loaded; A4/grayscale verification (PRD FR-7) | 2 d |
-| 4.2 | **`POST /api/send-results` route**: server-rendered PDF attachment + optional career-look photo via nodemailer/Gmail SMTP; per-address (3/day) + per-network (20/hour) salted-hash limits in memory; honeypot; **raw email never stored — send and discard**; branded HTML body | 2.5 d |
+| 4.2 | **`POST /api/send-results` route**: server-rendered PDF attachment (no photo) via nodemailer/Gmail SMTP; per-address (3/day) + per-network (20/hour) salted-hash limits in memory; honeypot; **raw email never stored — send and discard**; branded HTML body | 2.5 d |
 | 4.3 | Email dialog UI: client validation, consent checkbox with DPA copy, success/failure toasts with retry, PDF fallback prompt on failure (PRD E8–E10) | 1.5 d |
-| 4.5 | Career look: camera, MediaPipe face anchoring, career props, memory-only photo for the email (PRD FR-11) | 3 d |
+| 4.5 | Career look: camera, MediaPipe face anchoring, career props, hand-sign effects, photo kept on the device and never emailed (PRD FR-11) | 3 d |
 | 4.4 | Landing page final polish per §2 mapping; privacy notice page; OG images and metadata | 1.5 d |
 
 ### Phase 5 — Hardening & Launch (Weeks 9–10)
@@ -136,7 +139,7 @@ Design language and page-level wireframes live in `docs/AlignEd_Design_Vision.md
 | 5.3 | Accessibility audit: axe automated pass + manual keyboard/screen-reader pass; contrast verification in both themes | 1.5 d |
 | 5.4 | Load sanity check: k6 against `/api/results` and `/api/send-results`; move in-memory rate limiters to a shared store if running more than one instance | 1 d |
 | 5.5 | UAT with Philippine SHS students (Grade 11–12); iterate on findings | 2 d |
-| 5.6 | Production promotion: custom domain, Gmail sending account + App Password, `ADMIN_TOKEN` issued, monitoring dashboards | 1 d |
+| 5.6 | Production promotion: custom domain, Gmail sending account + App Password, `ADMIN_PASSWORD` set (16+ random characters), monitoring dashboards | 1 d |
 | 5.7 | Strict nonce-based CSP in `proxy.ts` (headers today live in `next.config.ts`) | 1 d |
 
 ---
@@ -175,6 +178,8 @@ Design language and page-level wireframes live in `docs/AlignEd_Design_Vision.md
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 
+- 2026-11-20 · frontend · Task 2.5 states shipped behaviour only (no storage-failure warning). · Unbuilt requirement dropped.
+- 2026-11-20 · docs · Architecture, DB table, component map and task rows updated to the shipped code: two route handlers, `/admin` with a shared password, migrations 0005 to 0007, no `LazyMotion`, no emailed photo, retake clears the profile, no results-ID UI. · Docs audit: every statement checked against the shipped site; the site was not changed.
 - 2026-11-10 · frontend · FR-5 row updated: top-three cards are a carousel with rank banners (PRD FR-5.4). · Requested.
 - 2026-11-09 · frontend/backend · Task 3.5's saved results is now a no-UI auto-save only: ID display, compare-by-ID, and delete are all gone from `saved-results-panel.tsx` and `/api/results/[id]`. · Requested removal of the results-ID feature from the Results page.
 - 2026-11-09 · frontend/backend · Task 3.5's compare-by-ID is removed (saved results now auto-save + delete only). · Comparing was cut from the results page.

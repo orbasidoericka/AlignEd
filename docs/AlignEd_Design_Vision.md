@@ -1,5 +1,7 @@
 # AlignEd Design Vision 
 
+> **Status (2026-11-20):** a creative blueprint, not a description of the shipped site. Where it differs, `docs/DESIGN.md` (look and components), `docs/FRONTEND.md` (behaviour) and the PRD win. Known differences: the nav has no locked "My Results" item or progress ring (the CTA switches to "View My Results" once the quiz is done); the quiz shows "Next" on answered statements and "Skip for now" on open ones; the milestone beats are small cheer pills at 11/21/32 answers, not full interstitials; results show majors and pathways per letter, with no program ranking, match badges or "verdict" names; the code reveal is a bento dashboard, not a full-viewport reveal; Download PDF builds the file directly (no print view); Profile Setup also asks strand, age and consent, not only grade and school.
+
 > Creative blueprint for the four-step journey defined in `docs/AlignEd_PRD.md`
 > (Landing → Profile → Assessment → Results). Feeds Phases 2–4 of the
 > Implementation Plan. If this document and the PRD conflict, the PRD wins.

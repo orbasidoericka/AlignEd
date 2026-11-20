@@ -8,8 +8,8 @@ Server routes, data, secrets, and privacy controls. Client code lives in `FRONTE
 
 | Route | Method | Does | Limits |
 | :--- | :--- | :--- | :--- |
-| `/api/results` | POST | Save a finished result (six scores, code, grade, age, date). Returns a results ID (`ALGN-XXXX-XXXX`), stored client-side and printed in the PDF; no route exposes a lookup or delete by ID, and the client has no UI for either. | 200 / hour per network |
-| `/api/send-results` | POST | Email the encrypted results PDF, and nothing else, via Gmail SMTP (nodemailer), then discard the address. A `photo` field from an older page is ignored. | per hashed email + per hashed IP |
+| `/api/results` | POST | Save a finished result (six scores, code, grade, strand, age, date), then bump the `tests_taken` site counter and mark the landing tally stale (`revalidateTag`). Returns a results ID (`ALGN-XXXX-XXXX`), kept in the client store and printed in the PDF; no route exposes a lookup or delete by ID, and the client has no UI for either. A counter failure is logged and never fails the save. | 200 / hour per network |
+| `/api/send-results` | POST | Email the encrypted results PDF, and nothing else, via Gmail SMTP (nodemailer), then discard the address. A `photo` field from an older page is ignored. | 3 per address per rolling day, 20 per network per rolling hour (salted hashes) |
 
 - Rate limiters (`lib/results-email/rate-limiter.ts`, `lib/saved-results/ip-limiter.ts`) are in-memory, keyed by salted hashes with a per-process random salt. They reset on restart and count per server instance.
 - Inputs validated server-side with `lib/riasec/validate-results.ts`; email content in `lib/results-email/email-content.ts`.
@@ -21,7 +21,7 @@ Server routes, data, secrets, and privacy controls. Client code lives in `FRONTE
 
 The session is checked before anything is sent, then the dashboard streams inside a `Suspense` boundary keyed by grade. Do not add a `loading.tsx` to this route: it would stream the page frame before the session check. `purgeExpired` runs in `after()`, once the page is sent, and `listResults` filters on `expires_at` so expired rows never show.
 
-`/admin/export` (same session check, 404 without it) downloads the current view as an Excel workbook, built by `lib/saved-results/export-xlsx.ts` with no library, in the classic Excel table look: blue (#4472C4) header rows with white bold text, light-blue banded rows, thin grey borders on every table cell, bold Total rows, gridlines on. Sheet 1, Summary, repeats the admin page from the same `summarize()` totals: an Overview table (saved results, each grade with its share, last 30 days, average age, most common code), then strongest interest area (trait-coloured letter cells), most common codes (top 10), strand and age, each with Students and Share ("0%", same rounding as the page) and, except the codes, a Total row. Sheet 2, Latest results, is the admin table: Taken, Results ID, Code over three trait-coloured cells, Grade, Strand (short name), Age, R to C scores with the code's letters bold and the rest grey; real dates, frozen header, filters; missing values read "Not given". Styles are collected per workbook by a small `StyleSheet` class, so cells only describe how they look. The file is a hand-written zip of the OOXML parts using `node:zlib`, so the route needs the Node runtime.
+`/admin/export` (same session check, 404 without it) downloads the current view as an Excel workbook, built by `lib/saved-results/export-xlsx.ts` with no library, in the classic Excel table look: blue (#4472C4) header rows with white bold text, light-blue banded rows, thin grey borders on every table cell, bold Total rows, gridlines on. Sheet 1, Summary, repeats the admin page from the same `summarize()` totals: an Overview table (saved results, each grade with its share, last 30 days, average age, most common code), then strongest interest area (trait-coloured letter cells), most common codes (top 10), strand and age, each with Students and Share ("0%", same rounding as the page) and, except the codes, a Total row. Sheet 2, Latest results, is the admin table: Taken, Code over three trait-coloured cells, Grade, Strand (short name), Age, R to C scores with the code's letters bold and the rest grey; real dates, frozen header, filters; missing values read "Not given". Styles are collected per workbook by a small `StyleSheet` class, so cells only describe how they look. The file is a hand-written zip of the OOXML parts using `node:zlib`, so the route needs the Node runtime.
 
 ## Database (Supabase Postgres)
 
@@ -32,9 +32,11 @@ The session is checked before anything is sent, then the dashboard streams insid
 | `0003_saved_results.sql` | `saved_results`: results ID, six scores, `max_score`, code, grade, date; expires after one year. RLS on with no policies, so only the service role (server routes) can touch it. |
 | `0004_saved_results_age.sql` | Adds nullable `age` (10–30). |
 | `0005_saved_results_strand.sql` | Adds nullable `strand`, limited to the `SHS_STRANDS` list. |
+| `0006_site_counters.sql` | `site_counters` (key, value, updated_at; RLS on, no policies), seeded with `tests_taken` from the existing row count, and `increment_site_counter(p_key)`: one atomic `security definer` upsert, execute granted to the service role only. The counter only goes up, so deleting or purging a saved result never lowers the public figure. |
 | `0007_saved_results_strand_others.sql` | Widens the `strand` check to also allow `'Others'`. Only the word is stored; a typed strand never reaches the server. Run it before deploying the Others option. |
 
-- Clients: `lib/supabase/client.ts` (anon, browser) and `lib/supabase/admin.ts` (service role, server only). Repository in `lib/saved-results/repository.ts`.
+- Clients: `lib/supabase/client.ts` (anon, browser) and `lib/supabase/admin.ts` (service role, server only). Repositories: `lib/saved-results/repository.ts` and `lib/site-counters/repository.ts`.
+- Landing tally: `lib/site-counters/tests-taken.ts` reads `tests_taken` through `unstable_cache` (`cacheComponents` is off in `next.config.ts`, so this is the classic caching model), revalidated every 300 s or on the `TESTS_TAKEN_TAG` tag after a save. It returns `null` when Supabase is unconfigured or the read fails, and the landing page then shows nothing.
 - Reference data: `data/*.csv` → `npm run seed:build` (`scripts/build-seed.mjs`) → `supabase/seed.sql`.
 - Never stored: name, nickname, school, email, photo, individual answers.
 
@@ -64,6 +66,9 @@ Set in `apps/web/next.config.ts` for every path: `X-Frame-Options: DENY`, `nosni
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 
+- 2026-11-20 · backend/admin · The admin table and the Excel export no longer show the results ID column (`latest-results.tsx`, `export-xlsx.ts`); the ID is still stored and printed on the student's PDF. · Not needed on the admin page.
+- 2026-11-20 · backend · Removed the Known-gaps note about the policy's Delete saved copy wording: the policy text was corrected (v3.2). Saved records still expire after one year; there is no delete or lookup route. · Site copy aligned with the backend.
+- 2026-11-20 · docs · Added `0006_site_counters.sql`, the `tests_taken` bump in `/api/results`, the cached landing tally, email rate-limit numbers; noted the privacy copy's "Delete saved copy" wording has no matching feature. · Docs audit: every statement checked against the shipped site; the site was not changed.
 - 2026-11-15 · admin · Excel export restyled as classic Excel tables (blue header, banded rows, cell borders, Total rows, Overview table) with a per-workbook style registry · admins found the earlier layout hard to scan in Sheets/Excel.
 - 2026-11-15 · admin · Excel export keeps Excel's gridlines and gives table cells thin grey grid borders instead of blue row lines and white gaps · it should still look like a spreadsheet.
 - 2026-11-15 · admin · Excel export adds a first "Summary" sheet built from `summarize()` (the page's cards and charts as numbers); the table moves to a second "Latest results" sheet · admins wanted the overview in the file too.

@@ -37,7 +37,10 @@ import { cn } from "@/lib/utils";
 // abuse limiters, and PostHog analytics.
 // Change the code and this changes too: keep claims accurate.
 // v3.1: the career-look photo is no longer sent with the results email.
-export const PRIVACY_POLICY_VERSION = "v3.1";
+// v3.2: no "Delete saved copy" button and no results-ID lookup exist, so the
+// text no longer promises them; saved records expire after a year.
+// v3.3: the admin page no longer shows results IDs.
+export const PRIVACY_POLICY_VERSION = "v3.3";
 
 // First standalone version: split out of the combined notice above at v3.0.
 export const TERMS_VERSION = "v1.0";
@@ -178,13 +181,13 @@ const PRIVACY_POLICY_SECTIONS: PolicySection[] = [
       },
       {
         type: "para",
-        text: "**Your results ID works like a password.** Anyone who has it can see the scores saved under it, though nothing that names you. Keep it private.",
+        text: "**Your results ID is just a label.** It is printed on your PDF, and AlignEd has no page where it can be used to look up results. Keep it private anyway.",
       },
       { type: "subheading", text: "Who can see it" },
       {
         type: "list",
         items: [
-          "AlignEd program administrators, through a private page that shows saved records and results IDs, but no names;",
+          "AlignEd program administrators, through a private page that shows saved records, but no names;",
           "school guidance staff the program authorizes; and",
           "the services that run AlignEd, only as needed to keep it working: Supabase (database), Google Gmail (sends the emails you ask for), PostHog (website statistics, when on), and our website hosting provider.",
         ],
@@ -206,7 +209,7 @@ const PRIVACY_POLICY_SECTIONS: PolicySection[] = [
       { type: "subheading", text: "On our server" },
       {
         type: "para",
-        text: "You can delete your saved record at any time with **Delete saved copy** on your results page, or by giving your results ID to the program administrators.",
+        text: "Saved records are removed automatically one year after they are made.",
       },
       {
         type: "para",
@@ -281,7 +284,7 @@ const PRIVACY_POLICY_SECTIONS: PolicySection[] = [
       },
       {
         type: "para",
-        text: `To use these rights, email **${PRIVACY_CONTACT_EMAIL}**. Data kept only on your device is removed with **Start over**. Your saved record is removed with **Delete saved copy**, or by giving your results ID to the program administrators.`,
+        text: `To use these rights, email **${PRIVACY_CONTACT_EMAIL}**. Data kept only on your device is removed with **Start over**.`,
       },
     ],
   },
@@ -319,7 +322,7 @@ const TERMS_SECTIONS: PolicySection[] = [
           "**AlignEd is free career guidance.** It is not a test you can pass or fail, and it does not decide your future.",
           "**Answer honestly** so your results fit you.",
           "**Do not type private details** such as your full name, address, phone number, or passwords.",
-          "**Keep your results ID private.** Do not try to look up other people's results IDs.",
+          "**Keep your results ID private.**",
           "**Do not misuse AlignEd.** No spamming the email feature, no trying to break or overload the service, and no trying to get into the admin page.",
           "AlignEd may change, pause, or be unavailable at times. We do our best to keep results accurate, but they can be wrong, so use them together with advice from people you trust.",
         ],

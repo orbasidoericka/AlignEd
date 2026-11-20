@@ -8,7 +8,7 @@
 
 ## 1. Executive Summary
 
-AlignEd is an anonymous, web-based career-guidance platform for Philippine Senior High School students (Grade 11 and 12). In a single guided session, a student describes their academic profile (grade level, strand, age), completes a RIASEC (Holland Code) personality assessment, and receives an actionable results dashboard: their 3-letter Holland Code, and the college majors and related career pathways for each code letter. Students can download their results as a password-protected PDF, send that PDF to their email, and keep a random results ID that lets them compare a later retake against a saved, nameless copy.
+AlignEd is an anonymous, web-based career-guidance platform for Philippine Senior High School students (Grade 11 and 12). In a single guided session, a student describes their academic profile (grade level, strand, age), completes a RIASEC (Holland Code) personality assessment, and receives an actionable results dashboard: their 3-letter Holland Code, and the college majors and related career pathways for each code letter. Students can download their results as a password-protected PDF or send that PDF to their email. A nameless copy of the scores is also saved on the server for the program's aggregate statistics; the student has no way to look it up, compare against it or delete it.
 
 The product is deliberately narrow: **four steps, one session, no accounts.** Landing → Profile → Assessment → Results.
 
@@ -64,40 +64,40 @@ The product is a strict linear journey. Every route, component, and data model s
 | Results | `/results` | Client-computed from local state; majors/pathways from static data |
 | Admin (not part of the journey) | `/admin` | Server-rendered; shared-password sign-in (FR-10) |
 
-Server routes (Next.js route handlers, Node runtime): `POST /api/results`, `GET`/`DELETE /api/results/[id]` (FR-9), `POST /api/send-results` (FR-8).
+Also outside the journey: the About Us page (`/about`, FR-1.8) and the admin Excel export (`/admin/export`, FR-10.3). Server routes (Next.js route handlers, Node runtime): `POST /api/results` (FR-9) and `POST /api/send-results` (FR-8). There is no lookup or delete route.
 
 Navigation rules:
 - The Assessment route redirects to Profile Setup if no profile exists.
 - The Results route redirects to the appropriate earlier step if the assessment is incomplete.
-- A returning visitor with completed results in local storage is offered "View your results" from the landing page.
+- A returning visitor with completed results in local storage sees the navbar and closing calls to action switch to "View My Results" / "View my results" (FR-1.4).
 
 ## 6. Functional Requirements
 
 ### FR-1 Landing Page
 - FR-1.1. Communicates the value proposition: discover your Holland Code and find the right college degree using Holland's RIASEC framework.
-- FR-1.2. One primary CTA ("Start the assessment") initiating the journey at Profile Setup.
-- FR-1.3. Explains the 4-step journey and expected duration (~5 minutes).
-- FR-1.4. Journey-aware CTA: if a completed assessment exists in local storage, the primary CTA becomes "View your results".
+- FR-1.2. Calls to action that start the journey at Profile Setup, each with its own wording: "Take Assessment" in the navbar and "Find your path" in the closing panel. The hero carries no button, since the navbar CTA sits directly above it.
+- FR-1.3. Explains the journey as three steps (Tell us about yourself, Discover yourself, See your alignment) and the expected duration (~5 minutes, also a badge in the hero).
+- FR-1.4. Journey-aware CTA: if a completed assessment exists in local storage, the navbar CTA becomes "View My Results" and the closing CTA "View my results".
 - FR-1.5. Shows the lifetime number of assessments taken, read from an aggregate counter (`site_counters`, key `tests_taken`) incremented once per completion. The figure is cumulative and never decreases: deleting a saved result or purging an expired one does not un-take the test. It is a count only — no identifiers, nothing per student — so it stays inside the anonymous-by-design commitment. When the count cannot be read, nothing is shown; a placeholder or estimate is never substituted.
 - FR-1.6. Explains the scoring procedure in plain language (42 statements, 7 per trait, Yes = 1 point / No = 0, scores 0 to 7, top three form the code, ties broken R→I→A→S→E→C per FR-4.2) with a worked example computed by the real scoring function; reachable from the navbar ("Scoring").
 - FR-1.7. Directly after the hero and before the journey steps, explains Holland's theory of career choice in plain, paraphrased language (John L. Holland, 1959; interests reflect personality; six RIASEC types; most people are a blend, which is why the code has three letters), with the six types drawn on Holland's hexagon in R→I→A→S→E→C order. No type is ranked or scored.
-- FR-1.8. The About Us page (`/about`) acknowledges the adopted instrument after the team: assessment (42-item RIASEC Interest Test), original source (Hawai'i Department of Education), framework (Holland's RIASEC Theory), and purpose (the language options row, English and Filipino with the translation review note, is held back until the Filipino version is cleared for use) (career interest exploration).
+- FR-1.8. The About Us page (`/about`) acknowledges the adopted instrument after the team: assessment (42-item RIASEC Interest Test), original source (Hawai'i Department of Education), framework (Holland's RIASEC Theory), and purpose (career interest exploration). A language options row (English and Filipino, with a translation review note) is not shown until the Filipino version is cleared for use.
 
 ### FR-2 Student Profile Setup
-Captured before the assessment begins; stored client-side only (localStorage via the persisted store). Only grade level and age ever reach the server, inside the nameless saved-results record (FR-9).
+Captured before the assessment begins; stored client-side only (localStorage via the persisted store). Only grade level, strand (just the word "Others" when a strand was typed) and age ever reach the server, inside the nameless saved-results record (FR-9).
 
 | Field | Type | Constraint |
 | :--- | :--- | :--- |
 | Nickname | Text | **Required.** 1–8 characters, uppercase letters `A–Z` and the hyphen `-` only. Input is normalized on every keystroke: characters are upper-cased, digits and all other symbols are discarded, and entry stops at 8 characters. It is a display handle, not a real name; it is never stored on the server and never included in the saved-results record. It reaches the server only inside an email request (FR-8), to name and password the PDF, and is discarded with the address. |
 | Grade Level | Enum | **Required.** Exactly two values: `Grade 11` and `Grade 12`. No free text. |
-| SHS Strand | Enum | **Required.** One of the supported academic, Arts and Design, Sports, or TVL strands: ABM, STEM, HUMSS, GAS, Arts and Design, Sports, AFA, HE, IA, or ICT, or **Others**. Choosing Others reveals a required "Type your strand" field (max 60). That text stays in the browser and the student's own PDF only; the server and admin page record just "Others". No other free text. |
+| SHS Strand | Enum | **Required.** One of the supported academic, Arts and Design, Sports, or TVL strands: ABM, STEM, HUMSS, GAS, Arts and Design, Sports, AFA, HE, IA, or ICT, or **Others**. Choosing Others reveals a required "Type your strand" field (max 60). That text stays in the browser and the student's own downloaded PDF only; the server and admin page record just "Others". No other free text. |
 | Age | Whole number | **Required.** 10–30. Stored in the saved-results record for the admin page's age statistics. |
-| School | Text | **Optional.** Max 120 characters. Never leaves the device except printed in the student's own PDF/email. |
-| Terms and Conditions | Checkbox | **Required.** Card heading and inline link: "Data Privacy Policy and Terms and Conditions". Full checkbox text: "I have read and agree to the Data Privacy Policy and Terms and Conditions." Opens a dialog titled "Terms and Conditions and Data Privacy Policy" (RA 10173), versioned in `components/journey/privacy-consent.tsx` (`v2.3`). It lists every piece of data collected and where it goes, without stating a specific retention period or a "so you can compare later" purpose. For a student under 18, the notice tells a parent or legal guardian to read it and be the one who ticks the box: there is no separate parent account or flow, so this single checkbox is how their consent is given. Contact email `aligned.career.support@gmail.com`. Key points are bold. Required before continuing. |
+| School | Text | **Optional.** Max 120 characters. Never leaves the device except printed in the student's own downloaded PDF (the emailed PDF omits it). |
+| Terms and Conditions | Checkbox | **Required.** Card heading and inline link: "Data Privacy Policy and Terms and Conditions". Full checkbox text: "I have read and agree to the Data Privacy Policy and Terms and Conditions." Opens a dialog titled "Data Privacy Policy & Terms and Conditions" (RA 10173), versioned in `components/journey/privacy-consent.tsx` (Data Privacy Policy `v3.3`, Terms `v1.0`), with the two documents on separate tabs. It lists every piece of data collected and where it goes, without stating a specific retention period or a "so you can compare later" purpose. For a student under 18, the notice tells a parent or legal guardian to read it and be the one who ticks the box: there is no separate parent account or flow, so this single checkbox is how their consent is given. Contact email `aligned.career.support@gmail.com`. Key points are bold. Required before continuing. |
 
 - FR-2.1. The "Continue to assessment" action is unavailable until all required fields (nickname, grade level, SHS strand, age, privacy acceptance) are set.
 - FR-2.2. Profile values are editable by returning to this step before completing the assessment.
-- FR-2.3. **Scoring notice.** On arrival the step opens with a blocking notice, "How your code is scored" (the same four steps as the landing page's scoring section), over a blurred profile. It is dismissed with "I understand" (or Escape / an outside click), but only once the student has read it and started: it is remembered per browser tab (`sessionStorage`) and honoured only while the profile has a nickname, so a refresh or a return from the quiz does not bring it back, while an empty form (left to the landing page and returned, Start over, Retake) opens it again. It follows the English / Filipino toggle and carries its own toggle. It collects nothing and gates nothing beyond being read first.
+- FR-2.3. **Scoring notice.** On arrival the step opens with a blocking notice, "How your code is scored" (the same four steps as the landing page's scoring section), over a blurred profile. It is dismissed with "I understand" (or Escape / an outside click), but only once the student has read it and started: it is remembered per browser tab (`sessionStorage`) and honoured only while the profile has a nickname, so a refresh or a return from the quiz does not bring it back, while an empty form (left to the landing page and returned, Start over, Retake) opens it again. It follows the English / Filipino toggle and carries its own toggle (both hidden while Filipino is on hold, FR-3.8). It collects nothing and gates nothing beyond being read first.
 
 ### FR-3 RIASEC Assessment Engine
 - FR-3.1. **Question bank:** the 42 statements of the source RIASEC instrument, statically defined, balanced at exactly 7 items per trait across the six Holland types (Realistic, Investigative, Artistic, Social, Enterprising, Conventional). Statement text is reproduced **verbatim** from the instrument — including its original punctuation — and is not subject to editorial rewriting. Items are presented in the instrument's printed order (traits interleaved, never grouped), and each item's trait assignment is fixed by the instrument's answer key.
@@ -105,20 +105,20 @@ Captured before the assessment begins; stored client-side only (localStorage via
 - FR-3.3. **Presentation (strict):**
   - Exactly **one question is on screen at a time**; no list, grid, or multi-question page is permitted.
   - The only answer controls are the binary pair **Yes / No**.
-  - **No "Next" control exists.** Selecting Yes or No records the answer and the interface advances to the next question on its own.
+  - **A new statement has no "Next" control.** Selecting Yes or No records the answer and the interface advances on its own (after a 280 ms beat). Revisiting an already-answered statement (after Back) shows an outline "Next" button in the corner; re-tapping the chosen card also advances. An unanswered statement instead offers "Skip for now", which leaves it open and moves to the next open one; when it is the only one left, a hint reads "Tap an answer to continue".
   - A **Back** control returns to the previous question. It is unavailable (not merely inert) on the first question.
   - Persistent progress indicator (percent + question count), and the whole bank is completable by keyboard alone.
 - FR-3.4. **Backward navigation:** on returning to an earlier question, the student's previous answer is shown as selected and may be changed. Changing it re-scores that item in place (FR-3.2) and advances forward again; the student is never required to re-answer questions they have already completed.
-- FR-3.5. **Session handling:** answers persist to localStorage on every change. On refresh or return, the student resumes at their first unanswered question ("Welcome back — continue where you left off?"). Sessions have no server component and expire 30 minutes after the last change: on the next visit an older session is wiped from localStorage — profile, answers, scores, and the saved results alike — and the student starts fresh, so an abandoned quiz is never left on a shared or school device for the next student to resume.
+- FR-3.5. **Session handling:** answers persist to localStorage on every change. On refresh or return, the student resumes at their first unanswered question (there is no separate welcome-back prompt). Sessions have no server component and expire 30 minutes after the last change: on the next visit an older session is wiped from localStorage — profile, answers, scores, and the saved results alike — and the student starts fresh, so an abandoned quiz is never left on a shared or school device for the next student to resume.
 - FR-3.6. **Completion:** requires all 42 questions answered (Yes or No). On completion the student goes to Results, which saves exactly one nameless record per session (FR-9).
-- FR-3.7. **Retake:** an explicit "Retake assessment" action on Results resets answers and scores (profile is retained and re-confirmable).
-- FR-3.9. **Results lifetime:** a finished session (all 42 answered) is visible for as long as the 30-minute session allows and no longer than the tab: when the tab or browser session ends and the student returns, a finished session is wiped like an expired one and they start at Profile. An unfinished quiz still resumes (E4). The tab is detected with a `sessionStorage` marker, so a refresh keeps results while a closed tab does not; where `sessionStorage` is unreadable only the 30-minute limit applies. Results shows a live countdown note ("Your results stay on this device for 24:10 more, or until you close this tab.") with a Results ID reminder once one exists. The saved Results ID (FR-9, one year) is unaffected and is the way back to scores.
+- FR-3.7. **Retake:** an explicit "Retake assessment" action on Results, behind a confirmation, clears the whole session (profile, answers, scores) and returns to Profile Setup to start fresh. The dialog tells the student to save the PDF first.
+- FR-3.9. **Results lifetime:** a finished session (all 42 answered) is visible for as long as the 30-minute session allows and no longer than the tab: when the tab or browser session ends and the student returns, a finished session is wiped like an expired one and they start at Profile. An unfinished quiz still resumes (E4). The tab is detected with a `sessionStorage` marker, so a refresh keeps results while a closed tab does not; where `sessionStorage` is unreadable only the 30-minute limit applies. Results shows a live countdown note ("Your results stay on this device for 24:10 more, or until you close this tab."). The nameless server copy (FR-9, one year) is unaffected, but the student has no way back to it.
 - FR-3.8. **Filipino statements:** an English / Filipino toggle on the assessment screen switches the 42 statements to the supplied Filipino translation (`lib/riasec/questions-fil.ts`, keyed by question id) and the answer pair to **Oo / Hindi**. Presentation only: ids, trait assignment, scoring, order and the English text are unchanged, answers already given are kept when the language is switched, and Y/N and O/H both work as keyboard shortcuts. The choice persists with the session (default English) and is cleared with it. The translation is reproduced as supplied, not editorially rewritten. The rest of the interface stays in English. **On hold:** until permission to use the Filipino version of the instrument is granted, every language toggle is hidden and the app runs in English only (`FILIPINO_ENABLED = false` in `lib/riasec/questions.ts`); the Filipino translations stay in the codebase, ready to re-enable.
 
 ### FR-4 Holland Code Computation
 - FR-4.1. The 3-letter Holland Code is the three highest-scoring traits, ordered by score descending.
 - FR-4.2. **Tie-breaking (deterministic):** ties at any rank are broken by fixed trait order `R → I → A → S → E → C`. The same answer set always yields the same code.
-- FR-4.3. The results dashboard displays the code (e.g. `I-A-S`) plus a per-trait breakdown of all six scores (radar chart, normalized against the per-trait ceiling of 7) and short plain-language descriptions of the top three traits.
+- FR-4.3. The results dashboard displays the code (e.g. `I-A-S`) plus a per-trait breakdown of all six scores (radar chart, normalized against the per-trait ceiling of 7) and short plain-language descriptions of the top three traits, and a Disclaimer card stating that the result is an exploratory tool, not a prediction.
 
 ### FR-5 Majors and Related Pathways
 - FR-5.1. Source is the official RIASEC results sheet ("Which Career Pathway is right for you?"), stored as static data in `apps/web/src/lib/riasec/career-pathways.ts`: for each letter, its description, college majors, and related pathways, transcribed in full (only two obvious source typos corrected).
@@ -131,7 +131,7 @@ Captured before the assessment begins; stored client-side only (localStorage via
 - FR-6.2. No university or institution mapping is displayed anywhere.
 
 ### FR-7 Export — Download as PDF
-- FR-7.1. A "Download PDF" action on the results dashboard produces a document containing: nickname, grade, strand, age, school (if given), test date, Holland Code + all six trait scores, and the description, majors and related pathways for each code letter (FR-5), with AlignEd branding and page numbers.
+- FR-7.1. A "Download PDF" action on the results dashboard produces a document containing: nickname, grade, strand, age, school (if given), test date, the results ID once one has been saved, Holland Code + all six trait scores, and the description, majors and related pathways for each code letter (FR-5), with AlignEd branding and page numbers.
 - FR-7.2. Built entirely in the browser with pdfmake (`lib/results-pdf/download-results-pdf.ts`), loaded only on click. No upload, no persistence.
 - FR-7.3. The PDF is encrypted. Its password is the nickname followed by the three code letters (e.g. `MARI` + `I-R-A` → `MARIIRA`), shown to the student on screen.
 - FR-7.4. Layout is A4 and legible in grayscale.
@@ -139,19 +139,19 @@ Captured before the assessment begins; stored client-side only (localStorage via
 ### FR-8 Export — Send to Email
 - FR-8.1. "Email me my results" opens a dialog: email input + mandatory consent checkbox (Data Privacy Act copy) + send button.
 - FR-8.2. Email format is validated client-side with inline errors before any request is made; the server validates again.
-- FR-8.3. Sending calls `POST /api/send-results`, a Next.js route that renders the same encrypted PDF as FR-7 on the server (`lib/results-pdf/render-results-pdf.ts`) and sends it, and nothing else, from the program's Gmail account over SMTP (nodemailer, `GMAIL_USER` + `GMAIL_APP_PASSWORD`). The address is then discarded. A `photo` field sent by an older page is ignored. **Raw email addresses are never persisted.**
+- FR-8.3. Sending calls `POST /api/send-results`, a Next.js route that renders the same encrypted PDF as FR-7 on the server (`lib/results-pdf/render-results-pdf.ts`) and sends it, and nothing else, from the program's Gmail account over SMTP (nodemailer, `GMAIL_USER` + `GMAIL_APP_PASSWORD`). The address is then discarded. The emailed copy carries nickname, grade, code, scores, pathways and results ID only: strand, age and school are not included. A `photo` field sent by an older page is ignored. **Raw email addresses are never persisted.**
 - FR-8.4. Rate limiting: 3 sends per address per rolling day and 20 per network per rolling hour, keyed by salted SHA-256 hashes held in server memory (per-process random salt, reset on restart). A filled `website` honeypot field is answered with a fake success and nothing is sent. Limit-exceeded responses (HTTP 429) show a friendly "try again later" message.
 - FR-8.5. Delivery failure surfaces a toast with a retry action; success surfaces a confirmation toast.
 
 ### FR-9 Saved Results (server-side only, no UI)
-- FR-9.1. On reaching Results, the client calls `POST /api/results` once per session. The server stores one row in `saved_results`: the six trait scores, the score ceiling, the Holland code, grade level, age, and test date. No name, nickname, school, email, photo, or individual answers.
-- FR-9.2. The server answers with a random results ID (`ALGN-XXXX-XXXX`, 8 characters from a 32-letter alphabet without 0/O/1/I, 2^40 possibilities), stored client-side and printed in the PDF (FR-7) as a record of the result. There is no on-screen display of it, no lookup, and no delete; the row exists only to feed the admin stats page (FR-10).
+- FR-9.1. On reaching Results, the client calls `POST /api/results` once per session. The server stores one row in `saved_results`: the six trait scores, the score ceiling, the Holland code, grade level, strand ("Others" for any typed strand), age, and test date. No name, nickname, school, email, photo, or individual answers.
+- FR-9.2. The server answers with a random results ID (`ALGN-XXXX-XXXX`, 8 characters from a 32-letter alphabet without 0/O/1/I, 2^40 possibilities), stored client-side and printed in the PDF (FR-7) as a record of the result. There is no on-screen display of it, no lookup, and no delete route or button; the row exists only to feed the admin stats page (FR-10), which does not display the ID.
 - FR-9.3. Rows expire one year after creation.
 - FR-9.4. Limits: 200 saves per network per hour (in-memory), generous because a school lab shares one IP.
 - FR-9.5. A failed save never blocks the results; it is silent and never retried from the UI.
 
 ### FR-10 Admin Page
-- FR-10.1. `/admin` shows aggregate statistics over saved results (count, average age, strongest interest area, most common codes, age distribution) and a table of the latest results. Rows carry no identity, so neither does the page.
+- FR-10.1. `/admin` shows aggregate statistics over saved results (count, average age, strongest interest area, most common codes, age distribution) and a table of the latest results (date, code, grade, strand, age, six scores; no results ID). Rows carry no identity, so neither does the page.
 - FR-10.2. The page asks for one shared password, `ADMIN_PASSWORD` (server only, at least 16 characters), compared in constant time; if it is unset or shorter the page stays locked. A correct password sets an 8-hour session cookie (HttpOnly, SameSite=Strict, Secure in production) signed with a key derived from the password, so changing the password signs everyone out. A Log out button ends the session. There are no admin accounts and nothing about the session is stored server-side.
 - FR-10.3. Sign-in attempts are limited to 5 per network per 15 minutes and 30 across all networks per hour (in memory). The Excel export (`/admin/export`) needs the same session. Old `/admin/<token>` links return 404.
 
@@ -169,7 +169,7 @@ Captured before the assessment begins; stored client-side only (localStorage via
 
 | Category | Requirement |
 | :--- | :--- |
-| **Performance** | Lighthouse ≥ 90 (Performance, Accessibility, SEO) on mobile emulation with throttled CPU, on every PR. LCP < 2.5 s on mid-tier mobile. Landing route JS ≤ ~180 KB gzipped. |
+| **Performance** | Target: Lighthouse ≥ 90 (Performance, Accessibility, SEO) on mobile emulation with throttled CPU, on every PR (the CI gate is not wired yet). LCP < 2.5 s on mid-tier mobile. Landing route JS ≤ ~180 KB gzipped. |
 | **Responsiveness** | Mobile-first. Full functional parity from 360 px-wide budget Android devices to desktop. Assessment is fully operable one-handed (thumb zone). |
 | **Accessibility** | WCAG 2.1 AA: keyboard navigability, screen-reader labeled controls, visible focus states, contrast in light and dark themes. `prefers-reduced-motion` collapses all nonessential animation with zero content loss. |
 | **Privacy & security** | Anonymous by design — no accounts, no PII at rest. Single write path: one nameless `saved_results` row per session, written only by server routes with the service-role key (RLS on, no policies, so the anon key can neither read nor write). Raw emails never stored; rate-limit keys are salted hashes in memory only. Explicit privacy acceptance at Profile Setup and consent before each email. Compliant with the Data Privacy Act of 2012 (RA 10173); the privacy notice is versioned with the code. Security headers set in `next.config.ts` for every path: `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy` allowing only same-origin camera. A strict nonce-based CSP (in `proxy.ts`) is deferred to hardening. Server secrets never use the `NEXT_PUBLIC_` prefix. |
@@ -181,8 +181,8 @@ Captured before the assessment begins; stored client-side only (localStorage via
 | # | Scenario | Required behavior |
 | :--- | :--- | :--- |
 | E1 | Two or more traits tie in the top 3 | Deterministic tie-break by `R → I → A → S → E → C` order (FR-4.2). Ties are common on the 0–7 integer scale, so this path is routine rather than exceptional; the breakdown shows exact scores so ties are visible to the student. |
-| E2 | All six traits equal (flat profile) | Code computed per FR-4.2 (`R-I-A`); dashboard adds an insight note that the profile is balanced and results should be read as exploratory. |
-| E3 | Student answers No to all 42 items | Every trait scores 0 — a valid flat profile, not an error. Handled as E2: deterministic `R-I-A` code plus the exploratory insight note. Results, export, and email all remain available. |
+| E2 | All six traits equal (flat profile) | Code computed per FR-4.2 (`R-I-A`). No flat-profile-specific note is shown; the Disclaimer card (FR-4.3) frames every result as exploratory. |
+| E3 | Student answers No to all 42 items | Every trait scores 0 — a valid flat profile, not an error. Handled as E2: deterministic `R-I-A` code. Results, export, and email all remain available. |
 | E4 | Student refreshes / closes tab mid-quiz | Resume from localStorage at first unanswered question (FR-3.5). |
 | E4a | Student closes the tab after finishing, then reopens the site | Finished session is wiped; the student starts at Profile (FR-3.9). |
 | E5 | Student navigates to `/results` without completing | Redirect to the correct earlier step (§5 navigation rules). |
@@ -194,7 +194,7 @@ Captured before the assessment begins; stored client-side only (localStorage via
 | E10 | Email rate limit exceeded | Friendly "try again later" message; no address stored (FR-8.4). |
 | E11 | Saved-results call fails | Results still render (computed client-side); the save fails silently with no retry, never blocking the page (FR-9.5). |
 | E11b | Email or saved-results server not configured | Route answers `not_configured`; the rest of Results keeps working either way (the save has no UI to report it). |
-| E12 | localStorage unavailable (private mode edge cases) | Journey still works within the session in memory; a notice warns that refresh will lose progress. |
+| E12 | localStorage unavailable (private mode edge cases) | Journey still works within the session in memory; failed writes are ignored and no notice is shown. |
 
 ## 9. Acceptance Criteria (Definition of Done)
 
@@ -209,9 +209,9 @@ Captured before the assessment begins; stored client-side only (localStorage via
 - **Given** a school name of more than 120 characters, **when** typed or pasted, **then** input is truncated/blocked at 120 with a visible counter.
 
 ### Assessment
-- **Given** the assessment route at any point in the bank, **then** exactly one statement is visible, the only answer controls are Yes and No, and no "Next" control is present anywhere on screen.
+- **Given** the assessment route at any point in the bank, **then** exactly one statement is visible, the only answer controls are Yes and No, and no "Next" control is shown on a statement that has not been answered (an answered one shows "Next" after Back).
 - **Given** a student viewing a question, **when** they choose Yes or No, **then** the answer is recorded and the next question appears without any further interaction.
-- **Given** the final question, **when** it is answered, **then** the completion state is reached without a "Next" or "Submit" press.
+- **Given** the final open question, **when** it is answered, **then** the completion state (the "All done!" pop-up) opens without a "Next" or "Submit" press.
 - **Given** a student on question *n* > 1, **when** they use Back, **then** question *n − 1* appears with its previously chosen answer shown as selected.
 - **Given** the first question, **then** the Back control is unavailable.
 - **Given** a previously answered question, **when** the student changes Yes to No, **then** that trait's total decreases by exactly 1 and the interface advances forward again.
@@ -220,7 +220,7 @@ Captured before the assessment begins; stored client-side only (localStorage via
 - **Given** a student mid-assessment, **when** they refresh the page, **then** they resume at their first unanswered question with all prior answers intact.
 - **Given** an unanswered question remains, **then** completion is not reachable.
 - **Given** the whole bank, **then** it is completable using the keyboard alone.
-- **Given** completion, **then** reaching Results saves exactly one `saved_results` row per session containing the six scores, score ceiling, Holland code, grade level, age and date — and no name, nickname, school, email, photo or answers.
+- **Given** completion, **then** reaching Results saves exactly one `saved_results` row per session containing the six scores, score ceiling, Holland code, grade level, strand, age and date — and no name, nickname, school, email, photo or answers.
 
 ### Holland Code
 - **Given** any complete answer set, **when** scored twice, **then** the identical 3-letter code results (deterministic, property-tested).
@@ -249,7 +249,7 @@ Captured before the assessment begins; stored client-side only (localStorage via
 - **Given** a browser that cannot share files, **then** Share is hidden and Save image still works.
 
 ### Non-functional gates
-- Lighthouse ≥ 90 (Perf/A11y/SEO, mobile emulation) enforced in CI on every PR.
+- Lighthouse ≥ 90 (Perf/A11y/SEO, mobile emulation) is the target; the CI gate is not wired yet (CI runs lint, typecheck, unit tests, the seed check and the build).
 - The complete journey is finishable with keyboard only, and with `prefers-reduced-motion` enabled, with no loss of content or function.
 
 ---
@@ -269,7 +269,7 @@ AlignEd ships as a mostly-static, anonymous-first Next.js application.
 
 | Table | Migration | Purpose | Access |
 | :--- | :--- | :--- | :--- |
-| `saved_results` | `0003`, `0004` | One nameless row per session: `results_id` (unique, `ALGN-XXXX-XXXX`), six trait scores, `max_score`, `holland_code`, `grade_level` (`11`/`12`), `age` (nullable, 10–30), date, created_at. Expires after one year. | RLS on, no policies: service role only, via `/api/results` and the admin page. |
+| `saved_results` | `0003`, `0004`, `0005`, `0007` | One nameless row per session: `results_id` (unique, `ALGN-XXXX-XXXX`), six trait scores, `max_score`, `holland_code`, `grade_level` (`11`/`12`), `age` (nullable, 10–30), `strand` (nullable, the SHS list plus `Others`), date, created_at. Expires after one year. | RLS on, no policies: service role only, via `/api/results` and the admin page. |
 | `courses`, `careers`, `course_careers` | `0001` | Reference data seeded from `data/*.csv` (`npm run seed:build`). Not displayed (FR-6). | Public read. |
 | `assessments` | `0001` | Former anonymous completion log. Superseded by `saved_results`; nothing writes to it. | Insert-only. |
 | `universities`, `university_courses` | `0002` | Out of scope (§3); slated for removal. | — |
@@ -298,7 +298,7 @@ AlignEd ships as a mostly-static, anonymous-first Next.js application.
 | Admin password leaks or is guessed | Aggregate stats exposed | Rows carry no identity; password ≥16 chars, constant-time compare, rate-limited attempts, 8-hour sessions; rotating `ADMIN_PASSWORD` signs everyone out. |
 | In-memory limiters on several instances | Limits multiply per instance | Acceptable at one school's traffic; move to a shared store before scaling out. |
 | Stale program/career data | Loss of trust | Versioned CSV → seed pipeline; data edits ship as reviewed PRs. |
-| Low-end mobile performance | Primary audience bounces | Reduced-motion gate, LazyMotion, viewport-triggered animation only, CI Lighthouse gate with CPU throttling. |
+| Low-end mobile performance | Primary audience bounces | Reduced-motion gate (`MotionConfig reducedMotion="user"`), looping decoration limited to fine-pointer devices, viewport-triggered animation only; a CI Lighthouse gate with CPU throttling is planned, not wired. |
 
 ---
 
@@ -306,6 +306,9 @@ AlignEd ships as a mostly-static, anonymous-first Next.js application.
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 
+- 2026-11-20 · admin · FR-10.1: the latest-results table and Excel export no longer show the results ID. FR-9.2 notes the admin page does not display it. FR-2: policy v3.3. · Not needed on the admin page.
+- 2026-11-20 · privacy/edge cases · FR-2: policy is now v3.2 and no longer mentions a Delete saved copy button or results-ID lookup (neither exists, FR-9.2). E2, E12: stated as shipped behaviour (no flat-profile note, no storage-failure notice). · Site copy and docs aligned; unbuilt requirements dropped.
+- 2026-11-20 · docs · Corrected to the shipped site: no results-ID compare/lookup/delete (exec summary, route map, FR-3.9); three-step landing and real CTA wording (FR-1.2 to FR-1.4); strand is saved with the result (FR-2, FR-9.1, DB table); privacy dialog title and versions v3.1/v1.0 (FR-2); retake clears the whole session (FR-3.7); quiz has Next on answered statements and Skip for now on open ones (FR-3.3, acceptance); emailed PDF omits strand, age and school (FR-8.3); Lighthouse gate and flat-profile note and storage-failure notice are not built (NFR, E2, E3, E12). · Docs audit: every statement checked against the shipped site; the site was not changed.
 - 2026-11-20 · about/profile · FR-1.8: language options row removed from About Us while Filipino is held back. FR-2.3: the scoring notice reopens on an empty Profile Setup instead of once per tab. · Requested; the notice was silently skipped on every re-entry after the first dismissal.
 - 2026-11-20 · assessment · FR-3.8 on hold: every English / Filipino toggle hidden, app runs English only; Filipino translations kept in code. · Awaiting permission to use the Filipino version of the assessment.
 - 2026-11-17 · about · Added FR-1.8: About Us acknowledges the adopted instrument (Hawai'i DOE 42-item RIASEC Interest Test, Holland's theory, English and Filipino with the translation review, purpose) · credit the source the 42 statements come from.

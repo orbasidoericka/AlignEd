@@ -14,7 +14,8 @@ function rows(count: number): SavedResult[] {
     code: ["R", "I", "A"],
     gradeLevel: "11",
     strand: "GAS",
-    age: 17,
+    // Distinct per row, so a page can be told apart: the table shows no ID.
+    age: 10 + i,
     scores: {
       realistic: 5,
       investigative: 4,
@@ -42,13 +43,14 @@ describe("LatestResults", () => {
     fireEvent.click(next);
     fireEvent.click(next);
     expect(bodyRows()).toHaveLength(1);
-    expect(screen.getByText("ALGN-TEST-0020")).toBeInTheDocument();
+    expect(screen.getByText("30")).toBeInTheDocument();
     expect(next).toBeDisabled();
     expect(screen.getByText(/Showing/)).toHaveTextContent("Showing 21–21 of 21");
 
     fireEvent.click(previous);
     expect(bodyRows()).toHaveLength(10);
-    expect(screen.getByText("ALGN-TEST-0010")).toBeInTheDocument();
+    expect(screen.getByText("20")).toBeInTheDocument();
+    expect(screen.queryByText(/ALGN-/)).not.toBeInTheDocument();
   });
 
   it("hides the page controls when everything fits on one page", () => {

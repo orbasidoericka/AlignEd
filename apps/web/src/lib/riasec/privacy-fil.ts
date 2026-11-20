@@ -132,13 +132,13 @@ export const PRIVACY_POLICY_SECTIONS_FIL: readonly PolicySection[] = [
       },
       {
         type: "para",
-        text: "**Gumagana ang iyong results ID tulad ng password.** Sinumang may hawak nito ay makikita ang mga iskor na naka-save dito, kahit wala itong pangalan mo. Panatilihin itong pribado.",
+        text: "**Label lamang ang iyong results ID.** Naka-print ito sa iyong PDF, at walang pahina sa AlignEd na magagamit ito para hanapin ang mga resulta. Panatilihin pa rin itong pribado.",
       },
       { type: "subheading", text: "Sino ang makakakita nito" },
       {
         type: "list",
         items: [
-          "mga administrador ng programang AlignEd, sa pamamagitan ng isang pribadong pahina na nagpapakita ng mga naka-save na record at results ID, pero walang pangalan;",
+          "mga administrador ng programang AlignEd, sa pamamagitan ng isang pribadong pahina na nagpapakita ng mga naka-save na record, pero walang pangalan;",
           "mga guidance staff ng paaralan na pinahintulutan ng programa; at",
           "ang mga serbisyong nagpapatakbo ng AlignEd, kung kailangan lamang para panatilihin itong gumagana: Supabase (database), Google Gmail (nagpapadala ng mga email na hihilingin mo), PostHog (estadistika ng website, kapag naka-on), at ang aming website hosting provider.",
         ],
@@ -160,7 +160,7 @@ export const PRIVACY_POLICY_SECTIONS_FIL: readonly PolicySection[] = [
       { type: "subheading", text: "Sa aming server" },
       {
         type: "para",
-        text: "Maaari mong burahin ang iyong naka-save na record anumang oras gamit ang **Delete saved copy** sa iyong results page, o sa pamamagitan ng pagbibigay ng iyong results ID sa mga administrador ng programa.",
+        text: "Awtomatikong binubura ang mga naka-save na record isang taon pagkatapos ng paggawa nito.",
       },
       {
         type: "para",
@@ -235,7 +235,7 @@ export const PRIVACY_POLICY_SECTIONS_FIL: readonly PolicySection[] = [
       },
       {
         type: "para",
-        text: "Para gamitin ang mga karapatang ito, mag-email sa **aligned.career.support@gmail.com**. Ang datos na nasa iyong device lamang ay tinatanggal gamit ang **Start over**. Ang iyong naka-save na record ay tinatanggal gamit ang **Delete saved copy**, o sa pamamagitan ng pagbibigay ng iyong results ID sa mga administrador ng programa.",
+        text: "Para gamitin ang mga karapatang ito, mag-email sa **aligned.career.support@gmail.com**. Ang datos na nasa iyong device lamang ay tinatanggal gamit ang **Start over**.",
       },
     ],
   },
@@ -273,7 +273,7 @@ export const TERMS_SECTIONS_FIL: readonly PolicySection[] = [
           "**Libreng patnubay sa karera ang AlignEd.** Hindi ito isang pagsusulit na maaari mong pasahan o bagsakan, at hindi nito pinagdedesisyunan ang iyong kinabukasan.",
           "**Sumagot nang tapat** para akma sa'yo ang iyong resulta.",
           "**Huwag i-type ang mga pribadong detalye** tulad ng iyong buong pangalan, tirahan, numero ng telepono, o mga password.",
-          "**Panatilihing pribado ang iyong results ID.** Huwag subukang hanapin ang results ID ng ibang tao.",
+          "**Panatilihing pribado ang iyong results ID.**",
           "**Huwag abusuhin ang AlignEd.** Huwag mag-spam sa email feature, huwag subukang sirain o i-overload ang serbisyo, at huwag subukang makapasok sa admin page.",
           "Maaaring magbago, mag-pause, o maging hindi available ang AlignEd paminsan-minsan. Ginagawa namin ang aming makakaya para panatilihing tama ang resulta, ngunit maaari itong magkamali, kaya gamitin ito kasama ng payo mula sa mga taong pinagkakatiwalaan mo.",
         ],

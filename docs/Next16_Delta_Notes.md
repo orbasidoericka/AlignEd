@@ -7,7 +7,8 @@
 
 ## Verified deltas that affect this repo
 
-1. **Middleware is now Proxy.** The file is `proxy.ts` (project root or `src/`),
+1. **Middleware is now Proxy.** There is no `proxy.ts` in the repo yet (security
+   headers live in `next.config.ts`). The file would be `proxy.ts` (project root or `src/`),
    exporting `proxy` (or default). Same `NextRequest`/`NextResponse`/`matcher`
    API, new name. Anything we (or a library README) call "middleware" must be
    written as `proxy.ts`. Relevant later for the strict CSP work in Phase 5.
@@ -21,12 +22,14 @@
    ISR/`export const revalidate` model still works while `cacheComponents` is
    off** (docs call it the "previous model": guide at
    `01-app/02-guides/caching-without-cache-components`).
-   - **Decision for Phase 3 (results reference-data fetchers):** prefer enabling
-     `cacheComponents` and using `'use cache'` + `cacheLife('days')` +
-     `cacheTag('reference-data')` on the Supabase reference-data fetchers —
-     it is the forward model and gives us tag-based invalidation when seed
-     data is republished. Validate on a branch first; if it fights us, classic
-     ISR remains supported.
+   - **Current state:** `cacheComponents` is **off** in `next.config.ts`, and
+     there are no `'use cache'` directives. The one cached server read, the
+     landing page's tests-taken count (`lib/site-counters/tests-taken.ts`),
+     uses `unstable_cache` with a 300 s revalidate and a tag that
+     `/api/results` revalidates after each save. Majors and pathways are static
+     TypeScript data, so the reference-data fetchers this note once planned
+     for do not exist. Moving to Cache Components remains an option, not a
+     done decision.
    - With Cache Components enabled, **GET route handlers prerender like
      pages** — remember this when the API routes appear.
 
@@ -43,8 +46,8 @@
 - When a shadcn/MagicUI/Aceternity/Efferd doc says "add middleware", write
   `proxy.ts`.
 - When a tutorial says `export const revalidate = 3600`, that is the previous
-  model — fine while `cacheComponents` is off, but our Phase 3 plan is
-  `'use cache'` + `cacheLife`.
+  model — fine while `cacheComponents` is off, which is how the repo runs today
+  (`unstable_cache` for the one database read).
 - Tailwind is v4 in this repo: tokens/keyframes live in `globals.css` under
   `@theme` — there is **no** `tailwind.config.ts` (one was deleted in Phase 1
   because v4 silently ignores it without an `@config` directive). Registry
@@ -54,3 +57,9 @@
 - Docs were only spot-verified for Phase 1 scope (proxy, caching,
   revalidating, css, fonts). Before Phase 2+ work on route handlers, Server
   Actions ("mutating data"), or deploying, read those specific guides.
+
+## Changelog
+
+Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
+
+- 2026-11-20 · framework · Caching and proxy notes now state current truth: `cacheComponents` is off, the landing tally uses `unstable_cache`, and there is no `proxy.ts` yet. · Docs audit: every statement checked against the shipped site; the site was not changed.
