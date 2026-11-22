@@ -36,6 +36,12 @@ import {
   purgeExpired,
   type SavedResult,
 } from "@/lib/saved-results/repository";
+import {
+  PERIODS,
+  parsePeriod,
+  withinPeriod,
+  type Period,
+} from "@/lib/saved-results/periods";
 import { summarize, type ResultsSummary } from "@/lib/saved-results/summary";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { cn } from "@/lib/utils";
@@ -60,7 +66,7 @@ const TABLE_LIMIT = 200;
 export default async function AdminPage({
   searchParams,
 }: {
-  searchParams: Promise<{ grade?: string | string[] }>;
+  searchParams: Promise<{ grade?: string | string[]; period?: string | string[] }>;
 }) {
   if (!(await hasAdminSession())) {
     return (
@@ -71,16 +77,20 @@ export default async function AdminPage({
   }
   // ?grade=11 or ?grade=12 narrows every total and list to that grade;
   // anything else shows the overall view.
-  const { grade } = await searchParams;
+  const { grade, period: periodParam } = await searchParams;
   const gradeFilter = GRADE_LEVELS.find((level) => level === grade) ?? null;
+  // ?period=7d|30d|3m|6m narrows to results saved in that window; absent is
+  // all time (results are deleted after a year anyway). Combines with grade.
+  const period = parsePeriod(periodParam);
 
   // The session is checked above, before anything is sent, so a visitor
   // without one never gets a byte of the dashboard. That is also why this is
   // a Suspense boundary and not a loading.tsx: a loading.tsx would stream
-  // this page's frame before the check. Keyed so that changing grade shows the placeholder at once.
+  // this page's frame before the check. Keyed so that changing grade or
+  // period shows the placeholder at once.
   return (
-    <Suspense key={gradeFilter ?? "all"} fallback={<AdminLoading />}>
-      <AdminDashboard gradeFilter={gradeFilter} />
+    <Suspense key={`${gradeFilter ?? "all"}-${period?.id ?? "all"}`} fallback={<AdminLoading />}>
+      <AdminDashboard gradeFilter={gradeFilter} period={period} />
     </Suspense>
   );
 }
@@ -103,8 +113,10 @@ function AdminLoading() {
 
 async function AdminDashboard({
   gradeFilter,
+  period,
 }: {
   gradeFilter: GradeLevel | null;
+  period: Period | null;
 }) {
   const db = createSupabaseAdminClient();
   if (!db) {
@@ -141,10 +153,13 @@ async function AdminDashboard({
     );
   }
 
-  const overall = summarize(loaded.results);
+  // Period first, then grade: the grade counts and every total below are
+  // for the chosen period.
+  const inPeriod = withinPeriod(loaded.results, period);
+  const overall = summarize(inPeriod);
   const results = gradeFilter
-    ? loaded.results.filter((result) => result.gradeLevel === gradeFilter)
-    : loaded.results;
+    ? inPeriod.filter((result) => result.gradeLevel === gradeFilter)
+    : inPeriod;
   const summary = gradeFilter ? summarize(results) : overall;
   const partial = loaded.total > loaded.results.length;
 
@@ -160,11 +175,14 @@ async function AdminDashboard({
 
   return (
     <AdminShell
-      headline={<Headline summary={summary} gradeFilter={gradeFilter} />}
+      headline={<Headline summary={summary} gradeFilter={gradeFilter} period={period} />}
       filter={
-        <div className="flex flex-wrap items-center gap-3">
-          <GradeFilter current={gradeFilter} options={filterOptions} />
-          <ExportLink gradeFilter={gradeFilter} />
+        <div className="flex flex-col gap-3">
+          <PeriodFilter current={period} gradeFilter={gradeFilter} />
+          <div className="flex flex-wrap items-center gap-3">
+            <GradeFilter current={gradeFilter} period={period} options={filterOptions} />
+            <ExportLink gradeFilter={gradeFilter} period={period} />
+          </div>
         </div>
       }
     >
@@ -174,18 +192,27 @@ async function AdminDashboard({
       >
         <SavedResultsTile
           gradeFilter={gradeFilter}
-          count={gradeFilter ? summary.count : loaded.total}
+          count={gradeFilter || period ? summary.count : loaded.total}
           overallCount={overall.count}
           byGrade={overall.byGrade}
         />
         <TopCodeTile top={summary.topCodes[0]} total={summary.count} />
         <div className="col-span-1 flex flex-col gap-4">
-          <MiniStat
-            icon={CalendarDays}
-            label="Last 30 days"
-            value={summary.last30Days.toLocaleString()}
-            description="Results saved in the past month."
-          />
+          {period ? (
+            <MiniStat
+              icon={CalendarDays}
+              label="In this period"
+              value={summary.count.toLocaleString()}
+              description={`Results saved in the ${period.label.toLowerCase()}.`}
+            />
+          ) : (
+            <MiniStat
+              icon={CalendarDays}
+              label="Last 30 days"
+              value={summary.last30Days.toLocaleString()}
+              description="Results saved in the past month."
+            />
+          )}
           <MiniStat
             icon={Cake}
             label="Average age"
@@ -229,7 +256,9 @@ async function AdminDashboard({
           title="Strand"
           description="How many students are in each SHS strand, most common first."
         >
-          {summary.byStrand.length === 0 && summary.strandNotGiven === 0 ? (
+          {/* Results saved before strands were collected have none; they are
+              left out here rather than listed as "Not given". */}
+          {summary.byStrand.length === 0 ? (
             <EmptyState>No results yet.</EmptyState>
           ) : (
             <CountTable
@@ -252,22 +281,8 @@ async function AdminDashboard({
                   count: row.count,
                   barClassName: "bg-secondary",
                 })),
-                ...(summary.strandNotGiven > 0
-                  ? [
-                      {
-                        key: "not-given",
-                        label: <span className="text-muted-foreground">Not given</span>,
-                        count: summary.strandNotGiven,
-                        barClassName: "bg-muted-foreground/40",
-                      },
-                    ]
-                  : []),
               ]}
-              max={Math.max(
-                1,
-                summary.strandNotGiven,
-                ...summary.byStrand.map((row) => row.count),
-              )}
+              max={Math.max(1, ...summary.byStrand.map((row) => row.count))}
               total={summary.count}
             />
           )}
@@ -320,12 +335,19 @@ async function AdminDashboard({
 function Headline({
   summary,
   gradeFilter,
+  period,
 }: {
   summary: ResultsSummary;
   gradeFilter: GradeLevel | null;
+  period: Period | null;
 }) {
+  const when = period ? `in the ${period.label.toLowerCase()}` : null;
   if (summary.count === 0) {
-    return <>No {gradeFilter ? `Grade ${gradeFilter} ` : ""}results saved yet.</>;
+    return (
+      <>
+        No {gradeFilter ? `Grade ${gradeFilter} ` : ""}results saved {when ?? "yet"}.
+      </>
+    );
   }
   const best = Math.max(...summary.byTopLetter.map((row) => row.count));
   const leaders = summary.byTopLetter
@@ -337,7 +359,7 @@ function Headline({
         {summary.count.toLocaleString()}
       </span>{" "}
       {gradeFilter ? `Grade ${gradeFilter} ` : ""}
-      {summary.count === 1 ? "student" : "students"} so far, and most lean{" "}
+      {summary.count === 1 ? "student" : "students"} {when ?? "so far"}, and most lean{" "}
       {leaders.map((name, i) => (
         <span key={name}>
           {i > 0 && (i === leaders.length - 1 ? " and " : ", ")}
@@ -490,35 +512,78 @@ interface FilterOption {
 
 // Overall, Grade 11 and Grade 12 views of the same page, as links so the
 // choice lives in the URL and survives a reload.
+// The admin page's address for a grade and period; each filter keeps the
+// other's choice.
+function adminHref(grade: GradeLevel | null, period: Period | null): string {
+  const params = new URLSearchParams();
+  if (grade) params.set("grade", grade);
+  if (period) params.set("period", period.id);
+  const query = params.toString();
+  return query ? `/admin?${query}` : "/admin";
+}
+
+// Pills wrap onto a second line on narrow phones, so no choice hides off the
+// edge; one rounded row from `sm` up.
+const FILTER_NAV =
+  "inline-flex max-w-full shrink-0 flex-wrap self-start rounded-3xl border border-input bg-card p-1 shadow-bento sm:flex-nowrap sm:rounded-full";
+const filterLink = (active: boolean) =>
+  cn(
+    "flex items-center gap-2 rounded-full px-3.5 py-1.5 text-sm font-semibold whitespace-nowrap transition-colors duration-200 outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+    active
+      ? "bg-primary text-primary-foreground shadow-chip"
+      : "text-muted-foreground hover:bg-muted hover:text-foreground",
+  );
+
+// All time and the preset windows, as links so the choice lives in the URL.
+function PeriodFilter({
+  current,
+  gradeFilter,
+}: {
+  current: Period | null;
+  gradeFilter: GradeLevel | null;
+}) {
+  const options = [{ id: "all", short: "All time", period: null as Period | null }].concat(
+    PERIODS.map((period) => ({ id: period.id, short: period.short, period })),
+  );
+  return (
+    <nav aria-label="Filter by period" className={FILTER_NAV}>
+      {options.map((option) => {
+        const active = (option.period?.id ?? null) === (current?.id ?? null);
+        return (
+          <Link
+            key={option.id}
+            href={adminHref(gradeFilter, option.period)}
+            aria-current={active ? "page" : undefined}
+            aria-label={option.period ? option.period.label : "All time"}
+            className={filterLink(active)}
+          >
+            {option.short}
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
+
 function GradeFilter({
   current,
+  period,
   options,
 }: {
   current: GradeLevel | null;
+  period: Period | null;
   options: FilterOption[];
 }) {
   return (
-    <nav
-      aria-label="Filter by grade"
-      className="inline-flex shrink-0 self-start rounded-full border border-input bg-card p-1 shadow-bento"
-    >
+    <nav aria-label="Filter by grade" className={FILTER_NAV}>
       {options.map((option) => {
         const active = option.grade === current;
         return (
           <Link
             key={option.label}
-            href={
-              option.grade
-                ? `/admin?grade=${option.grade}`
-                : "/admin"
-            }
+            href={adminHref(option.grade, period)}
             aria-current={active ? "page" : undefined}
-            className={cn(
-              "flex items-center gap-2 rounded-full px-3.5 py-1.5 text-sm font-semibold whitespace-nowrap transition-colors duration-200 outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
-              active
-                ? "bg-primary text-primary-foreground shadow-chip"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground",
-            )}
+            className={filterLink(active)}
           >
             {option.label}
             <span
@@ -541,12 +606,14 @@ function GradeFilter({
 // browser downloads the file instead of the router trying to render it.
 function ExportLink({
   gradeFilter,
+  period,
 }: {
   gradeFilter: GradeLevel | null;
+  period: Period | null;
 }) {
   return (
     <a
-      href={`/admin/export${gradeFilter ? `?grade=${gradeFilter}` : ""}`}
+      href={adminHref(gradeFilter, period).replace("/admin", "/admin/export")}
       download
       className="inline-flex h-10 items-center gap-2 rounded-full bg-accent-strong px-4 text-sm font-bold whitespace-nowrap text-accent-strong-foreground shadow-bento transition-[filter,translate] duration-200 outline-none hover:brightness-95 focus-visible:ring-3 focus-visible:ring-ring/50 active:translate-y-px"
     >
@@ -554,6 +621,7 @@ function ExportLink({
       Export to Excel
       <span className="sr-only">
         {gradeFilter ? `, Grade ${gradeFilter} only` : ", all grades"}
+        {period ? `, ${period.label.toLowerCase()}` : ""}
       </span>
     </a>
   );

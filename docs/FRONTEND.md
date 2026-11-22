@@ -67,6 +67,8 @@ Next.js 16.2.5 App Router, React 19, TypeScript, Tailwind v4 (tokens in `apps/we
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 
+- 2026-11-22 · admin · `PeriodFilter` pill row above the grade filter on `/admin`; both filters build links with `adminHref` so each keeps the other's choice; Suspense key includes the period; headline names the period · the team asked to filter results by when they were saved.
+- 2026-11-22 · admin · The Strand panel on `/admin` drops its "Not given" row · requested by the team.
 - 2026-11-20 · frontend · `app/admin/page.tsx`: `AdminShell` renders only a centred `main` when `signedIn` is false; `components/admin/admin-login-form.tsx` heading is an h1. · Cleaner admin sign-in.
 - 2026-11-20 · frontend · `components/admin/latest-results.tsx` drops the Results ID column; policy text (`privacy-consent.tsx`, `privacy-fil.ts`) no longer says the admin page shows results IDs, version `v3.3`. Tests updated. · Admin no longer shows results IDs.
 - 2026-11-20 · frontend · `PRIVACY_POLICY_VERSION` `v3.2`: `privacy-consent.tsx` and `privacy-fil.ts` drop the Delete saved copy promise and the results-ID-as-password claim; saved records are described as expiring after a year. Removed the empty `app/admin/[token]` folder. · The text promised features that do not exist.

@@ -57,7 +57,7 @@ describe("resultsSheetRows", () => {
 
   it("opens with the table's title, a scope line and a key to the letters", () => {
     expect(values(rows[0]!)).toEqual(["Latest results"]);
-    expect(values(rows[1]!)[0]).toMatch(/^All grades · 2 results · exported Nov 11, 2026\. Newest first/);
+    expect(values(rows[1]!)[0]).toMatch(/^All grades · All time · 2 results · exported Nov 11, 2026\. Newest first/);
     expect(values(rows[2]!)[0]).toMatch(/from 0 to 7/);
     expect(values(rows[2]!)[0]).toContain("R Realistic, I Investigative, A Artistic");
   });
@@ -100,9 +100,14 @@ describe("resultsSheetRows", () => {
     expect(values(rows[6]!).slice(4, 7)).toEqual(["Not given", "Not given", "Not given"]);
   });
 
+  it("names the period filter in the subtitle", () => {
+    const recent = resultsSheetRows([RESULT], { grade: "11", period: "Last 30 days", exportedOn: "2026-11-11" });
+    expect(values(recent[1]!)[0]).toMatch(/^Grade 11 only · Last 30 days · 1 result ·/);
+  });
+
   it("names the grade filter in the subtitle", () => {
     const filtered = resultsSheetRows([RESULT], { grade: "12", exportedOn: "2026-11-11" });
-    expect(values(filtered[1]!)[0]).toMatch(/^Grade 12 only · 1 result ·/);
+    expect(values(filtered[1]!)[0]).toMatch(/^Grade 12 only · All time · 1 result ·/);
   });
 });
 
@@ -134,7 +139,7 @@ describe("summarySheet", () => {
 
   it("puts the page's cards in an Overview table", () => {
     expect(values(rows[0]!)).toEqual(["Saved results summary"]);
-    expect(values(rows[1]!)[0]).toMatch(/^All grades · 3 results · exported Nov 11, 2026\./);
+    expect(values(rows[1]!)[0]).toMatch(/^All grades · All time · 3 results · exported Nov 11, 2026\./);
     expect(values(find("Measure")!)).toEqual(["Measure", "", "Value", "Notes", ""]);
     expect(figure("Saved results")).toBe(3);
     expect(figure("Grade 11")).toBe(1);
@@ -156,15 +161,15 @@ describe("summarySheet", () => {
     expect(social?.[3]?.value).toBeCloseTo(2 / 3);
     expect(social?.[3]?.style?.numFmt).toBe("0%");
     expect(find("STEM")?.[2]?.value).toBe(1);
-    expect(rows.filter((row) => row[0]?.value === "Not given")).toHaveLength(2);
+    // Only Age keeps a "Not given" row; strands saved before they were
+    // collected are left out of the Strand table.
+    expect(rows.filter((row) => row[0]?.value === "Not given")).toHaveLength(1);
 
     const totals = rows.filter((row) => row[0]?.value === "Total");
     expect(totals).toHaveLength(3); // interest area, strand, age; not the top-10 codes
-    for (const row of totals) {
-      expect(row[2]?.value).toBe(3);
-      expect(row[3]?.value).toBe(1);
-      expect(row[0]?.style?.bold).toBe(true);
-    }
+    expect(totals.map((row) => row[2]?.value)).toEqual([3, 2, 3]);
+    expect(totals[1]?.[3]?.value).toBeCloseTo(2 / 3);
+    for (const row of totals) expect(row[0]?.style?.bold).toBe(true);
   });
 
   it("merges the name columns where a table has no letters", () => {

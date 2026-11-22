@@ -118,12 +118,16 @@ const dateFormat = new Intl.DateTimeFormat("en-PH", {
   timeZone: "UTC",
 });
 
-function scopeLine(
-  count: number,
-  grade: GradeLevel | null,
-  exportedOn: string,
-): string {
-  const scope = grade ? `Grade ${grade} only` : "All grades";
+// Which results the file holds, for the subtitle of each sheet.
+export interface ExportScope {
+  grade: GradeLevel | null;
+  // The admin page period filter label, e.g. "Last 30 days"; null for all time.
+  period?: string | null;
+  exportedOn: string;
+}
+
+function scopeLine(count: number, { grade, period, exportedOn }: ExportScope): string {
+  const scope = [grade ? `Grade ${grade} only` : "All grades", period ?? "All time"].join(" · ");
   const counted = `${count.toLocaleString("en-PH")} ${count === 1 ? "result" : "results"}`;
   return `${scope} · ${counted} · exported ${dateFormat.format(new Date(`${exportedOn}T00:00:00Z`))}`;
 }
@@ -148,9 +152,9 @@ const SUMMARY_WIDTHS = [10, 26, 12, 12, 40];
 
 export function summarySheet(
   results: readonly SavedResult[],
-  { grade, exportedOn, now = Date.now() }: { grade: GradeLevel | null; exportedOn: string; now?: number },
+  scope: ExportScope & { now?: number },
 ): { rows: Cell[][]; merges: string[] } {
-  const summary = summarize(results, now);
+  const summary = summarize(results, scope.now ?? Date.now());
   const count = summary.count;
   const rows: Cell[][] = [];
   const merges: string[] = [];
@@ -160,7 +164,7 @@ export function summarySheet(
 
   rows.push(
     [text("Saved results summary", TITLE)],
-    [text(`${scopeLine(count, grade, exportedOn)}. No names or other identifiers are stored.`, NOTE)],
+    [text(`${scopeLine(count, scope)}. No names or other identifiers are stored.`, NOTE)],
     [],
   );
 
@@ -263,12 +267,9 @@ export function summarySheet(
   );
   table(
     "Strand",
-    "Students per SHS strand, most common first.",
+    "Students per SHS strand, most common first. Results saved before strands were collected are left out.",
     "Strand",
-    [
-      ...summary.byStrand.map((row) => ({ name: strandShortName(row.strand), count: row.count })),
-      ...(summary.strandNotGiven ? [{ name: "Not given", count: summary.strandNotGiven, muted: true }] : []),
-    ],
+    summary.byStrand.map((row) => ({ name: strandShortName(row.strand), count: row.count })),
     true,
   );
   table(
@@ -301,14 +302,14 @@ const COLUMNS: { header: string | null; width: number; h?: "left" | "center" }[]
 
 export function resultsSheetRows(
   results: readonly SavedResult[],
-  { grade, exportedOn }: { grade: GradeLevel | null; exportedOn: string },
+  scope: ExportScope,
 ): Cell[][] {
   const maxScore = results[0]?.maxScore ?? 7;
   const key = LETTERS.map((letter) => `${letter} ${RIASEC_PATHWAYS[letter].name}`).join(", ");
   const missing = (i: number, h?: "center") => text("Not given", body(i, { color: GREY_INK, italic: true, ...(h ? { h } : {}) }));
   return [
     [text("Latest results", TITLE)],
-    [text(`${scopeLine(results.length, grade, exportedOn)}. Newest first, with each student's score in every interest area.`, NOTE)],
+    [text(`${scopeLine(results.length, scope)}. Newest first, with each student's score in every interest area.`, NOTE)],
     [text(`Scores run from 0 to ${maxScore}. Bold scores are the letters in that student's code. ${key}.`, NOTE)],
     [],
     COLUMNS.map((column) => text(column.header ?? "", column.h === "left" ? HEAD_LEFT : HEAD)),
@@ -335,7 +336,7 @@ export function resultsSheetRows(
 
 export function resultsToXlsx(
   results: readonly SavedResult[],
-  options: { grade: GradeLevel | null; exportedOn: string; now?: number },
+  options: ExportScope & { now?: number },
 ): Uint8Array {
   const codeColumn = COLUMNS.findIndex((column) => column.header === "Code");
   const summary = summarySheet(results, options);

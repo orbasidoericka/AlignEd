@@ -251,6 +251,8 @@ Dark values are black-based with no blue tint and a faint inset top highlight, b
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 
+- 2026-11-22 · admin · Period pills (All time, 7 days, 30 days, 3 months, 6 months) above the grade pills, same pill style, both rows wrap onto a second line on narrow phones; the third card reads "In this period" when a period is chosen · the team asked to filter results by when they were saved.
+- 2026-11-22 · admin · Strand chart shows only real strands, no "Not given" bar · requested by the team.
 - 2026-11-20 · admin · Latest-results table uses `table-fixed` with a `colgroup` (Taken 9rem, Code 7rem, Grade 7rem, Age 4rem, each score 3rem; Strand takes the rest; table min width 56rem), so columns no longer shift between pages. · Paging changed the column spacing.
 - 2026-11-20 · admin · Signed-out `/admin` drops the "Saved results" hero (heading, intro, privacy line); only the header bar, a smaller Hexi (`w-40`, `sm:w-48`, decorative) and the sign-in card remain, centred in the page. The card's "Admin sign in" is now the page h1. Signed-in dashboard unchanged. · Requested: a cleaner sign-in screen.
 - 2026-11-20 · docs · Corrected: nav items (adds Scoring), landing section list and names, instrument-sources panel has four rows, Magic UI/Aceternity list limited to components actually used. · Docs audit: every statement checked against the shipped site; the site was not changed.

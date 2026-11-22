@@ -29,6 +29,7 @@ Product app with one brand surface: the landing page is brand register (identity
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 
+- 2026-11-22 · admin · Admin page and Excel export filter by period (last 7 days to 6 months, or all time) as well as by grade · the team asked to filter results by when they were saved.
 - 2026-11-20 · docs · Corrected: saved record is not for student comparison; email PDF omits strand, age and school; quiz Next/Skip; landing tally and About page named. · Docs audit: every statement checked against the shipped site; the site was not changed.
 - 2026-11-20 · about/profile · About Us drops the language options row (Filipino on hold); scoring notice reopens on an empty Profile Setup. See PRD FR-1.8, FR-2.3. · Requested.
 - 2026-11-20 · assessment · Language toggles hidden; English only until the Filipino version is cleared. See PRD FR-3.8. · Awaiting permission to use the Filipino version.
