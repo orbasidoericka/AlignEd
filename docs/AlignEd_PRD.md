@@ -151,7 +151,7 @@ Captured before the assessment begins; stored client-side only (localStorage via
 - FR-9.5. A failed save never blocks the results; it is silent and never retried from the UI.
 
 ### FR-10 Admin Page
-- FR-10.1. `/admin` shows aggregate statistics over saved results (count, average age, strongest interest area, most common codes, age distribution) and a table of the latest results (date, code, grade, strand, age, six scores; no results ID). Everything on it, and the Excel export, can be narrowed by grade (11, 12) and by period (all time, last 7 days, 30 days, 3 months, 6 months, by when the result was saved; results are deleted after a year, so all time is the past year). Rows carry no identity, so neither does the page.
+- FR-10.1. `/admin` shows aggregate statistics over saved results (count, average age, strongest interest area, most common codes, age distribution) and a table of the latest results (date, code, grade, strand, age, six scores; no results ID). Everything on it, and the Excel export, can be narrowed by grade (11, 12) and by period (all time, last 7 days, 30 days, 3 months, 6 months, 12 months, by when the result was saved; results are deleted after a year, so all time and 12 months mostly match). Rows carry no identity, so neither does the page.
 - FR-10.2. The page asks for one shared password, `ADMIN_PASSWORD` (server only, at least 16 characters), compared in constant time; if it is unset or shorter the page stays locked. A correct password sets an 8-hour session cookie (HttpOnly, SameSite=Strict, Secure in production) signed with a key derived from the password, so changing the password signs everyone out. A Log out button ends the session. There are no admin accounts and nothing about the session is stored server-side.
 - FR-10.3. Sign-in attempts are limited to 5 per network per 15 minutes and 30 across all networks per hour (in memory). The Excel export (`/admin/export`) needs the same session. Old `/admin/<token>` links return 404.
 
@@ -306,6 +306,7 @@ AlignEd ships as a mostly-static, anonymous-first Next.js application.
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 
+- 2026-11-23 · admin · FR-10.1: period filter gains "Last 12 months" (1 year) · the team asked for a yearly option.
 - 2026-11-22 · admin · FR-10.1: period filter (all time, 7 days, 30 days, 3 months, 6 months) alongside the grade filter; the Excel export follows both · the team asked to filter results by when they were saved.
 - 2026-11-20 · admin · FR-10.1: the latest-results table and Excel export no longer show the results ID. FR-9.2 notes the admin page does not display it. FR-2: policy v3.3. · Not needed on the admin page.
 - 2026-11-20 · privacy/edge cases · FR-2: policy is now v3.2 and no longer mentions a Delete saved copy button or results-ID lookup (neither exists, FR-9.2). E2, E12: stated as shipped behaviour (no flat-profile note, no storage-failure notice). · Site copy and docs aligned; unbuilt requirements dropped.

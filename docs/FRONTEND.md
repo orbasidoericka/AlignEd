@@ -67,6 +67,7 @@ Next.js 16.2.5 App Router, React 19, TypeScript, Tailwind v4 (tokens in `apps/we
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 
+- 2026-11-23 · admin · `PERIODS` gains `1y` ("Last 12 months", pill "1 year") · the team asked for a yearly option.
 - 2026-11-22 · admin · `PeriodFilter` pill row above the grade filter on `/admin`; both filters build links with `adminHref` so each keeps the other's choice; Suspense key includes the period; headline names the period · the team asked to filter results by when they were saved.
 - 2026-11-22 · admin · The Strand panel on `/admin` drops its "Not given" row · requested by the team.
 - 2026-11-20 · frontend · `app/admin/page.tsx`: `AdminShell` renders only a centred `main` when `signedIn` is false; `components/admin/admin-login-form.tsx` heading is an h1. · Cleaner admin sign-in.

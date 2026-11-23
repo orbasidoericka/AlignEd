@@ -23,14 +23,14 @@ const savedDaysAgo = (days: number): SavedResult => ({
 describe("parsePeriod", () => {
   it("knows each preset and treats anything else as all time", () => {
     for (const period of PERIODS) expect(parsePeriod(period.id)).toBe(period);
-    for (const other of [undefined, null, "", "1y", "30", ["30d"], "30D"]) {
+    for (const other of [undefined, null, "", "12m", "30", ["30d"], "30D"]) {
       expect(parsePeriod(other)).toBeNull();
     }
   });
 });
 
 describe("withinPeriod", () => {
-  const results = [0, 6, 7, 8, 29, 30, 31, 90, 91, 92, 181, 182, 183, 300].map(savedDaysAgo);
+  const results = [0, 6, 7, 8, 29, 30, 31, 90, 91, 92, 181, 182, 183, 300, 365, 366].map(savedDaysAgo);
   const kept = (id: string | null) =>
     withinPeriod(results, parsePeriod(id), NOW).map((result) => result.resultsId);
   const ids = (...days: number[]) => days.map((days) => savedDaysAgo(days).resultsId);
@@ -44,6 +44,7 @@ describe("withinPeriod", () => {
     expect(kept("30d")).toEqual(ids(0, 6, 7, 8, 29, 30));
     expect(kept("3m")).toEqual(ids(0, 6, 7, 8, 29, 30, 31, 90, 91));
     expect(kept("6m")).toEqual(ids(0, 6, 7, 8, 29, 30, 31, 90, 91, 92, 181, 182));
+    expect(kept("1y")).toEqual(ids(0, 6, 7, 8, 29, 30, 31, 90, 91, 92, 181, 182, 183, 300, 365));
   });
 
   it("never changes the list it was given", () => {

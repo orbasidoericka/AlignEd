@@ -251,6 +251,7 @@ Dark values are black-based with no blue tint and a faint inset top highlight, b
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 
+- 2026-11-23 · admin · Period pills add "1 year" after "6 months" · the team asked for a yearly option.
 - 2026-11-22 · admin · Period pills (All time, 7 days, 30 days, 3 months, 6 months) above the grade pills, same pill style, both rows wrap onto a second line on narrow phones; the third card reads "In this period" when a period is chosen · the team asked to filter results by when they were saved.
 - 2026-11-22 · admin · Strand chart shows only real strands, no "Not given" bar · requested by the team.
 - 2026-11-20 · admin · Latest-results table uses `table-fixed` with a `colgroup` (Taken 9rem, Code 7rem, Grade 7rem, Age 4rem, each score 3rem; Strand takes the rest; table min width 56rem), so columns no longer shift between pages. · Paging changed the column spacing.
