@@ -93,7 +93,7 @@ describe("ProfileForm layout and Others strand", () => {
       screen.getByRole("heading", { name: "Tell us about yourself" }),
     ).toBeInTheDocument();
     expect(screen.queryByText(/Step 1 of 3/i)).not.toBeInTheDocument();
-    for (const label of [/What should we call you/i, /How old are you/i, /School/i]) {
+    for (const label of [/What should we call you/i, /How old are you/i]) {
       expect(screen.getByLabelText(label)).not.toHaveAttribute("placeholder");
     }
   });
@@ -133,8 +133,8 @@ describe("ProfileForm layout and Others strand", () => {
       "true",
     );
     expect(screen.getByText("What grade are you in?")).toHaveTextContent("*");
-    // School is the one optional field, and carries no star.
-    expect(document.querySelector('label[for="school"]')).not.toHaveTextContent("*");
+    // School is no longer asked.
+    expect(document.getElementById("school")).toBeNull();
     expect(consentBox().closest("label")).toHaveTextContent("*");
   });
 

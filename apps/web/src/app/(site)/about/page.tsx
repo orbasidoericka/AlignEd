@@ -39,7 +39,7 @@ const pillars = [
   },
   {
     title: "How we treat your data",
-    body: "No accounts and no real names. Your nickname never leaves your device. If you save a result, it is stored without your name, nickname or school. We follow the Data Privacy Act of 2012 (RA 10173).",
+    body: "No accounts and no real names. Your nickname never leaves your device. If you save a result, it is stored without your name or nickname. We follow the Data Privacy Act of 2012 (RA 10173).",
     icon: ShieldCheck,
   },
 ] as const;

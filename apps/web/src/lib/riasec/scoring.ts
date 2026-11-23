@@ -32,23 +32,25 @@ export const TRAIT_META: Record<RiasecTrait, TraitMeta> = {
 
 export type HollandCode = readonly [RiasecLetter, RiasecLetter, RiasecLetter];
 
-// Top three traits by score, ties broken by TRAIT_ORDER (R→I→A→S→E→C), so the
-// same answer set always yields the same code (PRD FR-4.1, FR-4.2).
+// All six letters by score, ties broken by TRAIT_ORDER (R→I→A→S→E→C), so the
+// same answer set always yields the same order (PRD FR-4.1, FR-4.2).
+export function rankTraits(scores: RiasecScores): RiasecLetter[] {
+  return [...TRAIT_ORDER]
+    .sort((a, b) => {
+      const diff = scores[b] - scores[a];
+      if (diff !== 0) return diff;
+      return TRAIT_ORDER.indexOf(a) - TRAIT_ORDER.indexOf(b);
+    })
+    .map((trait) => TRAIT_META[trait].letter);
+}
+
+// The Holland Code: the top three of rankTraits.
 export function computeHollandCode(scores: RiasecScores): HollandCode {
-  const ranked = [...TRAIT_ORDER].sort((a, b) => {
-    const diff = scores[b] - scores[a];
-    if (diff !== 0) return diff;
-    return TRAIT_ORDER.indexOf(a) - TRAIT_ORDER.indexOf(b);
-  });
-  const [first, second, third] = ranked;
+  const [first, second, third] = rankTraits(scores);
   if (!first || !second || !third) {
     throw new Error("TRAIT_ORDER must contain all six traits");
   }
-  return [
-    TRAIT_META[first].letter,
-    TRAIT_META[second].letter,
-    TRAIT_META[third].letter,
-  ];
+  return [first, second, third];
 }
 
 export function formatHollandCode(code: readonly RiasecLetter[]): string {

@@ -1,4 +1,10 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { RIASEC_PATHWAYS } from "@/lib/riasec/career-pathways";
@@ -205,5 +211,62 @@ describe("PathwayResults", () => {
     for (const frame of frames.slice(1)) {
       expect(frame).not.toMatch(/(border|ring)-trait-/);
     }
+  });
+
+  describe("other types popup", () => {
+    const renderWithOthers = () =>
+      render(
+        <PathwayResults
+          topThreeLetters={["R", "I", "A"]}
+          otherLetters={["S", "E", "C"]}
+        />,
+      );
+
+    it("keeps ranks 4 to 6 out of the page until the button is pressed", () => {
+      renderWithOthers();
+      for (const letter of ["S", "E", "C"] as const) {
+        expect(screen.queryByText(RIASEC_PATHWAYS[letter].name)).toBeNull();
+      }
+      expect(
+        screen.getByRole("button", { name: "See the other types" }),
+      ).toBeInTheDocument();
+    });
+
+    it("shows each other type as a full card, ranked 4 to 6, with every major and pathway", async () => {
+      renderWithOthers();
+      fireEvent.click(screen.getByRole("button", { name: "See the other types" }));
+      const dialog = await screen.findByRole("dialog", {
+        name: "The other RIASEC types",
+      });
+
+      const cards = within(dialog).getAllByRole("region");
+      expect(cards.map((card) => within(card).getByRole("heading", { level: 2 }).textContent))
+        .toEqual(["Social", "Enterprising", "Conventional"]);
+      for (const [index, letter] of (["S", "E", "C"] as const).entries()) {
+        const profile = RIASEC_PATHWAYS[letter];
+        const card = cards[index]!;
+        expect(card).toHaveTextContent(`#${index + 4}`);
+        const [majorsList, pathwaysList] = within(card).getAllByRole("list");
+        expect(
+          within(majorsList!).getAllByRole("listitem").map((li) => li.textContent),
+        ).toEqual([...profile.majors]);
+        expect(
+          within(pathwaysList!).getAllByRole("listitem").map((li) => li.textContent),
+        ).toEqual([...profile.relatedPathways]);
+      }
+      expect(dialog).toHaveTextContent("Your fourth RIASEC type");
+      expect(dialog).toHaveTextContent("Your sixth RIASEC type");
+      expect(dialog.textContent).not.toMatch(/%|best match|strong match/i);
+      // Not a carousel: no slide controls inside.
+      expect(within(dialog).queryByRole("button", { name: /^Show / })).toBeNull();
+    });
+
+    it("closes with Escape", async () => {
+      renderWithOthers();
+      fireEvent.click(screen.getByRole("button", { name: "See the other types" }));
+      const dialog = await screen.findByRole("dialog");
+      fireEvent.keyDown(dialog, { key: "Escape" });
+      await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    });
   });
 });

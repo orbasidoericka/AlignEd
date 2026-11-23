@@ -7,7 +7,6 @@ const input = {
   gradeLevel: "11",
   strand: "Science, Technology, Engineering, and Mathematics (STEM)",
   age: "17",
-  school: "San Fernando NHS",
   scores: {
     realistic: 6,
     investigative: 7,
@@ -46,8 +45,10 @@ describe("buildResultsPdf", () => {
     const text = JSON.stringify(buildResultsPdf(input).content);
     expect(text).toContain("I-R-A");
     expect(text).toContain(
-      "MARI · 17 years old · Grade 11 · Science, Technology, Engineering, and Mathematics (STEM) · San Fernando NHS",
+      "MARI · 17 years old · Grade 11 · Science, Technology, Engineering, and Mathematics (STEM)\"",
     );
+    // No school, and no results ID.
+    expect(text).not.toContain("Results ID");
     expect(text).toContain("7 / 7");
     expect(text).toContain("0 / 7");
     // One major from each code letter's pathway sheet entry.

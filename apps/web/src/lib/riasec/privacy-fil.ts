@@ -38,8 +38,7 @@ export const PRIVACY_POLICY_SECTIONS_FIL: readonly PolicySection[] = [
           "ang iyong palayaw (1 hanggang 8 titik);",
           "ang iyong edad;",
           "ang iyong antas ng grado (11 o 12);",
-          "ang iyong SHS strand (kung wala sa listahan ang sa'yo, maaari kang pumili ng Others at i-type ito);",
-          "ang pangalan ng iyong paaralan (opsyonal); at",
+          "ang iyong SHS strand (kung wala sa listahan ang sa'yo, maaari kang pumili ng Others at i-type ito); at",
           "ang iyong tsek na nagpapakita na sumasang-ayon ka sa mga Tuntuning ito.",
         ],
       },
@@ -77,7 +76,7 @@ export const PRIVACY_POLICY_SECTIONS_FIL: readonly PolicySection[] = [
       {
         type: "list",
         items: [
-          "**Nananatili lang sa iyong device:** ang iyong palayaw, paaralan, mga sagot, wika, tema, pinili mong tunog, oras ng sesyon, anumang strand na i-type mo sa ilalim ng Others (napi-print din ito sa iyong sariling PDF), at anumang career look photo na kukunin mo.",
+          "**Nananatili lang sa iyong device:** ang iyong palayaw, mga sagot, wika, tema, pinili mong tunog, oras ng sesyon, anumang strand na i-type mo sa ilalim ng Others (napi-print din ito sa iyong sariling PDF), at anumang career look photo na kukunin mo.",
           "**Naka-save sa aming server (walang pangalan):** ang iyong antas ng grado, SHS strand (ang salitang Others lamang kung sarili mong tinype), edad, anim na iskor, tatlong-titik na code, petsa, at results ID.",
           "**Ipinapadala minsan, pagkatapos ay itinatapon:** ang iyong email address.",
           "**Ipinapadala sa aming analytics provider:** datos ng pagbisita sa website, kapag naka-on ang analytics.",
@@ -86,11 +85,11 @@ export const PRIVACY_POLICY_SECTIONS_FIL: readonly PolicySection[] = [
       { type: "subheading", text: "Hindi namin kinokolekta" },
       {
         type: "para",
-        text: "**Hindi namin kinokolekta** ang iyong buong pangalan, tirahan, numero ng telepono, o password, at hindi kami gumagawa ng mga account. **Ang iyong palayaw, paaralan, indibidwal na sagot, tinype na strand, email address, at larawan ay hindi kailanman nase-save sa aming server.** Mangyaring huwag i-type ang alinman sa mga pribadong detalyeng ito sa AlignEd.",
+        text: "**Hindi namin kinokolekta** ang iyong buong pangalan, tirahan, numero ng telepono, o password, at hindi kami gumagawa ng mga account. **Ang iyong palayaw, indibidwal na sagot, tinype na strand, email address, at larawan ay hindi kailanman nase-save sa aming server.** Mangyaring huwag i-type ang alinman sa mga pribadong detalyeng ito sa AlignEd.",
       },
       {
         type: "para",
-        text: "Personal ang iyong edad at mga detalye ng paaralan. Inaalagaan namin ang mga ito nang mabuti kahit walang pangalang kalakip.",
+        text: "Personal ang iyong edad, grado, at strand. Inaalagaan namin ang mga ito nang mabuti kahit walang pangalang kalakip.",
       },
     ],
   },
@@ -119,7 +118,7 @@ export const PRIVACY_POLICY_SECTIONS_FIL: readonly PolicySection[] = [
       { type: "subheading", text: "Sa iyong device habang kinukuha mo ang assessment" },
       {
         type: "para",
-        text: "Ang iyong palayaw, edad, grado, strand, paaralan, mga sagot, at iskor ay nananatili sa browser ng device na ginagamit mo. Ito ang nagpapahintulot sa AlignEd na matandaan ang iyong posisyon nang walang account.",
+        text: "Ang iyong palayaw, edad, grado, strand, mga sagot, at iskor ay nananatili sa browser ng device na ginagamit mo. Ito ang nagpapahintulot sa AlignEd na matandaan ang iyong posisyon nang walang account.",
       },
       { type: "subheading", text: "Sa aming server pagkatapos mong matapos" },
       {
@@ -128,11 +127,11 @@ export const PRIVACY_POLICY_SECTIONS_FIL: readonly PolicySection[] = [
       },
       {
         type: "para",
-        text: "**Wala ritong pangalan, palayaw, paaralan, email, larawan, o sagot.** Itinuturing pa rin namin itong protektadong datos, dahil hindi namin maaaring ipangako na imposibleng ma-ugnay ito sa isang tao.",
+        text: "**Wala ritong pangalan, palayaw, email, larawan, o sagot.** Itinuturing pa rin namin itong protektadong datos, dahil hindi namin maaaring ipangako na imposibleng ma-ugnay ito sa isang tao.",
       },
       {
         type: "para",
-        text: "**Label lamang ang iyong results ID.** Naka-print ito sa iyong PDF, at walang pahina sa AlignEd na magagamit ito para hanapin ang mga resulta. Panatilihin pa rin itong pribado.",
+        text: "**Label lamang ang results ID** ng record na iyon. Hindi ito ipinapakita sa iyo o naka-print sa iyong PDF, at walang pahina sa AlignEd na magagamit ito para hanapin ang mga resulta.",
       },
       { type: "subheading", text: "Sino ang makakakita nito" },
       {
@@ -273,7 +272,6 @@ export const TERMS_SECTIONS_FIL: readonly PolicySection[] = [
           "**Libreng patnubay sa karera ang AlignEd.** Hindi ito isang pagsusulit na maaari mong pasahan o bagsakan, at hindi nito pinagdedesisyunan ang iyong kinabukasan.",
           "**Sumagot nang tapat** para akma sa'yo ang iyong resulta.",
           "**Huwag i-type ang mga pribadong detalye** tulad ng iyong buong pangalan, tirahan, numero ng telepono, o mga password.",
-          "**Panatilihing pribado ang iyong results ID.**",
           "**Huwag abusuhin ang AlignEd.** Huwag mag-spam sa email feature, huwag subukang sirain o i-overload ang serbisyo, at huwag subukang makapasok sa admin page.",
           "Maaaring magbago, mag-pause, o maging hindi available ang AlignEd paminsan-minsan. Ginagawa namin ang aming makakaya para panatilihing tama ang resulta, ngunit maaari itong magkamali, kaya gamitin ito kasama ng payo mula sa mga taong pinagkakatiwalaan mo.",
         ],

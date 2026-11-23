@@ -27,8 +27,6 @@ export interface SendResultsInput {
   maxScore: number;
   // When the assessment was finished; printed on the PDF.
   takenOn: Date;
-  // The saved-results ID, printed on the PDF; null when not saved.
-  resultsId: string | null;
 }
 
 // The student's own calendar date, so the emailed PDF shows the same date
@@ -58,7 +56,6 @@ export async function sendResultsEmail(
           scores: input.scores,
           maxScore: input.maxScore,
           takenOn: localDate(input.takenOn),
-          resultsId: input.resultsId,
         },
       }),
     });

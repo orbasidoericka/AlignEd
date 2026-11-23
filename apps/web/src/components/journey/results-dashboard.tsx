@@ -22,6 +22,7 @@ import { QUESTIONS } from "@/lib/riasec/questions";
 import { RESULTS_TEXT_FIL, TRAIT_LABEL_FIL } from "@/lib/riasec/results-fil";
 import {
   computeHollandCode,
+  rankTraits,
   formatHollandCode,
   maxScorePerTrait,
   TRAIT_META,
@@ -52,6 +53,7 @@ export function ResultsDashboard() {
   const hydrated = useHydrated();
 
   const code = useMemo(() => computeHollandCode(scores), [scores]);
+  const otherLetters = useMemo(() => rankTraits(scores).slice(3), [scores]);
   const max = useMemo(() => maxScorePerTrait(QUESTIONS), []);
 
   return (
@@ -303,7 +305,7 @@ export function ResultsDashboard() {
             delay={0.14}
             className={cn("md:col-span-3", printSingle)}
           >
-            <PathwayResults topThreeLetters={code} />
+            <PathwayResults topThreeLetters={code} otherLetters={otherLetters} />
           </BlurFade>
         </BentoGrid>
 

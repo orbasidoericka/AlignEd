@@ -34,7 +34,15 @@ export const RESULTS_TEXT_FIL = {
     "Pangunahin mong uri ng RIASEC",
     "Ikalawa mong uri ng RIASEC",
     "Ikatlo mong uri ng RIASEC",
+    "Ikaapat mong uri ng RIASEC",
+    "Ikalima mong uri ng RIASEC",
+    "Ikaanim mong uri ng RIASEC",
   ],
+  otherTypes: {
+    button: "Tingnan ang iba pang uri",
+    title: "Ang iba pang uri ng RIASEC",
+    description: "Silipin ang iba pang uri ng RIASEC.",
+  },
   carousel: {
     label: "Ang iyong tatlong nangungunang uri ng RIASEC",
     show: (name: string) => `Ipakita ang ${name}`,

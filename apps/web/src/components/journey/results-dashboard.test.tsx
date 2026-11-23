@@ -16,7 +16,7 @@ vi.mock("@/lib/saved-results/client", () => ({ saveResults }));
 function completeAssessment(nickname: string) {
   const { reset, setProfile, setAnswer } = useAssessmentStore.getState();
   reset();
-  setProfile({ nickname, gradeLevel: "11", school: "" });
+  setProfile({ nickname, gradeLevel: "11" });
   for (const question of QUESTIONS) {
     setAnswer(question.id, { trait: question.trait, value: 1 });
   }

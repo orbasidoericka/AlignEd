@@ -252,6 +252,9 @@ Dark values are black-based with no blue tint and a faint inset top highlight, b
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 
 - 2026-11-23 · admin · Period pills add "1 year" after "6 months" · the team asked for a yearly option.
+- 2026-11-23 · results · "See the other types" button centred under the carousel: smaller outline pill (h-9, text-sm), neutral gray: `tag` fill with `tag-foreground` ink (same pair as the tag chips, 15.9:1), `muted` hover, chevron icon, `print:hidden`. Opens a dialog (`sm:max-w-3xl lg:max-w-7xl`) whose own box never scrolls: an inner rounded box does, inset by the dialog padding, so the scrollbar sits inside the rounded corners. Subtitle "Browse the other RIASEC types." titled "The other RIASEC types" with the #4 to #6 cards in a three-column grid (stacked under `lg`), no tilt or rotation, scrolling inside the dialog. · Requested browse-only view of the remaining types.
+- 2026-11-23 · journey · Profile Setup order is now nickname, age, grade, strand, consent. · Requested.
+- 2026-11-23 · journey/results · Profile Setup loses the optional School field (age is the last field before the consent card). The results PDF header no longer shows the "Results ID" line or the school in the who-line. · Requested removal.
 - 2026-11-22 · admin · Period pills (All time, 7 days, 30 days, 3 months, 6 months) above the grade pills, same pill style, both rows wrap onto a second line on narrow phones; the third card reads "In this period" when a period is chosen · the team asked to filter results by when they were saved.
 - 2026-11-22 · admin · Strand chart shows only real strands, no "Not given" bar · requested by the team.
 - 2026-11-20 · admin · Latest-results table uses `table-fixed` with a `colgroup` (Taken 9rem, Code 7rem, Grade 7rem, Age 4rem, each score 3rem; Strand takes the rest; table min width 56rem), so columns no longer shift between pages. · Paging changed the column spacing.

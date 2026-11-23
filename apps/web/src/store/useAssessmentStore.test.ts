@@ -212,7 +212,7 @@ describe("useAssessmentStore", () => {
     const { setProfile } = useAssessmentStore.getState();
     setProfile({ nickname: "MARI-EL" });
     setProfile({ gradeLevel: "11" });
-    setProfile({ school: "San Fernando NHS" });
+    setProfile({ age: "17" });
 
     const { profile } = useAssessmentStore.getState();
     expect(profile).toEqual({
@@ -220,9 +220,8 @@ describe("useAssessmentStore", () => {
       gradeLevel: "11",
       strand: null,
       strandOther: "",
-      age: "",
+      age: "17",
       privacyAccepted: false,
-      school: "San Fernando NHS",
     });
   });
 
@@ -254,7 +253,6 @@ describe("useAssessmentStore", () => {
       strandOther: "",
       age: "",
       privacyAccepted: false,
-      school: "",
     });
   });
 
@@ -344,7 +342,6 @@ describe("useAssessmentStore", () => {
       strandOther: "",
       age: "",
       privacyAccepted: false,
-      school: "",
     });
     expect(migrated.currentStep).toBe(0);
   });
@@ -360,6 +357,8 @@ describe("useAssessmentStore", () => {
 
     expect(merged.profile.nickname).toBe("");
     expect(merged.profile.gradeLevel).toBe("9");
+    // School is no longer asked; an older session's value is dropped.
+    expect(merged.profile).not.toHaveProperty("school");
   });
 
   it("backfills an empty nickname onto pre-v4 profiles", () => {
@@ -377,7 +376,7 @@ describe("useAssessmentStore", () => {
         enterprising: 0,
         conventional: 0,
       },
-      profile: { gradeLevel: "12", school: "San Fernando NHS" },
+      profile: { gradeLevel: "12" },
       lastUpdated: "2026-01-01T00:00:00.000Z",
     };
     const migrated = migrate!(v3Payload, 3) as { profile: unknown };
@@ -389,7 +388,6 @@ describe("useAssessmentStore", () => {
       strandOther: "",
       age: "",
       privacyAccepted: false,
-      school: "San Fernando NHS",
     });
   });
 
@@ -411,7 +409,7 @@ describe("useAssessmentStore", () => {
         enterprising: 0,
         conventional: 0,
       },
-      profile: { gradeLevel: "10", school: "San Fernando NHS" },
+      profile: { gradeLevel: "10" },
       lastUpdated: "2026-01-01T00:00:00.000Z",
     };
     const migrated = migrate!(v2Payload, 2) as {
@@ -438,7 +436,6 @@ describe("useAssessmentStore", () => {
       strandOther: "",
       age: "",
       privacyAccepted: false,
-      school: "San Fernando NHS",
     });
   });
 
@@ -464,7 +461,6 @@ describe("useAssessmentStore", () => {
         strandOther: "",
         age: "17",
         privacyAccepted: true,
-        school: "",
       },
       lastUpdated: "2026-01-01T00:00:00.000Z",
     };
@@ -591,7 +587,6 @@ describe("session expiry on rehydration", () => {
           profile: {
             nickname: "MARI-EL",
             gradeLevel: "12",
-            school: "San Fernando NHS",
           },
           lastUpdated,
           completedAt,

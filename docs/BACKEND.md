@@ -8,7 +8,7 @@ Server routes, data, secrets, and privacy controls. Client code lives in `FRONTE
 
 | Route | Method | Does | Limits |
 | :--- | :--- | :--- | :--- |
-| `/api/results` | POST | Save a finished result (six scores, code, grade, strand, age, date), then bump the `tests_taken` site counter and mark the landing tally stale (`revalidateTag`). Returns a results ID (`ALGN-XXXX-XXXX`), kept in the client store and printed in the PDF; no route exposes a lookup or delete by ID, and the client has no UI for either. A counter failure is logged and never fails the save. | 200 / hour per network |
+| `/api/results` | POST | Save a finished result (six scores, code, grade, strand, age, date), then bump the `tests_taken` site counter and mark the landing tally stale (`revalidateTag`). Returns a results ID (`ALGN-XXXX-XXXX`), kept in the client store only (not printed in the PDF); no route exposes a lookup or delete by ID, and the client has no UI for either. A counter failure is logged and never fails the save. | 200 / hour per network |
 | `/api/send-results` | POST | Email the encrypted results PDF, and nothing else, via Gmail SMTP (nodemailer), then discard the address. A `photo` field from an older page is ignored. | 3 per address per rolling day, 20 per network per rolling hour (salted hashes) |
 
 - Rate limiters (`lib/results-email/rate-limiter.ts`, `lib/saved-results/ip-limiter.ts`) are in-memory, keyed by salted hashes with a per-process random salt. They reset on restart and count per server instance.
@@ -69,6 +69,7 @@ Set in `apps/web/next.config.ts` for every path: `X-Frame-Options: DENY`, `nosni
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 
 - 2026-11-23 · admin · `?period=1y` (365 days) on the admin page and `/admin/export` · the team asked for a yearly option.
+- 2026-11-23 · backend · `/api/send-results` no longer accepts or prints a `resultsId`; the emailed PDF carries no school or results ID. The saved row and the returned ID are unchanged. · Results ID removed from the PDF.
 - 2026-11-22 · admin · `?period=` filter (`periods.ts`) on the admin page and `/admin/export`, combined with `?grade=` · the team asked to filter results by when they were saved.
 - 2026-11-22 · admin · Excel Summary Strand table leaves out results saved before strands were collected (no "Not given" row; its Total is the sum of listed strands, Share still over all results) · matches the admin page.
 - 2026-11-20 · backend/admin · The admin table and the Excel export no longer show the results ID column (`latest-results.tsx`, `export-xlsx.ts`); the ID is still stored and printed on the student's PDF. · Not needed on the admin page.

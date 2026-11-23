@@ -31,7 +31,7 @@ import { cn } from "@/lib/utils";
 // data AlignEd handles: the profile and session kept on the device (see
 // `partialize` in the assessment store, the sound preference and the theme),
 // the saved-results record (grade, strand, age, RIASEC scores and code, date,
-// results ID; no name, nickname, school or answers; see
+// results ID; no name, nickname or answers; see
 // supabase/migrations/0003 to 0007), the site-wide tests-taken counter, the
 // private admin page, the email route (PDF only), the in-memory
 // abuse limiters, and PostHog analytics.
@@ -40,10 +40,12 @@ import { cn } from "@/lib/utils";
 // v3.2: no "Delete saved copy" button and no results-ID lookup exist, so the
 // text no longer promises them; saved records expire after a year.
 // v3.3: the admin page no longer shows results IDs.
-export const PRIVACY_POLICY_VERSION = "v3.3";
+// v3.4: no school field, and the results ID is no longer printed on the PDF.
+export const PRIVACY_POLICY_VERSION = "v3.4";
 
 // First standalone version: split out of the combined notice above at v3.0.
-export const TERMS_VERSION = "v1.0";
+// v1.1: the "keep your results ID private" rule went with the ID on the PDF.
+export const TERMS_VERSION = "v1.1";
 
 export const PRIVACY_CONTACT_EMAIL = "aligned.career.support@gmail.com";
 
@@ -87,8 +89,7 @@ const PRIVACY_POLICY_SECTIONS: PolicySection[] = [
           "your nickname (1 to 8 letters);",
           "your age;",
           "your grade level (11 or 12);",
-          "your SHS strand (if yours is not listed, you can pick Others and type it);",
-          "your school name (optional); and",
+          "your SHS strand (if yours is not listed, you can pick Others and type it); and",
           "your tick showing you agree to these Terms.",
         ],
       },
@@ -126,7 +127,7 @@ const PRIVACY_POLICY_SECTIONS: PolicySection[] = [
       {
         type: "list",
         items: [
-          "**Stays on your device only:** your nickname, school, answers, language, theme, sound choice, session timing, any strand you type under Others (it also prints in your own PDF), and any career look photo you take.",
+          "**Stays on your device only:** your nickname, answers, language, theme, sound choice, session timing, any strand you type under Others (it also prints in your own PDF), and any career look photo you take.",
           "**Saved on our server (no name):** your grade level, SHS strand (only the word Others if you typed your own), age, six scores, three-letter code, date, and results ID.",
           "**Sent once, then thrown away:** your email address.",
           "**Sent to our analytics provider:** website visit data, if analytics is on.",
@@ -135,11 +136,11 @@ const PRIVACY_POLICY_SECTIONS: PolicySection[] = [
       { type: "subheading", text: "What we do not collect" },
       {
         type: "para",
-        text: "**We do not collect** your full name, home address, phone number, or password, and we do not make accounts. **Your nickname, school, individual answers, typed strand, email address, and photo are never saved on our server.** Please do not type any of those private details into AlignEd.",
+        text: "**We do not collect** your full name, home address, phone number, or password, and we do not make accounts. **Your nickname, individual answers, typed strand, email address, and photo are never saved on our server.** Please do not type any of those private details into AlignEd.",
       },
       {
         type: "para",
-        text: "Your age and your school details are personal. We treat them with care even though they carry no name.",
+        text: "Your age, grade, and strand are personal. We treat them with care even though they carry no name.",
       },
     ],
   },
@@ -168,7 +169,7 @@ const PRIVACY_POLICY_SECTIONS: PolicySection[] = [
       { type: "subheading", text: "On your device while you take the assessment" },
       {
         type: "para",
-        text: "Your nickname, age, grade, strand, school, answers, and scores are kept in your browser on the device you are using. This lets AlignEd remember your place without an account.",
+        text: "Your nickname, age, grade, strand, answers, and scores are kept in your browser on the device you are using. This lets AlignEd remember your place without an account.",
       },
       { type: "subheading", text: "On our server after you finish" },
       {
@@ -177,11 +178,11 @@ const PRIVACY_POLICY_SECTIONS: PolicySection[] = [
       },
       {
         type: "para",
-        text: "**It does not hold your name, nickname, school, email, photo, or answers.** We still treat it as protected data, because we cannot promise it is impossible to link to a person.",
+        text: "**It does not hold your name, nickname, email, photo, or answers.** We still treat it as protected data, because we cannot promise it is impossible to link to a person.",
       },
       {
         type: "para",
-        text: "**Your results ID is just a label.** It is printed on your PDF, and AlignEd has no page where it can be used to look up results. Keep it private anyway.",
+        text: "**The results ID is just a label** for that record. It is not shown to you or printed on your PDF, and AlignEd has no page where it can be used to look up results.",
       },
       { type: "subheading", text: "Who can see it" },
       {
@@ -322,7 +323,6 @@ const TERMS_SECTIONS: PolicySection[] = [
           "**AlignEd is free career guidance.** It is not a test you can pass or fail, and it does not decide your future.",
           "**Answer honestly** so your results fit you.",
           "**Do not type private details** such as your full name, address, phone number, or passwords.",
-          "**Keep your results ID private.**",
           "**Do not misuse AlignEd.** No spamming the email feature, no trying to break or overload the service, and no trying to get into the admin page.",
           "AlignEd may change, pause, or be unavailable at times. We do our best to keep results accurate, but they can be wrong, so use them together with advice from people you trust.",
         ],

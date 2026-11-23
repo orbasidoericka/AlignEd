@@ -40,7 +40,6 @@ export interface ProfileState {
   // server is only ever told "Others".
   strandOther: string;
   age: string;
-  school: string;
   // Data Privacy Act consent, given on the profile step. Part of the profile
   // so reset() clears it and a new student on a shared device is asked again.
   privacyAccepted: boolean;
@@ -103,7 +102,6 @@ const emptyProfile: ProfileState = {
   strand: null,
   strandOther: "",
   age: "",
-  school: "",
   privacyAccepted: false,
 };
 
@@ -178,6 +176,14 @@ function ssrSafeStorage(): StateStorage {
 }
 
 const STORAGE_KEY = "aligned.assessment.v1";
+
+// Sessions saved before the school field was removed still carry it; drop it
+// so it is never persisted again.
+function withoutSchool(profile: ProfileState & { school?: unknown }): ProfileState {
+  const rest = { ...profile };
+  delete rest.school;
+  return rest;
+}
 
 // A saved session is temporary: these are shared and school devices, so an
 // abandoned quiz must not be sitting there for the next student to resume.
@@ -402,7 +408,7 @@ export const useAssessmentStore = create<AssessmentStore>()(
           language: FILIPINO_ENABLED
             ? (saved.language ?? current.language)
             : "en",
-          profile: { ...emptyProfile, ...saved.profile },
+          profile: withoutSchool({ ...emptyProfile, ...saved.profile }),
         };
       },
       partialize: (state) => ({

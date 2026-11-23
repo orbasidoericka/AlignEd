@@ -92,8 +92,7 @@ Captured before the assessment begins; stored client-side only (localStorage via
 | Grade Level | Enum | **Required.** Exactly two values: `Grade 11` and `Grade 12`. No free text. |
 | SHS Strand | Enum | **Required.** One of the supported academic, Arts and Design, Sports, or TVL strands: ABM, STEM, HUMSS, GAS, Arts and Design, Sports, AFA, HE, IA, or ICT, or **Others**. Choosing Others reveals a required "Type your strand" field (max 60). That text stays in the browser and the student's own downloaded PDF only; the server and admin page record just "Others". No other free text. |
 | Age | Whole number | **Required.** 10–30. Stored in the saved-results record for the admin page's age statistics. |
-| School | Text | **Optional.** Max 120 characters. Never leaves the device except printed in the student's own downloaded PDF (the emailed PDF omits it). |
-| Terms and Conditions | Checkbox | **Required.** Card heading and inline link: "Data Privacy Policy and Terms and Conditions". Full checkbox text: "I have read and agree to the Data Privacy Policy and Terms and Conditions." Opens a dialog titled "Data Privacy Policy & Terms and Conditions" (RA 10173), versioned in `components/journey/privacy-consent.tsx` (Data Privacy Policy `v3.3`, Terms `v1.0`), with the two documents on separate tabs. It lists every piece of data collected and where it goes, without stating a specific retention period or a "so you can compare later" purpose. For a student under 18, the notice tells a parent or legal guardian to read it and be the one who ticks the box: there is no separate parent account or flow, so this single checkbox is how their consent is given. Contact email `aligned.career.support@gmail.com`. Key points are bold. Required before continuing. |
+| Terms and Conditions | Checkbox | **Required.** Card heading and inline link: "Data Privacy Policy and Terms and Conditions". Full checkbox text: "I have read and agree to the Data Privacy Policy and Terms and Conditions." Opens a dialog titled "Data Privacy Policy & Terms and Conditions" (RA 10173), versioned in `components/journey/privacy-consent.tsx` (Data Privacy Policy `v3.4`, Terms `v1.1`), with the two documents on separate tabs. It lists every piece of data collected and where it goes, without stating a specific retention period or a "so you can compare later" purpose. For a student under 18, the notice tells a parent or legal guardian to read it and be the one who ticks the box: there is no separate parent account or flow, so this single checkbox is how their consent is given. Contact email `aligned.career.support@gmail.com`. Key points are bold. Required before continuing. |
 
 - FR-2.1. The "Continue to assessment" action is unavailable until all required fields (nickname, grade level, SHS strand, age, privacy acceptance) are set.
 - FR-2.2. Profile values are editable by returning to this step before completing the assessment.
@@ -125,13 +124,14 @@ Captured before the assessment begins; stored client-side only (localStorage via
 - FR-5.2. For each of the student's top 3 letters, in code order, the dashboard shows that letter's description, **all** of its majors, and **all** of its related pathways. Lists are never truncated.
 - FR-5.3. Majors and pathways are never ranked. Items appear as equal-weight tags in the sheet's own order; there are no "strongest/weakest match", "top choice", match-strength badges, or percentages, because there is no validated basis for ranking items within a letter.
 - FR-5.4. The three letter cards are shown as a rotating three-card carousel, starting on the first letter with the second letter peeking on the left and the third on the right. Swiping, side arrows, or tapping a peeking card rotates the ring in either direction with no end. Each card carries a banner stating that trait's position in the student's own code (#1 "Your top trait", #2 "Your second trait", #3 "Your third trait"). The banner ranks the student's traits by score only and says nothing about careers. All three cards stack in full when printed.
+- FR-5.5. Below the carousel, a "See the other types" button opens a popup with the student's remaining three letters (ranks #4 to #6 by score, same tie-break as FR-4), for browsing only. Each is the same card as FR-5.4 (banner "#4 Your fourth RIASEC type" etc., description, **all** majors and related pathways in sheet order, no match labels), laid out side by side (stacked on phones) with no carousel motion. Nothing of these letters is on the page until the button is pressed; the popup closes with its X, Escape or a backdrop tap. The Holland Code stays the top three. Not printed.
 
 ### FR-6 Recommended College Programs (superseded)
 - FR-6.1. Superseded by FR-5. The ranked program list (`match_courses(p_code)` with Exact / Strong badges) is no longer displayed. `data/careers.csv`, `data/courses.csv`, and the Supabase seed remain as backend reference data.
 - FR-6.2. No university or institution mapping is displayed anywhere.
 
 ### FR-7 Export — Download as PDF
-- FR-7.1. A "Download PDF" action on the results dashboard produces a document containing: nickname, grade, strand, age, school (if given), test date, the results ID once one has been saved, Holland Code + all six trait scores, and the description, majors and related pathways for each code letter (FR-5), with AlignEd branding and page numbers.
+- FR-7.1. A "Download PDF" action on the results dashboard produces a document containing: nickname, grade, strand, age, test date, Holland Code + all six trait scores, and the description, majors and related pathways for each code letter (FR-5), with AlignEd branding and page numbers.
 - FR-7.2. Built entirely in the browser with pdfmake (`lib/results-pdf/download-results-pdf.ts`), loaded only on click. No upload, no persistence.
 - FR-7.3. The PDF is encrypted. Its password is the nickname followed by the three code letters (e.g. `MARI` + `I-R-A` → `MARIIRA`), shown to the student on screen.
 - FR-7.4. Layout is A4 and legible in grayscale.
@@ -139,13 +139,13 @@ Captured before the assessment begins; stored client-side only (localStorage via
 ### FR-8 Export — Send to Email
 - FR-8.1. "Email me my results" opens a dialog: email input + mandatory consent checkbox (Data Privacy Act copy) + send button.
 - FR-8.2. Email format is validated client-side with inline errors before any request is made; the server validates again.
-- FR-8.3. Sending calls `POST /api/send-results`, a Next.js route that renders the same encrypted PDF as FR-7 on the server (`lib/results-pdf/render-results-pdf.ts`) and sends it, and nothing else, from the program's Gmail account over SMTP (nodemailer, `GMAIL_USER` + `GMAIL_APP_PASSWORD`). The address is then discarded. The emailed copy carries nickname, grade, code, scores, pathways and results ID only: strand, age and school are not included. A `photo` field sent by an older page is ignored. **Raw email addresses are never persisted.**
+- FR-8.3. Sending calls `POST /api/send-results`, a Next.js route that renders the same encrypted PDF as FR-7 on the server (`lib/results-pdf/render-results-pdf.ts`) and sends it, and nothing else, from the program's Gmail account over SMTP (nodemailer, `GMAIL_USER` + `GMAIL_APP_PASSWORD`). The address is then discarded. The emailed copy carries nickname, grade, code, scores and pathways only: strand and age are not included. A `photo` field sent by an older page is ignored. **Raw email addresses are never persisted.**
 - FR-8.4. Rate limiting: 3 sends per address per rolling day and 20 per network per rolling hour, keyed by salted SHA-256 hashes held in server memory (per-process random salt, reset on restart). A filled `website` honeypot field is answered with a fake success and nothing is sent. Limit-exceeded responses (HTTP 429) show a friendly "try again later" message.
 - FR-8.5. Delivery failure surfaces a toast with a retry action; success surfaces a confirmation toast.
 
 ### FR-9 Saved Results (server-side only, no UI)
 - FR-9.1. On reaching Results, the client calls `POST /api/results` once per session. The server stores one row in `saved_results`: the six trait scores, the score ceiling, the Holland code, grade level, strand ("Others" for any typed strand), age, and test date. No name, nickname, school, email, photo, or individual answers.
-- FR-9.2. The server answers with a random results ID (`ALGN-XXXX-XXXX`, 8 characters from a 32-letter alphabet without 0/O/1/I, 2^40 possibilities), stored client-side and printed in the PDF (FR-7) as a record of the result. There is no on-screen display of it, no lookup, and no delete route or button; the row exists only to feed the admin stats page (FR-10), which does not display the ID.
+- FR-9.2. The server answers with a random results ID (`ALGN-XXXX-XXXX`, 8 characters from a 32-letter alphabet without 0/O/1/I, 2^40 possibilities), stored client-side only so the result is saved once per session. It is not shown on screen or printed in the PDF; there is no display of it, no lookup, and no delete route or button; the row exists only to feed the admin stats page (FR-10), which does not display the ID.
 - FR-9.3. Rows expire one year after creation.
 - FR-9.4. Limits: 200 saves per network per hour (in-memory), generous because a school lab shares one IP.
 - FR-9.5. A failed save never blocks the results; it is silent and never retried from the UI.
@@ -188,7 +188,7 @@ Captured before the assessment begins; stored client-side only (localStorage via
 | E5 | Student navigates to `/results` without completing | Redirect to the correct earlier step (§5 navigation rules). |
 | E6 | Student uses Back and changes an earlier answer | Prior contribution replaced, never double-counted; a Yes→No change decrements the trait (FR-3.2, FR-3.4). |
 | E7 | Stored answers predate the current question bank or answer scale | Discarded on load: the quiz restarts from question 1 with zeroed scores; the student's profile is preserved. |
-| E7a | Stored profile predates the nickname field | An empty nickname is backfilled on load. The profile is then incomplete, so the student is routed to Profile Setup to supply one; their grade level and school are still filled in. |
+| E7a | Stored profile predates the nickname field | An empty nickname is backfilled on load. The profile is then incomplete, so the student is routed to Profile Setup to supply one; their grade level is still filled in. |
 | E8 | Invalid email submitted | Client-side validation blocks the request; inline field error (FR-8.2). |
 | E9 | Email send fails (network / provider) | Toast with retry; results remain on screen; PDF download offered as fallback (FR-8.5). |
 | E10 | Email rate limit exceeded | Friendly "try again later" message; no address stored (FR-8.4). |
@@ -206,7 +206,6 @@ Captured before the assessment begins; stored client-side only (localStorage via
 - **Given** an empty nickname, **when** continue is attempted, **then** the journey does not advance and an inline error names the missing nickname.
 - **Given** the grade level control, **then** it offers exactly `Grade 11` and `Grade 12` and no free-text entry.
 - **Given** the age field, **when** a value outside 10–30 or a non-whole number is entered, **then** it is not accepted.
-- **Given** a school name of more than 120 characters, **when** typed or pasted, **then** input is truncated/blocked at 120 with a visible counter.
 
 ### Assessment
 - **Given** the assessment route at any point in the bank, **then** exactly one statement is visible, the only answer controls are Yes and No, and no "Next" control is shown on a statement that has not been answered (an answered one shows "Next" after Back).
@@ -307,6 +306,8 @@ AlignEd ships as a mostly-static, anonymous-first Next.js application.
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 
 - 2026-11-23 · admin · FR-10.1: period filter gains "Last 12 months" (1 year) · the team asked for a yearly option.
+- 2026-11-23 · results · Added FR-5.5: "See the other types" popup showing ranks #4 to #6 as the same cards, browse-only. · Requested: let students look at their remaining types without changing the code.
+- 2026-11-23 · profile/results · FR-2: the optional School field is removed from Profile Setup (and from the PDF); policy v3.4, Terms v1.1. FR-7.1/FR-8.3/FR-9.2: the results ID is no longer printed on the downloaded or emailed PDF; it stays server-side and in the client store only. · Requested removal of School and of the PDF results ID.
 - 2026-11-22 · admin · FR-10.1: period filter (all time, 7 days, 30 days, 3 months, 6 months) alongside the grade filter; the Excel export follows both · the team asked to filter results by when they were saved.
 - 2026-11-20 · admin · FR-10.1: the latest-results table and Excel export no longer show the results ID. FR-9.2 notes the admin page does not display it. FR-2: policy v3.3. · Not needed on the admin page.
 - 2026-11-20 · privacy/edge cases · FR-2: policy is now v3.2 and no longer mentions a Delete saved copy button or results-ID lookup (neither exists, FR-9.2). E2, E12: stated as shipped behaviour (no flat-profile note, no storage-failure notice). · Site copy and docs aligned; unbuilt requirements dropped.

@@ -22,7 +22,6 @@ import {
   AGE_MIN,
   GRADE_LEVELS,
   SHS_STRANDS,
-  SCHOOL_MAX_LENGTH,
   STRAND_OTHER,
   STRAND_OTHER_MAX_LENGTH,
   sanitizeNickname,
@@ -72,8 +71,8 @@ function markNoticeSeen(): void {
   }
 }
 
-// Profile Setup (PRD FR-2): grade as tappable cards, strand as a dropdown,
-// optional school. Stage accent: soft yellow. Everything stays client-side in
+// Profile Setup (PRD FR-2): nickname, age, grade as tappable cards, strand as a dropdown.
+// Stage accent: soft yellow. Everything stays client-side in
 // the store.
 export function ProfileForm() {
   const router = useRouter();
@@ -164,6 +163,37 @@ export function ProfileForm() {
           {showHints && profile.nickname.length === 0 && (
             <p className="text-sm font-semibold text-destructive" role="alert">
               {t ? t.nicknameHint : "Enter a nickname to continue."}
+            </p>
+          )}
+        </div>
+
+        {/* Age */}
+        <div className="flex flex-col gap-2">
+          <label
+            htmlFor="age"
+            className="text-lg font-semibold text-foreground"
+          >
+            {t ? t.ageLabel : "How old are you?"}
+            <Required />
+          </label>
+          <Input
+            id="age"
+            type="number"
+            inputMode="numeric"
+            min={AGE_MIN}
+            max={AGE_MAX}
+            value={profile.age}
+            onChange={(event) => {
+              const raw = event.target.value.replace(/\D/g, "").slice(0, 2);
+              setProfile({ age: raw });
+            }}
+            aria-required="true"
+            aria-invalid={showHints && profile.age === ""}
+            className="h-12 rounded-xl bg-card text-base"
+          />
+          {showHints && profile.age === "" && (
+            <p className="text-sm font-semibold text-destructive" role="alert">
+              {t ? t.ageHint : "Enter your age to continue."}
             </p>
           )}
         </div>
@@ -293,70 +323,6 @@ export function ProfileForm() {
                 {t ? t.strandOtherHint : "Type your strand to continue."}
               </p>
             )}
-        </div>
-
-        {/* Age */}
-        <div className="flex flex-col gap-2">
-          <label
-            htmlFor="age"
-            className="text-lg font-semibold text-foreground"
-          >
-            {t ? t.ageLabel : "How old are you?"}
-            <Required />
-          </label>
-          <Input
-            id="age"
-            type="number"
-            inputMode="numeric"
-            min={AGE_MIN}
-            max={AGE_MAX}
-            value={profile.age}
-            onChange={(event) => {
-              const raw = event.target.value.replace(/\D/g, "").slice(0, 2);
-              setProfile({ age: raw });
-            }}
-            aria-required="true"
-            aria-invalid={showHints && profile.age === ""}
-            className="h-12 rounded-xl bg-card text-base"
-          />
-          {showHints && profile.age === "" && (
-            <p className="text-sm font-semibold text-destructive" role="alert">
-              {t ? t.ageHint : "Enter your age to continue."}
-            </p>
-          )}
-        </div>
-
-        {/* School (optional, visually quieter) */}
-        <div className="flex flex-col gap-2">
-          <label
-            htmlFor="school"
-            className="text-base font-medium text-foreground"
-          >
-            {t ? t.schoolLabel : "School"}{" "}
-            <span className="text-sm font-normal text-muted-foreground">
-              {t ? t.schoolOptional : "(optional)"}
-            </span>
-          </label>
-          <Input
-            id="school"
-            value={profile.school}
-            maxLength={SCHOOL_MAX_LENGTH}
-            onChange={(event) =>
-              setProfile({
-                school: event.target.value.slice(0, SCHOOL_MAX_LENGTH),
-              })
-            }
-            className="h-11 rounded-xl bg-card text-base"
-          />
-          <p
-            className={cn(
-              "text-xs text-muted-foreground",
-              profile.school.length >= SCHOOL_MAX_LENGTH &&
-                "font-semibold text-destructive",
-            )}
-            aria-live="polite"
-          >
-          </p>
         </div>
 
         <PrivacyConsent

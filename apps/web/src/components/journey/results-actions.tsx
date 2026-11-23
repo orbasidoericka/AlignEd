@@ -172,7 +172,6 @@ function DownloadPdfDialog() {
   const [failed, setFailed] = useState(false);
 
   const takenOn = resultsTakenOn(completedAt, lastUpdated);
-  const resultsId = useAssessmentStore((state) => state.resultsId);
   const code = computeHollandCode(scores);
   const password = resultsPdfPassword(profile.nickname, code);
 
@@ -185,12 +184,10 @@ function DownloadPdfDialog() {
         gradeLevel: profile.gradeLevel,
         strand: strandLabel(profile.strand, profile.strandOther),
         age: profile.age,
-        school: profile.school,
         scores,
         code,
         maxScore: maxScorePerTrait(QUESTIONS),
         takenOn,
-        resultsId,
         password,
       });
     } catch (error) {
@@ -428,7 +425,6 @@ function EmailResultsDialog() {
   const fil = useAssessmentStore((state) => state.language) === "fil";
   const t = fil ? RESULTS_ACTIONS_TEXT_FIL.email : null;
   const takenOn = resultsTakenOn(completedAt, lastUpdated);
-  const resultsId = useAssessmentStore((state) => state.resultsId);
   const code = computeHollandCode(scores);
   const password = resultsPdfPassword(profile.nickname, code);
   const [email, setEmail] = useState("");
@@ -454,7 +450,6 @@ function EmailResultsDialog() {
       scores,
       maxScore: maxScorePerTrait(QUESTIONS),
       takenOn,
-      resultsId,
     });
     setSending(false);
     setOutcome(result);

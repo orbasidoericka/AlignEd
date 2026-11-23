@@ -44,8 +44,6 @@ export const PROFILE_TEXT_FIL = {
   strandOtherHint: "I-type ang iyong strand para magpatuloy.",
   ageLabel: "Ilang taon ka na?",
   ageHint: "Ilagay ang iyong edad para magpatuloy.",
-  schoolLabel: "Paaralan",
-  schoolOptional: "(opsyonal)",
   continueButton: "Magpatuloy sa pagtatasa",
   continueNote: "Maaari kang bumalik at baguhin ito bago matapos ang pagtatasa.",
 } as const;

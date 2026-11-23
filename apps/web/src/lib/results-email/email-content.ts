@@ -5,7 +5,6 @@ import {
   validateScoredResults,
   type ScoredResults,
 } from "@/lib/riasec/validate-results";
-import { isResultsId } from "@/lib/saved-results/results-id";
 
 export { parseTakenOn } from "@/lib/riasec/validate-results";
 
@@ -17,9 +16,6 @@ export { parseTakenOn } from "@/lib/riasec/validate-results";
 
 export interface ResultsPayload extends ScoredResults {
   nickname: string;
-  // The saved-results ID, printed on the PDF as a record of this result;
-  // null when the results were not saved.
-  resultsId: string | null;
 }
 
 export interface SendResultsRequest {
@@ -61,11 +57,6 @@ export function validateRequest(body: unknown): Validation {
     return { ok: false, error: "Invalid nickname." };
   }
 
-  const resultsId = results.resultsId ?? null;
-  if (resultsId !== null && !(typeof resultsId === "string" && isResultsId(resultsId))) {
-    return { ok: false, error: "Invalid results ID." };
-  }
-
   const scored = validateScoredResults(results);
   if (!scored.ok) return scored;
 
@@ -75,7 +66,7 @@ export function validateRequest(body: unknown): Validation {
       email,
       consent: true,
       website,
-      results: { ...scored.value, nickname, resultsId },
+      results: { ...scored.value, nickname },
     },
   };
 }

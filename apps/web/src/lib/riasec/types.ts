@@ -56,15 +56,12 @@ export interface StudentProfile {
   gradeLevel: GradeLevel;
   strand: ShsStrand;
   age: string;
-  school: string;
 }
 
 export const NICKNAME_MAX_LENGTH = 8;
 
 export const AGE_MIN = 10;
 export const AGE_MAX = 30;
-
-export const SCHOOL_MAX_LENGTH = 120;
 
 // Nicknames are uppercase letters and hyphens only (PRD FR-2). Applied on
 // every keystroke, so typing a digit or symbol simply produces nothing.

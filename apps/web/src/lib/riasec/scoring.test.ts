@@ -8,6 +8,7 @@ import {
   computeHollandCode,
   formatHollandCode,
   maxScorePerTrait,
+  rankTraits,
   TRAIT_META,
   TRAIT_ORDER,
 } from "./scoring";
@@ -24,6 +25,20 @@ function scores(partial: Partial<RiasecScores>): RiasecScores {
     ...partial,
   };
 }
+
+describe("rankTraits", () => {
+  it("orders all six letters by score, ties broken R→I→A→S→E→C", () => {
+    const ranked = rankTraits(
+      scores({ conventional: 6, social: 4, artistic: 4, realistic: 1 }),
+    );
+    expect(ranked).toEqual(["C", "A", "S", "R", "I", "E"]);
+  });
+
+  it("starts with the Holland Code", () => {
+    const s = scores({ investigative: 5, enterprising: 3, social: 3 });
+    expect(rankTraits(s).slice(0, 3)).toEqual([...computeHollandCode(s)]);
+  });
+});
 
 describe("computeHollandCode", () => {
   it("returns the three highest-scoring traits in descending order", () => {

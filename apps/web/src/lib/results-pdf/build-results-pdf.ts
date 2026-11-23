@@ -29,13 +29,10 @@ export interface ResultsPdfInput {
   gradeLevel: string | null;
   strand: string | null;
   age: string;
-  school: string;
   scores: RiasecScores;
   code: HollandCode;
   maxScore: number;
   takenOn: Date;
-  // The saved-results ID, as a record of this result.
-  resultsId?: string | null;
   password: string;
   // Guards the permissions below. Nobody needs to know it: pass a random
   // one per file. Without it PDFKit forbids printing and copying even for
@@ -129,15 +126,13 @@ function scoreBar(letter: RiasecLetter, score: number, max: number): Content {
 }
 
 export function buildResultsPdf(input: ResultsPdfInput): TDocumentDefinitions {
-  const { nickname, gradeLevel, strand, age, school, scores, code, maxScore } =
-    input;
+  const { nickname, gradeLevel, strand, age, scores, code, maxScore } = input;
 
   const who = [
     nickname || "Student",
     age ? `${age} years old` : null,
     gradeLevel ? `Grade ${gradeLevel}` : null,
     strand || null,
-    school || null,
   ]
     .filter(Boolean)
     .join(" · ");
@@ -264,20 +259,6 @@ export function buildResultsPdf(input: ResultsPdfInput): TDocumentDefinitions {
       { text: "Your AlignEd results", style: "h1" },
       { text: who, color: MUTED },
       { text: `Assessment taken ${longDate(input.takenOn)}`, color: MUTED },
-      ...(input.resultsId
-        ? [
-            {
-              text: [
-                { text: "Results ID: ", color: MUTED },
-                { text: input.resultsId, bold: true },
-                {
-                  text: " (a record of this result)",
-                  color: MUTED,
-                },
-              ],
-            },
-          ]
-        : []),
 
       eyebrow("Your Holland Code"),
       {

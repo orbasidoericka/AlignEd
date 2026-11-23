@@ -60,20 +60,12 @@ describe("validateRequest", () => {
 });
 
 describe("results ID", () => {
-  const withId = (resultsId: unknown) =>
-    validateRequest({ ...valid, results: { ...valid.results, resultsId } });
-
-  it("is optional, and passed through when well-formed", () => {
-    const missing = validateRequest(valid);
-    expect(missing.ok && missing.value.results.resultsId).toBeNull();
-    const given = withId("ALGN-7KQ2-MX9P");
-    expect(given.ok && given.value.results.resultsId).toBe("ALGN-7KQ2-MX9P");
-  });
-
-  it("rejects anything that is not a results ID", () => {
-    expect(withId("ALGN-0000-0000").ok).toBe(false);
-    expect(withId("<b>hi</b>").ok).toBe(false);
-    expect(withId(12).ok).toBe(false);
+  it("is never carried into the email or its PDF", () => {
+    const result = validateRequest({
+      ...valid,
+      results: { ...valid.results, resultsId: "ALGN-7KQ2-MX9P" },
+    });
+    expect(result.ok && result.value.results).not.toHaveProperty("resultsId");
   });
 });
 
@@ -126,7 +118,6 @@ describe("buildResultsEmail", () => {
     scores,
     maxScore: 7,
     takenOn: "2026-09-30",
-    resultsId: "ALGN-7KQ2-MX9P",
   });
 
   it("greets the student and names the PDF attachment", () => {
@@ -152,8 +143,6 @@ describe("buildResultsEmail", () => {
 
   it("keeps the results themselves inside the locked PDF", () => {
     for (const body of [email.html, email.text]) {
-      // The results ID opens the saved copy, so it stays in the PDF too.
-      expect(body).not.toContain("ALGN-7KQ2-MX9P");
       expect(body).not.toContain("I-R-A");
       expect(body).not.toContain("7 / 7");
       expect(body).not.toContain("Marine Biology");
