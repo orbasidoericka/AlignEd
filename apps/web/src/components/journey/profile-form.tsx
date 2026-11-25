@@ -24,6 +24,7 @@ import {
   SHS_STRANDS,
   STRAND_OTHER,
   STRAND_OTHER_MAX_LENGTH,
+  isValidAge,
   sanitizeNickname,
 } from "@/lib/riasec/types";
 import type { GradeLevel, ShsStrand } from "@/lib/riasec/types";
@@ -81,6 +82,12 @@ export function ProfileForm() {
   const complete = useAssessmentStore(selectIsProfileComplete);
   const language = useAssessmentStore((state) => state.language);
   const [showHints, setShowHints] = useState(false);
+  // Flag an out-of-range age once both digits are in (so typing "1" on the
+  // way to "17" never flashes an error), or after Continue is pressed.
+  const ageOutOfRange =
+    profile.age !== "" &&
+    !isValidAge(profile.age) &&
+    (profile.age.length >= 2 || showHints);
   const hydrated = useHydrated();
   const started = useAssessmentStore((state) => state.profile.nickname !== "");
   const [seenBefore] = useState(readNoticeSeen);
@@ -188,12 +195,26 @@ export function ProfileForm() {
               setProfile({ age: raw });
             }}
             aria-required="true"
-            aria-invalid={showHints && profile.age === ""}
+            aria-invalid={
+              (showHints && profile.age === "") || ageOutOfRange
+            }
+            aria-describedby={ageOutOfRange ? "age-range-hint" : undefined}
             className="h-12 rounded-xl bg-card text-base"
           />
           {showHints && profile.age === "" && (
             <p className="text-sm font-semibold text-destructive" role="alert">
               {t ? t.ageHint : "Enter your age to continue."}
+            </p>
+          )}
+          {ageOutOfRange && (
+            <p
+              id="age-range-hint"
+              className="text-sm font-semibold text-destructive"
+              role="alert"
+            >
+              {t
+                ? t.ageRangeHint(AGE_MIN)
+                : `Enter an age of ${AGE_MIN} or older.`}
             </p>
           )}
         </div>

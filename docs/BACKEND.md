@@ -21,7 +21,7 @@ Server routes, data, secrets, and privacy controls. Client code lives in `FRONTE
 
 The session is checked before anything is sent, then the dashboard streams inside a `Suspense` boundary keyed by grade. Do not add a `loading.tsx` to this route: it would stream the page frame before the session check. `purgeExpired` runs in `after()`, once the page is sent, and `listResults` filters on `expires_at` so expired rows never show.
 
-Filters: `?grade=11|12` and `?period=7d|30d|3m|6m|1y` (`lib/saved-results/periods.ts`: `parsePeriod`, `withinPeriod`; a result is in a period when `created_at` is within 7, 30, 91, 182 or 365 days of the request; anything else is all time). The page narrows the loaded rows by period, then grade, before `summarize()`; with a period chosen the "Last 30 days" card becomes "In this period". The export route applies the same two filters, the sheet subtitles name them, and the file name carries them (`aligned-results-grade-11-30d-<date>.xlsx`).
+Filters: `?grade=11|12` and `?period=30d|3m|6m|1y|3y|5y|10y` or `?period=custom&from=YYYY-MM-DD&to=YYYY-MM-DD` (`lib/saved-results/periods.ts`: `parsePeriod`, `withinPeriod`, `adminHref`; a preset keeps rows whose `created_at` is within 30, 91, 182, 365, 1096, 1826 or 3652 days of the request; a custom range keeps whole days in Philippine time (UTC+8), both ends included, either end may be open, reversed ends are swapped, invalid dates are dropped; anything else is all time). The page narrows the loaded rows by period, then grade, before `summarize()`; with a period chosen the "Last 30 days" card becomes "In this period". The export route applies the same two filters, the sheet subtitles name them, and the file name carries them (`aligned-results-grade-11-30d-<date>.xlsx`).
 
 `/admin/export` (same session check, 404 without it) downloads the current view as an Excel workbook, built by `lib/saved-results/export-xlsx.ts` with no library, in the classic Excel table look: blue (#4472C4) header rows with white bold text, light-blue banded rows, thin grey borders on every table cell, bold Total rows, gridlines on. Sheet 1, Summary, repeats the admin page from the same `summarize()` totals: an Overview table (saved results, each grade with its share, last 30 days, average age, most common code), then strongest interest area (trait-coloured letter cells), most common codes (top 10), strand and age, each with Students and Share ("0%", same rounding as the page) and, except the codes, a Total row. Sheet 2, Latest results, is the admin table: Taken, Code over three trait-coloured cells, Grade, Strand (short name), Age, R to C scores with the code's letters bold and the rest grey; real dates, frozen header, filters; missing values read "Not given". Styles are collected per workbook by a small `StyleSheet` class, so cells only describe how they look. The file is a hand-written zip of the OOXML parts using `node:zlib`, so the route needs the Node runtime.
 
@@ -36,6 +36,7 @@ Filters: `?grade=11|12` and `?period=7d|30d|3m|6m|1y` (`lib/saved-results/period
 | `0005_saved_results_strand.sql` | Adds nullable `strand`, limited to the `SHS_STRANDS` list. |
 | `0006_site_counters.sql` | `site_counters` (key, value, updated_at; RLS on, no policies), seeded with `tests_taken` from the existing row count, and `increment_site_counter(p_key)`: one atomic `security definer` upsert, execute granted to the service role only. The counter only goes up, so deleting or purging a saved result never lowers the public figure. |
 | `0007_saved_results_strand_others.sql` | Widens the `strand` check to also allow `'Others'`. Only the word is stored; a typed strand never reaches the server. Run it before deploying the Others option. |
+| `0008_saved_results_age_no_max.sql` | Widens the `age` check to 10–99 (was 10–30). `/api/results` accepts 15–99 (`AGE_MIN` 15, `AGE_MAX` 99, the two-digit field), so there is no product maximum. |
 
 - Clients: `lib/supabase/client.ts` (anon, browser) and `lib/supabase/admin.ts` (service role, server only). Repositories: `lib/saved-results/repository.ts` and `lib/site-counters/repository.ts`.
 - Landing tally: `lib/site-counters/tests-taken.ts` reads `tests_taken` through `unstable_cache` (`cacheComponents` is off in `next.config.ts`, so this is the classic caching model), revalidated every 300 s or on the `TESTS_TAKEN_TAG` tag after a save. It returns `null` when Supabase is unconfigured or the read fails, and the landing page then shows nothing.
@@ -65,9 +66,13 @@ Set in `apps/web/next.config.ts` for every path: `X-Frame-Options: DENY`, `nosni
 - No strict CSP yet; no Playwright specs yet; no Supabase contract test for `saved_results` constraints vs `validate-results.ts`.
 
 ## Changelog
+- 2026-11-25 · api · `/api/results` accepts ages 15–99 (`AGE_MAX` is now the two-digit field ceiling); migration `0008_saved_results_age_no_max.sql` widens the DB check to 10–99 · age upper limit removed.
+- 2026-11-25 · admin · `?period=` adds `30d|3m|6m|3y` and `custom` with `from`/`to` (Manila whole days); export file name carries the range (`…-2026-01-01-to-2026-11-25-…`) · the team asked for finer and custom ranges.
+- 2026-11-25 · admin · `?period=` is now `1y|5y|10y` (365, 1826, 3652 days); `7d|30d|3m|6m` removed and fall back to all time · the team asked for yearly periods.
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 
+- 2026-11-24 · api · `/api/results` rejects ages under 15 (was under 10) via the shared `AGE_MIN`; DB check unchanged at 10–30 · Senior High age range.
 - 2026-11-23 · admin · `?period=1y` (365 days) on the admin page and `/admin/export` · the team asked for a yearly option.
 - 2026-11-23 · backend · `/api/send-results` no longer accepts or prints a `resultsId`; the emailed PDF carries no school or results ID. The saved row and the returned ID are unchanged. · Results ID removed from the PDF.
 - 2026-11-22 · admin · `?period=` filter (`periods.ts`) on the admin page and `/admin/export`, combined with `?grade=` · the team asked to filter results by when they were saved.

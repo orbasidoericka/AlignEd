@@ -13,7 +13,7 @@ Grade 11 and 12 (Senior High) students in the Philippines, mobile-first on budge
 ## The journey (strict, linear)
 
 1. **Landing** (`/`) — value proposition, ~5-minute promise, journey-aware CTA, a short overview of Holland's theory of career choice (the six RIASEC types on Holland's hexagon), a lifetime "tests taken" tally (hidden when the count cannot be read), and a plain-language "How your code is scored" section with a worked example. An About Us page (`/about`) covers the team and credits the source instrument.
-2. **Profile Setup** (`/assessment/profile`) — nickname (required, up to 8 uppercase letters/hyphens, never stored server-side; sent only inside an email request), grade level (11 or 12), SHS strand (or Others with a typed strand that stays on the device and in the student's PDF), age (10–30) and acceptance of the Data Privacy Policy and Terms and Conditions (all required). Client-side only.
+2. **Profile Setup** (`/assessment/profile`) — nickname (required, up to 8 uppercase letters/hyphens, never stored server-side; sent only inside an email request), grade level (11 or 12), SHS strand (or Others with a typed strand that stays on the device and in the student's PDF), age (15 or older) and acceptance of the Data Privacy Policy and Terms and Conditions (all required). Client-side only.
 3. **RIASEC Assessment** (`/assessment`) — 42 yes/no statements (English only for now; the Filipino version is built but hidden pending permission, PRD FR-3.8), one per screen, auto-advancing on each answer (an answered statement shows Next after Back; an unanswered one can be skipped for later) with Back to revise; localStorage resume, deterministic scoring (tie-break R→I→A→S→E→C). Finished results stay on the device 30 minutes at most and vanish when the tab closes; Results shows the countdown. The statements are adopted from the Hawai'i Department of Education's 42-item RIASEC Interest Test (Holland's RIASEC Theory); the About Us page credits that source.
 4. **Results** (`/results`) — Holland code + trait breakdown, a rotating carousel of the three traits with a rank banner each and all majors and related pathways per code letter (traits are ranked, careers never), a "See the other types" popup with the #4 to #6 traits as the same cards (browse only), password-protected PDF download (with the selected SHS strand and age) and an emailed copy of the same PDF (without strand or age), optional career-look photo (face props, plus hand-sign effects; saved or shared from the device, never emailed), a share image of the code with no identifying data (device share menu or save). A results ID is saved server-side for the admin stats page; it is not shown on screen or printed in the PDF.
 
@@ -26,9 +26,13 @@ No accounts or authentication. No university/HEI directory or school mapping. No
 Product app with one brand surface: the landing page is brand register (identity, warmth, persuasion); Profile, Assessment, and Results are product register (task-focused, consistent, calm). See `DESIGN.md`.
 
 ## Changelog
+- 2026-11-25 · profile · Age has no upper limit: any age from 15 up · older returning learners were blocked.
+- 2026-11-25 · admin · Admin time filter is a dropdown (all time, 30 days to 10 years) with a custom From/To date range · the team asked for finer and custom ranges.
+- 2026-11-25 · admin · Admin period filter is yearly: 1, 5 or 10 years, or all time · the team asked for yearly periods.
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 
+- 2026-11-24 · profile · Age now accepts 15–30 (was 10–30) · a student entered 10, which is not a Senior High age.
 - 2026-11-23 · admin · Admin period filter adds 1 year · the team asked for a yearly option.
 - 2026-11-23 · results · Added the "See the other types" popup (ranks #4 to #6, same cards, browse only). · Requested.
 - 2026-11-23 · profile/results · Profile Setup no longer asks for a school; the results PDF no longer prints the results ID. · Requested removal.

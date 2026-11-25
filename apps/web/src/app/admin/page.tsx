@@ -17,6 +17,7 @@ import {
 import { AdminLoginForm } from "@/components/admin/admin-login-form";
 import { InterestHexagon } from "@/components/admin/interest-hexagon";
 import { LatestResults } from "@/components/admin/latest-results";
+import { PeriodPicker } from "@/components/admin/period-picker";
 import { Wordmark } from "@/components/blocks/wordmark";
 import { HexagonPattern } from "@/components/magic/hexagon-pattern";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -37,8 +38,12 @@ import {
   type SavedResult,
 } from "@/lib/saved-results/repository";
 import {
-  PERIODS,
+  adminHref,
+  manilaToday,
   parsePeriod,
+  periodKey,
+  periodLabel,
+  periodPhrase,
   withinPeriod,
   type Period,
 } from "@/lib/saved-results/periods";
@@ -66,7 +71,12 @@ const TABLE_LIMIT = 200;
 export default async function AdminPage({
   searchParams,
 }: {
-  searchParams: Promise<{ grade?: string | string[]; period?: string | string[] }>;
+  searchParams: Promise<{
+    grade?: string | string[];
+    period?: string | string[];
+    from?: string | string[];
+    to?: string | string[];
+  }>;
 }) {
   if (!(await hasAdminSession())) {
     return (
@@ -77,11 +87,11 @@ export default async function AdminPage({
   }
   // ?grade=11 or ?grade=12 narrows every total and list to that grade;
   // anything else shows the overall view.
-  const { grade, period: periodParam } = await searchParams;
+  const { grade, period: periodParam, from, to } = await searchParams;
   const gradeFilter = GRADE_LEVELS.find((level) => level === grade) ?? null;
-  // ?period=7d|30d|3m|6m|1y narrows to results saved in that window; absent is
-  // all time (results are deleted after a year anyway). Combines with grade.
-  const period = parsePeriod(periodParam);
+  // ?period= (a preset, or custom with from/to) narrows to results saved in
+  // that window; absent is all time. Combines with grade. See periods.ts.
+  const period = parsePeriod({ period: periodParam, from, to });
 
   // The session is checked above, before anything is sent, so a visitor
   // without one never gets a byte of the dashboard. That is also why this is
@@ -89,7 +99,7 @@ export default async function AdminPage({
   // this page's frame before the check. Keyed so that changing grade or
   // period shows the placeholder at once.
   return (
-    <Suspense key={`${gradeFilter ?? "all"}-${period?.id ?? "all"}`} fallback={<AdminLoading />}>
+    <Suspense key={`${gradeFilter ?? "all"}-${periodKey(period)}`} fallback={<AdminLoading />}>
       <AdminDashboard gradeFilter={gradeFilter} period={period} />
     </Suspense>
   );
@@ -178,7 +188,7 @@ async function AdminDashboard({
       headline={<Headline summary={summary} gradeFilter={gradeFilter} period={period} />}
       filter={
         <div className="flex flex-col gap-3">
-          <PeriodFilter current={period} gradeFilter={gradeFilter} />
+          <PeriodPicker period={period} gradeFilter={gradeFilter} today={manilaToday()} />
           <div className="flex flex-wrap items-center gap-3">
             <GradeFilter current={gradeFilter} period={period} options={filterOptions} />
             <ExportLink gradeFilter={gradeFilter} period={period} />
@@ -203,7 +213,7 @@ async function AdminDashboard({
               icon={CalendarDays}
               label="In this period"
               value={summary.count.toLocaleString()}
-              description={`Results saved in the ${period.label.toLowerCase()}.`}
+              description={`Results saved ${periodPhrase(period)}.`}
             />
           ) : (
             <MiniStat
@@ -341,7 +351,7 @@ function Headline({
   gradeFilter: GradeLevel | null;
   period: Period | null;
 }) {
-  const when = period ? `in the ${period.label.toLowerCase()}` : null;
+  const when = period ? periodPhrase(period) : null;
   if (summary.count === 0) {
     return (
       <>
@@ -510,18 +520,6 @@ interface FilterOption {
   count: number;
 }
 
-// Overall, Grade 11 and Grade 12 views of the same page, as links so the
-// choice lives in the URL and survives a reload.
-// The admin page's address for a grade and period; each filter keeps the
-// other's choice.
-function adminHref(grade: GradeLevel | null, period: Period | null): string {
-  const params = new URLSearchParams();
-  if (grade) params.set("grade", grade);
-  if (period) params.set("period", period.id);
-  const query = params.toString();
-  return query ? `/admin?${query}` : "/admin";
-}
-
 // Pills wrap onto a second line on narrow phones, so no choice hides off the
 // edge; one rounded row from `sm` up.
 const FILTER_NAV =
@@ -534,37 +532,8 @@ const filterLink = (active: boolean) =>
       : "text-muted-foreground hover:bg-muted hover:text-foreground",
   );
 
-// All time and the preset windows, as links so the choice lives in the URL.
-function PeriodFilter({
-  current,
-  gradeFilter,
-}: {
-  current: Period | null;
-  gradeFilter: GradeLevel | null;
-}) {
-  const options = [{ id: "all", short: "All time", period: null as Period | null }].concat(
-    PERIODS.map((period) => ({ id: period.id, short: period.short, period })),
-  );
-  return (
-    <nav aria-label="Filter by period" className={FILTER_NAV}>
-      {options.map((option) => {
-        const active = (option.period?.id ?? null) === (current?.id ?? null);
-        return (
-          <Link
-            key={option.id}
-            href={adminHref(gradeFilter, option.period)}
-            aria-current={active ? "page" : undefined}
-            aria-label={option.period ? option.period.label : "All time"}
-            className={filterLink(active)}
-          >
-            {option.short}
-          </Link>
-        );
-      })}
-    </nav>
-  );
-}
-
+// Overall, Grade 11 and Grade 12 views of the same page, as links so the
+// choice lives in the URL and survives a reload.
 function GradeFilter({
   current,
   period,
@@ -613,7 +582,7 @@ function ExportLink({
 }) {
   return (
     <a
-      href={adminHref(gradeFilter, period).replace("/admin", "/admin/export")}
+      href={adminHref(gradeFilter, period, "/admin/export")}
       download
       className="inline-flex h-10 items-center gap-2 rounded-full bg-accent-strong px-4 text-sm font-bold whitespace-nowrap text-accent-strong-foreground shadow-bento transition-[filter,translate] duration-200 outline-none hover:brightness-95 focus-visible:ring-3 focus-visible:ring-ring/50 active:translate-y-px"
     >
@@ -621,7 +590,7 @@ function ExportLink({
       Export to Excel
       <span className="sr-only">
         {gradeFilter ? `, Grade ${gradeFilter} only` : ", all grades"}
-        {period ? `, ${period.label.toLowerCase()}` : ""}
+        {period ? `, ${periodLabel(period)}` : ""}
       </span>
     </a>
   );

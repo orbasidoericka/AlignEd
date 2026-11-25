@@ -90,7 +90,7 @@ describe("/api/results", () => {
     const { POST } = await load();
     await POST(request("POST", "/api/results", { ...results, age: "" }));
     expect(saveResult.mock.calls[0]![1].age).toBeNull();
-    for (const age of ["9", "31", "16.5", "sixteen"]) {
+    for (const age of ["9", "14", "100", "16.5", "sixteen"]) {
       const response = await POST(
         request("POST", "/api/results", { ...results, age }),
       );

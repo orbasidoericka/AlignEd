@@ -2,7 +2,26 @@
 
 import { describe, expect, it } from "vitest";
 
-import { NICKNAME_MAX_LENGTH, sanitizeNickname, strandLabel } from "./types";
+import {
+  isValidAge,
+  NICKNAME_MAX_LENGTH,
+  sanitizeNickname,
+  strandLabel,
+} from "./types";
+
+describe("isValidAge", () => {
+  it("accepts any age from 15 up", () => {
+    for (const age of ["15", "16", "17", "30", "31", "45", "99"]) {
+      expect(isValidAge(age)).toBe(true);
+    }
+  });
+
+  it("rejects ages under 15, blanks, and non-numbers", () => {
+    for (const age of ["", "10", "14", "1", "100", "abc"]) {
+      expect(isValidAge(age)).toBe(false);
+    }
+  });
+});
 
 describe("strandLabel", () => {
   it("prints the picked strand as is", () => {

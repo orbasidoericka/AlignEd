@@ -91,8 +91,8 @@ Captured before the assessment begins; stored client-side only (localStorage via
 | Nickname | Text | **Required.** 1–8 characters, uppercase letters `A–Z` and the hyphen `-` only. Input is normalized on every keystroke: characters are upper-cased, digits and all other symbols are discarded, and entry stops at 8 characters. It is a display handle, not a real name; it is never stored on the server and never included in the saved-results record. It reaches the server only inside an email request (FR-8), to name and password the PDF, and is discarded with the address. |
 | Grade Level | Enum | **Required.** Exactly two values: `Grade 11` and `Grade 12`. No free text. |
 | SHS Strand | Enum | **Required.** One of the supported academic, Arts and Design, Sports, or TVL strands: ABM, STEM, HUMSS, GAS, Arts and Design, Sports, AFA, HE, IA, or ICT, or **Others**. Choosing Others reveals a required "Type your strand" field (max 60). That text stays in the browser and the student's own downloaded PDF only; the server and admin page record just "Others". No other free text. |
-| Age | Whole number | **Required.** 10–30. Stored in the saved-results record for the admin page's age statistics. |
-| Terms and Conditions | Checkbox | **Required.** Card heading and inline link: "Data Privacy Policy and Terms and Conditions". Full checkbox text: "I have read and agree to the Data Privacy Policy and Terms and Conditions." Opens a dialog titled "Data Privacy Policy & Terms and Conditions" (RA 10173), versioned in `components/journey/privacy-consent.tsx` (Data Privacy Policy `v3.4`, Terms `v1.1`), with the two documents on separate tabs. It lists every piece of data collected and where it goes, without stating a specific retention period or a "so you can compare later" purpose. For a student under 18, the notice tells a parent or legal guardian to read it and be the one who ticks the box: there is no separate parent account or flow, so this single checkbox is how their consent is given. Contact email `aligned.career.support@gmail.com`. Key points are bold. Required before continuing. |
+| Age | Whole number | **Required.** 15 or older, no upper limit (late enrollees and returning learners); the field takes two digits, so 99 at most. Stored in the saved-results record for the admin page's age statistics. |
+| Terms and Conditions | Checkbox | **Required.** Card heading and inline link: "Data Privacy Policy and Terms and Conditions". Full checkbox text: "I have read and agree to the Data Privacy Policy and Terms and Conditions." Opens a dialog titled "Data Privacy Policy & Terms and Conditions" (RA 10173), versioned in `components/journey/privacy-consent.tsx` (Data Privacy Policy `v3.3`, Terms `v1.0`), with the two documents on separate tabs. It lists every piece of data collected and where it goes, without stating a specific retention period or a "so you can compare later" purpose. For a student under 18, the notice tells a parent or legal guardian to read it and be the one who ticks the box: there is no separate parent account or flow, so this single checkbox is how their consent is given. Contact email `aligned.career.support@gmail.com`. Key points are bold. Required before continuing. |
 
 - FR-2.1. The "Continue to assessment" action is unavailable until all required fields (nickname, grade level, SHS strand, age, privacy acceptance) are set.
 - FR-2.2. Profile values are editable by returning to this step before completing the assessment.
@@ -151,7 +151,7 @@ Captured before the assessment begins; stored client-side only (localStorage via
 - FR-9.5. A failed save never blocks the results; it is silent and never retried from the UI.
 
 ### FR-10 Admin Page
-- FR-10.1. `/admin` shows aggregate statistics over saved results (count, average age, strongest interest area, most common codes, age distribution) and a table of the latest results (date, code, grade, strand, age, six scores; no results ID). Everything on it, and the Excel export, can be narrowed by grade (11, 12) and by period (all time, last 7 days, 30 days, 3 months, 6 months, 12 months, by when the result was saved; results are deleted after a year, so all time and 12 months mostly match). Rows carry no identity, so neither does the page.
+- FR-10.1. `/admin` shows aggregate statistics over saved results (count, average age, strongest interest area, most common codes, age distribution) and a table of the latest results (date, code, grade, strand, age, six scores; no results ID). Everything on it, and the Excel export, can be narrowed by grade (11, 12) and by time period, by when the result was saved: a "Time period" dropdown with All time, Last 30 days, 3 months, 6 months, 1 year, 3 years, 5 years, 10 years, and Custom date range, which shows From and To dates (whole days, Philippine time, both ends included). Rows carry no identity, so neither does the page.
 - FR-10.2. The page asks for one shared password, `ADMIN_PASSWORD` (server only, at least 16 characters), compared in constant time; if it is unset or shorter the page stays locked. A correct password sets an 8-hour session cookie (HttpOnly, SameSite=Strict, Secure in production) signed with a key derived from the password, so changing the password signs everyone out. A Log out button ends the session. There are no admin accounts and nothing about the session is stored server-side.
 - FR-10.3. Sign-in attempts are limited to 5 per network per 15 minutes and 30 across all networks per hour (in memory). The Excel export (`/admin/export`) needs the same session. Old `/admin/<token>` links return 404.
 
@@ -205,7 +205,7 @@ Captured before the assessment begins; stored client-side only (localStorage via
 - **Given** a nickname already at 8 characters, **when** more characters are typed, **then** the value stays at 8.
 - **Given** an empty nickname, **when** continue is attempted, **then** the journey does not advance and an inline error names the missing nickname.
 - **Given** the grade level control, **then** it offers exactly `Grade 11` and `Grade 12` and no free-text entry.
-- **Given** the age field, **when** a value outside 10–30 or a non-whole number is entered, **then** it is not accepted.
+- **Given** the age field, **when** a value under 15 or a non-whole number is entered, **then** it is not accepted and an inline message says "Enter an age of 15 or older."
 
 ### Assessment
 - **Given** the assessment route at any point in the bank, **then** exactly one statement is visible, the only answer controls are Yes and No, and no "Next" control is shown on a statement that has not been answered (an answered one shows "Next" after Back).
@@ -302,11 +302,18 @@ AlignEd ships as a mostly-static, anonymous-first Next.js application.
 ---
 
 ## Changelog
+- 2026-11-25 · profile · FR-2: age upper limit of 30 removed; any age from 15 up is accepted · older returning learners were blocked.
+- 2026-11-25 · admin · FR-10.1: period pills replaced by a "Time period" dropdown (all time, 30 days to 10 years) plus a custom From/To date range · the team asked for finer and custom ranges.
+- 2026-11-25 · admin · FR-10.1: period filter is now yearly only (1, 5, 10 years); 7 days to 6 months removed · the team asked for yearly periods.
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 
+<<<<<<< HEAD
 - 2026-11-25 · privacy · FR-2: policy v3.5 drops results ID, school guidance staff and the typed-strand claim; the notice is English only. · Notice matches actual data and access.
 
+=======
+- 2026-11-24 · profile · FR-2: age range narrowed from 10–30 to 15–30, with an inline "Enter an age from 15 to 30." message · a student entered 10, which is not a Senior High age.
+>>>>>>> 78423946c570ed98221e96e31002caf84ac17a3e
 - 2026-11-23 · admin · FR-10.1: period filter gains "Last 12 months" (1 year) · the team asked for a yearly option.
 - 2026-11-23 · results · Added FR-5.5: "See the other types" popup showing ranks #4 to #6 as the same cards, browse-only. · Requested: let students look at their remaining types without changing the code.
 - 2026-11-23 · profile/results · FR-2: the optional School field is removed from Profile Setup (and from the PDF); policy v3.4, Terms v1.1. FR-7.1/FR-8.3/FR-9.2: the results ID is no longer printed on the downloaded or emailed PDF; it stays server-side and in the client store only. · Requested removal of School and of the PDF results ID.

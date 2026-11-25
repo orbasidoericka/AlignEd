@@ -12,7 +12,7 @@ import {
   QUESTIONS,
   type QuestionLanguage,
 } from "@/lib/riasec/questions";
-import { STRAND_OTHER } from "@/lib/riasec/types";
+import { isValidAge, STRAND_OTHER } from "@/lib/riasec/types";
 import type { GradeLevel, ShsStrand } from "@/lib/riasec/types";
 
 export type RiasecTrait =
@@ -467,7 +467,7 @@ export const selectIsProfileComplete = (state: {
   state.profile.strand !== null &&
   (state.profile.strand !== STRAND_OTHER ||
     state.profile.strandOther.trim() !== "") &&
-  state.profile.age !== "" &&
+  isValidAge(state.profile.age) &&
   state.profile.privacyAccepted;
 
 export const selectIsAssessmentComplete = (state: {
