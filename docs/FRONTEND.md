@@ -65,6 +65,7 @@ Next.js 16.2.5 App Router, React 19, TypeScript, Tailwind v4 (tokens in `apps/we
 - CI (`.github/workflows/ci.yml`): install, lint, typecheck, unit tests, seed determinism, build. No Lighthouse or E2E step yet.
 
 ## Changelog
+- 2026-11-25 · admin · `components/admin/period-picker.tsx` (client): "Time period" `NativeSelect` of presets plus Custom date range with native From/To date fields; every change is a `router.push` to `adminHref` (now in `periods.ts`), replacing the `PeriodFilter` pills · the team asked for finer and custom ranges.
 - 2026-11-25 · admin · `PERIODS` is now `1y`, `5y`, `10y` (pills "1 year", "5 years", "10 years"); the 7 day to 6 month pills are gone · the team asked for yearly periods.
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.

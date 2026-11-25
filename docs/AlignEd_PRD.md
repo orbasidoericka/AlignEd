@@ -151,7 +151,7 @@ Captured before the assessment begins; stored client-side only (localStorage via
 - FR-9.5. A failed save never blocks the results; it is silent and never retried from the UI.
 
 ### FR-10 Admin Page
-- FR-10.1. `/admin` shows aggregate statistics over saved results (count, average age, strongest interest area, most common codes, age distribution) and a table of the latest results (date, code, grade, strand, age, six scores; no results ID). Everything on it, and the Excel export, can be narrowed by grade (11, 12) and by period (all time, last 1 year, 5 years, 10 years, by when the result was saved; results are deleted after a year, so today all time and every period mostly match). Rows carry no identity, so neither does the page.
+- FR-10.1. `/admin` shows aggregate statistics over saved results (count, average age, strongest interest area, most common codes, age distribution) and a table of the latest results (date, code, grade, strand, age, six scores; no results ID). Everything on it, and the Excel export, can be narrowed by grade (11, 12) and by time period, by when the result was saved: a "Time period" dropdown with All time, Last 30 days, 3 months, 6 months, 1 year, 3 years, 5 years, 10 years, and Custom date range, which shows From and To dates (whole days, Philippine time, both ends included). Rows carry no identity, so neither does the page.
 - FR-10.2. The page asks for one shared password, `ADMIN_PASSWORD` (server only, at least 16 characters), compared in constant time; if it is unset or shorter the page stays locked. A correct password sets an 8-hour session cookie (HttpOnly, SameSite=Strict, Secure in production) signed with a key derived from the password, so changing the password signs everyone out. A Log out button ends the session. There are no admin accounts and nothing about the session is stored server-side.
 - FR-10.3. Sign-in attempts are limited to 5 per network per 15 minutes and 30 across all networks per hour (in memory). The Excel export (`/admin/export`) needs the same session. Old `/admin/<token>` links return 404.
 
@@ -302,6 +302,7 @@ AlignEd ships as a mostly-static, anonymous-first Next.js application.
 ---
 
 ## Changelog
+- 2026-11-25 · admin · FR-10.1: period pills replaced by a "Time period" dropdown (all time, 30 days to 10 years) plus a custom From/To date range · the team asked for finer and custom ranges.
 - 2026-11-25 · admin · FR-10.1: period filter is now yearly only (1, 5, 10 years); 7 days to 6 months removed · the team asked for yearly periods.
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
