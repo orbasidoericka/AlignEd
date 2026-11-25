@@ -248,6 +248,7 @@ One scale, defined in `globals.css` (`--elev-*` in `:root` and `.dark`, exposed 
 Dark values are black-based with no blue tint and a faint inset top highlight, because the light blue-tinted values vanish on the navy page. Print zeroes all shadows.
 
 ## Changelog
+- 2026-11-25 · copy · Email results dialog: standing note under the password box, before and after sending: "Not in your inbox after a few minutes? Check your Spam or Junk folder, and mark it as Not spam so you can open the PDF." (English in both languages); the spam clause leaves the "Sent!" line · students thought the email never came.
 - 2026-11-25 · admin · Time period dropdown and From/To date fields: rounded-full `bg-card` fields with a calendar icon, label above in `muted-foreground`; the chevron on the date fields hides below `sm` so the date fits at 360px · replaces the period pills.
 - 2026-11-25 · tokens · New `--accent-strong-foreground` (#3A2800 in both themes) for ink on `accent-strong`; it pointed at `--highlight-foreground`, which is light yellow in dark, so the admin "Export to Excel" label was invisible (1.13:1, now 9.20:1) · bug report.
 

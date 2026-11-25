@@ -74,3 +74,13 @@ describe("Share my results", () => {
     warn.mockRestore();
   });
 });
+
+describe("Email my results", () => {
+  it("tells the student to check Spam before they send", () => {
+    render(<ResultsKeepsakeActions />);
+    fireEvent.click(screen.getByRole("button", { name: "Email me my results" }));
+    expect(
+      screen.getByText(/Check your Spam or Junk folder, and mark it as Not spam/),
+    ).toBeInTheDocument();
+  });
+});

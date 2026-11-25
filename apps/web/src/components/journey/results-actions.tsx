@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import {
   CheckCircle2Icon,
   DownloadIcon,
+  InfoIcon,
   LoaderCircleIcon,
   MailIcon,
   RotateCcwIcon,
@@ -497,6 +498,16 @@ function EmailResultsDialog() {
           </p>
         </div>
 
+        {/* Shown before and after sending, so students know where to look
+            before they decide the email never came. */}
+        <p className="flex items-start gap-2 text-sm text-muted-foreground">
+          <InfoIcon className="mt-0.5 size-4 shrink-0" aria-hidden />
+          <span lang="en">
+            Not in your inbox after a few minutes? Check your Spam or Junk
+            folder, and mark it as Not spam so you can open the PDF.
+          </span>
+        </p>
+
         {outcome === "sent" ? (
           <div
             className="flex items-start gap-3 rounded-2xl bg-muted p-4"
@@ -510,7 +521,7 @@ function EmailResultsDialog() {
                 <>
                   Sent! Check{" "}
                   <strong className="break-all">{email.trim()}</strong> for
-                  your results PDF. It may take a minute, and it might land in your spam folder.
+                  your results PDF. It may take a minute.
                 </>
               )}
             </p>

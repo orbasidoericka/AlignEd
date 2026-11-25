@@ -90,7 +90,7 @@ export const RESULTS_ACTIONS_TEXT_FIL = {
     passwordHint:
       "Ang iyong palayaw, pagkatapos ang iyong tatlong-titik na RIASEC code. CASE-SENSITIVE ang password. Hindi ito nakasulat sa email, kaya itago ito sa ligtas na lugar.",
     sent: (email: string) =>
-      `Naipadala na! Tingnan ang ${email} para sa iyong results PDF. Maaaring tumagal ito ng isang minuto, at posibleng mapunta ito sa iyong spam folder.`,
+      `Naipadala na! Tingnan ang ${email} para sa iyong results PDF. Maaaring tumagal ito ng isang minuto.`,
     emailLabel: "Email address",
     emailInvalid: "Maglagay ng wastong email address.",
     consent:
