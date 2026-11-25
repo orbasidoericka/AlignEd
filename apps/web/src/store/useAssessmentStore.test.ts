@@ -272,6 +272,23 @@ describe("useAssessmentStore", () => {
     expect(selectIsProfileComplete(useAssessmentStore.getState())).toBe(true);
   });
 
+  it("selectIsProfileComplete rejects an age outside 15 to 30", () => {
+    useAssessmentStore.getState().setProfile({
+      nickname: "MARI-EL",
+      gradeLevel: "11",
+      strand: "General Academic Strand (GAS)",
+      privacyAccepted: true,
+    });
+    for (const age of ["10", "14", "31", "99"]) {
+      useAssessmentStore.getState().setProfile({ age });
+      expect(selectIsProfileComplete(useAssessmentStore.getState())).toBe(false);
+    }
+    for (const age of ["15", "30"]) {
+      useAssessmentStore.getState().setProfile({ age });
+      expect(selectIsProfileComplete(useAssessmentStore.getState())).toBe(true);
+    }
+  });
+
   it("picking Others needs a typed strand before the profile is complete", () => {
     useAssessmentStore.getState().setProfile({
       nickname: "MARI-EL",

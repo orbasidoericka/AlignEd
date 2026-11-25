@@ -194,6 +194,36 @@ describe("ProfileForm privacy consent", () => {
     ).toBeInTheDocument();
   });
 
+  it("blocks an age outside 15 to 30 and says the range", () => {
+    render(<ProfileForm />);
+    fillProfile();
+    fireEvent.click(consentBox());
+    const age = screen.getByLabelText(/How old are you/i);
+
+    fireEvent.change(age, { target: { value: "10" } });
+    expect(screen.getByText("Enter an age from 15 to 30.")).toBeInTheDocument();
+    expect(age).toHaveAttribute("aria-invalid", "true");
+    fireEvent.click(screen.getByRole("button", { name: /Continue/i }));
+    expect(push).not.toHaveBeenCalled();
+
+    fireEvent.change(age, { target: { value: "16" } });
+    expect(
+      screen.queryByText("Enter an age from 15 to 30."),
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Continue/i }));
+    expect(push).toHaveBeenCalledExactlyOnceWith("/assessment");
+  });
+
+  it("does not flag the first digit of an age while it is typed", () => {
+    render(<ProfileForm />);
+    fireEvent.change(screen.getByLabelText(/How old are you/i), {
+      target: { value: "1" },
+    });
+    expect(
+      screen.queryByText("Enter an age from 15 to 30."),
+    ).not.toBeInTheDocument();
+  });
+
   it("continues once every field and the consent box are filled", () => {
     render(<ProfileForm />);
     fillProfile();

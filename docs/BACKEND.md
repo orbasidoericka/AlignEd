@@ -32,7 +32,7 @@ Filters: `?grade=11|12` and `?period=1y|5y|10y` (`lib/saved-results/periods.ts`:
 | `0001_init.sql` | `careers`, `courses`, `course_careers` (public read), anonymous `assessments` (insert-only), `match_courses` RPC. |
 | `0002_universities.sql` | University directory. **Out of scope per PRD**; slated for removal (Implementation Plan 1.2). |
 | `0003_saved_results.sql` | `saved_results`: results ID, six scores, `max_score`, code, grade, date; expires after one year. RLS on with no policies, so only the service role (server routes) can touch it. |
-| `0004_saved_results_age.sql` | Adds nullable `age` (10–30). |
+| `0004_saved_results_age.sql` | Adds nullable `age` (10–30). `/api/results` accepts only 15–30 (`AGE_MIN`/`AGE_MAX`), inside this wider check, so no migration was needed. |
 | `0005_saved_results_strand.sql` | Adds nullable `strand`, limited to the `SHS_STRANDS` list. |
 | `0006_site_counters.sql` | `site_counters` (key, value, updated_at; RLS on, no policies), seeded with `tests_taken` from the existing row count, and `increment_site_counter(p_key)`: one atomic `security definer` upsert, execute granted to the service role only. The counter only goes up, so deleting or purging a saved result never lowers the public figure. |
 | `0007_saved_results_strand_others.sql` | Widens the `strand` check to also allow `'Others'`. Only the word is stored; a typed strand never reaches the server. Run it before deploying the Others option. |
@@ -69,6 +69,7 @@ Set in `apps/web/next.config.ts` for every path: `X-Frame-Options: DENY`, `nosni
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 
+- 2026-11-24 · api · `/api/results` rejects ages under 15 (was under 10) via the shared `AGE_MIN`; DB check unchanged at 10–30 · Senior High age range.
 - 2026-11-23 · admin · `?period=1y` (365 days) on the admin page and `/admin/export` · the team asked for a yearly option.
 - 2026-11-23 · backend · `/api/send-results` no longer accepts or prints a `resultsId`; the emailed PDF carries no school or results ID. The saved row and the returned ID are unchanged. · Results ID removed from the PDF.
 - 2026-11-22 · admin · `?period=` filter (`periods.ts`) on the admin page and `/admin/export`, combined with `?grade=` · the team asked to filter results by when they were saved.

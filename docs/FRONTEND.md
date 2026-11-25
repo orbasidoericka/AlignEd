@@ -26,6 +26,7 @@ Next.js 16.2.5 App Router, React 19, TypeScript, Tailwind v4 (tokens in `apps/we
 
 - `store/useAssessmentStore.ts`: Zustand + `persist` (localStorage). Holds profile (nickname, grade, strand, `strandOther` for the typed "Others" strand, age; `merge` drops a `school` key left by older sessions), answers keyed by question id, scores, `questionOrder` (per-session shuffle), `language` (`en` | `fil`, set by `LanguageToggle`, always `en` while `FILIPINO_ENABLED` is false; persist version 10, which also force-resets `privacyAccepted` to `false` for any payload older than v10). Re-answer replaces the old contribution. Stored data from an older bank/scale is discarded on load (PRD E7).
 - Session TTL: 30 min after last change. Wiped on rehydrate by the store and live by `components/session-expiry-guard.tsx`.
+- Age: `isValidAge` (`lib/riasec/types.ts`, `AGE_MIN` 15 / `AGE_MAX` 30) gates `selectIsProfileComplete`; the profile form shows "Enter an age from 15 to 30." once two digits are typed or after Continue, never on the first digit.
 - Tab-close wipe: every load sets `sessionStorage` `aligned.tab`; a rehydrated session with `completedAt` set and no marker is wiped (`isOrphanedFinishedSession`). Unfinished quizzes keep resuming. Unreadable `sessionStorage` = no wipe (TTL only).
 - `components/journey/results-expiry-note.tsx`: countdown under the Results h1, from `sessionRemainingMs(lastUpdated)`; ticks 1 s, hidden in print, screen readers get a per-minute sentence.
 - `hooks/use-hydrated.ts`: gate anything that reads persisted state, so the server render never depends on it.
@@ -68,6 +69,7 @@ Next.js 16.2.5 App Router, React 19, TypeScript, Tailwind v4 (tokens in `apps/we
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 
+- 2026-11-24 · profile · `AGE_MIN` 10 → 15; new `isValidAge` gates profile completion; inline range message on the age field (EN + FIL) · the form only checked the field was not empty, so 10 got through.
 - 2026-11-23 · admin · `PERIODS` gains `1y` ("Last 12 months", pill "1 year") · the team asked for a yearly option.
 - 2026-11-23 · frontend · New `rankTraits()` in `lib/riasec/scoring.ts` (all six letters, same tie-break; `computeHollandCode` = its top 3). Card markup moved to `riasec/pathway-card.tsx` (`PathwayCard`, banners #1 to #6). New `riasec/other-types-dialog.tsx`; `PathwayResults` takes optional `otherLetters` and renders the button + popup; `results-dashboard.tsx` passes them. `RESULTS_TEXT_FIL` gains banners 4 to 6 and `otherTypes`. Tests added. · PRD FR-5.5.
 - 2026-11-23 · frontend · Profile form drops the optional School field (`profile-form.tsx`, `ProfileState`, `StudentProfile`, `SCHOOL_MAX_LENGTH`, Filipino labels); store `merge` strips `school` from older sessions. `buildResultsPdf` no longer takes `school` or `resultsId`; Download PDF and the email request stop sending `resultsId`. Policy `v3.4`, Terms `v1.1` (no school; results ID not on the PDF; "keep your results ID private" rule dropped). Tests updated. · Requested removal of School and of the PDF results ID.

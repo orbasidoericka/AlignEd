@@ -60,8 +60,19 @@ export interface StudentProfile {
 
 export const NICKNAME_MAX_LENGTH = 8;
 
-export const AGE_MIN = 10;
+// Senior High ages: Grade 11 is usually 16, and 15 still admits students who
+// started school early. 30 leaves room for late enrollees and returning
+// learners. The database check (0004) stays at 10-30, a wider bound.
+export const AGE_MIN = 15;
 export const AGE_MAX = 30;
+
+// The profile's age field holds digits only (sanitized per keystroke), so a
+// whole number within the range is all there is to check.
+export function isValidAge(age: string): boolean {
+  if (!/^\d+$/.test(age)) return false;
+  const value = Number(age);
+  return value >= AGE_MIN && value <= AGE_MAX;
+}
 
 // Nicknames are uppercase letters and hyphens only (PRD FR-2). Applied on
 // every keystroke, so typing a digit or symbol simply produces nothing.
