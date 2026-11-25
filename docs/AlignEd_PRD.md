@@ -308,6 +308,8 @@ AlignEd ships as a mostly-static, anonymous-first Next.js application.
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 
+- 2026-11-25 · profile · FR-2: the consent box will not tick until the student has scrolled to the end of both the Data Privacy Policy and Terms tabs (a "You must read" message appears on an early attempt; the Privacy tab jumps to Terms at its end). · Informed consent.
+
 <<<<<<< HEAD
 - 2026-11-25 · privacy · FR-2: policy v3.5 drops results ID, school guidance staff and the typed-strand claim; the notice is English only. · Notice matches actual data and access.
 

@@ -1,7 +1,7 @@
 // Copyright (c) 2026 EdTech. All rights reserved.
 "use client";
 
-import { Fragment, useState } from "react";
+import { Fragment, useCallback, useState } from "react";
 import { ShieldCheck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -34,6 +34,8 @@ import { cn } from "@/lib/utils";
 // text no longer promises them; saved records expire after a year.
 // v3.3: the admin page no longer shows results IDs.
 // v3.4: no school field, and the results ID is no longer printed on the PDF.
+// The consent box only ticks once both tabs are scrolled to the end; trying
+// sooner shows a "you must read" message instead.
 // v3.5: no results ID, school guidance staff or typed-strand claim in the
 // text, and the Filipino translation is gone (the notice is English only).
 export const PRIVACY_POLICY_VERSION = "v3.5";
@@ -397,28 +399,81 @@ function renderSections(sections: readonly PolicySection[]) {
 // The two documents as separate tabs, shared by the profile step's consent
 // dialog and the footer's read-only dialog, so the notice can only ever say
 // one thing. One checkbox and one "I agree" still cover both tabs.
+// "You must read ..." naming only the documents still unread.
+function mustReadMessage(read: { privacy: boolean; terms: boolean }) {
+  const missing = [
+    read.privacy ? null : "Data Privacy Policy",
+    read.terms ? null : "Terms and Conditions",
+  ].filter(Boolean);
+  return `You must read the ${missing.join(" and the ")} before you agree.`;
+}
+
+// A scrolling panel that reports once its last line has been reached. A panel
+// that is not tall enough to scroll counts as read as soon as it shows.
+function ReadRegion({
+  onRead,
+  children,
+}: {
+  /** `scrolled` is true when the student scrolled there, false on mount. */
+  onRead?: ((scrolled: boolean) => void) | undefined;
+  children: React.ReactNode;
+}) {
+  const check = useCallback(
+    (el: HTMLElement | null, scrolled: boolean) => {
+      if (!el || !onRead) return;
+      if (el.scrollHeight - el.scrollTop - el.clientHeight <= 8) onRead(scrolled);
+    },
+    [onRead],
+  );
+  return (
+    <div
+      ref={(el) => check(el, false)}
+      onScroll={(e) => check(e.currentTarget, true)}
+      className="flex max-h-[50vh] flex-col gap-5 overflow-y-auto pb-6"
+    >
+      {children}
+    </div>
+  );
+}
+
 function PolicyTabs({
   defaultTab = "privacy",
+  onRead,
 }: {
   defaultTab?: "privacy" | "terms";
+  /** Called when a tab has been scrolled to its end. */
+  onRead?: (tab: "privacy" | "terms") => void;
 }) {
+  const [tab, setTab] = useState<"privacy" | "terms">(defaultTab);
+  // Reaching the end of the Data Privacy Policy moves on to the Terms.
+  // (A panel too short to scroll counts as read but does not jump on its own.)
+  const readPrivacy = useCallback(
+    (scrolled: boolean) => {
+      onRead?.("privacy");
+      if (scrolled) setTab("terms");
+    },
+    [onRead],
+  );
+  const readTerms = useCallback(() => onRead?.("terms"), [onRead]);
   return (
-    <Tabs defaultValue={defaultTab} className="p-6 pb-0">
+    <Tabs
+      value={tab}
+      onValueChange={(value) => setTab(value === "terms" ? "terms" : "privacy")}
+      className="p-6 pb-0"
+    >
       <TabsList>
         <TabsTrigger value="privacy">Data Privacy Policy</TabsTrigger>
         <TabsTrigger value="terms">Terms and Conditions</TabsTrigger>
       </TabsList>
-      <TabsContent
-        value="privacy"
-        className="flex max-h-[50vh] flex-col gap-5 overflow-y-auto pb-6"
-      >
-        {renderSections(PRIVACY_POLICY_SECTIONS)}
+      <TabsContent value="privacy">
+        <ReadRegion onRead={onRead ? readPrivacy : undefined}>
+          {renderSections(PRIVACY_POLICY_SECTIONS)}
+        </ReadRegion>
       </TabsContent>
-      <TabsContent
-        value="terms"
-        className="flex max-h-[50vh] flex-col gap-5 overflow-y-auto pb-6"
-      >
-        {renderSections(TERMS_SECTIONS)}
+      <TabsContent value="terms">
+        <ReadRegion onRead={onRead ? readTerms : undefined}>
+          {renderSections(TERMS_SECTIONS)}
+        </ReadRegion>
       </TabsContent>
     </Tabs>
   );
@@ -440,6 +495,26 @@ export function PrivacyConsent({
   showHint,
 }: PrivacyConsentProps) {
   const [open, setOpen] = useState(false);
+  // Each document must be scrolled to its end before the box can be ticked.
+  // Per visit only: an already-ticked box (restored session) stays ticked.
+  const [read, setRead] = useState({ privacy: false, terms: false });
+  const markRead = useCallback(
+    (tab: "privacy" | "terms") =>
+      setRead((prev) => (prev[tab] ? prev : { ...prev, [tab]: true })),
+    [],
+  );
+  const hasRead = read.privacy && read.terms;
+  // Set when the student tries to agree before reading both documents.
+  const [triedUnread, setTriedUnread] = useState(false);
+  const unreadNote = triedUnread && !hasRead ? mustReadMessage(read) : null;
+  // Ticks only after both documents are read; unticking is always allowed.
+  const tryAccept = (next: boolean) => {
+    if (next && !accepted && !hasRead) {
+      setTriedUnread(true);
+      return;
+    }
+    onAcceptedChange(next);
+  };
   const invalid = showHint && !accepted;
 
   return (
@@ -466,8 +541,12 @@ export function PrivacyConsent({
       <label className="flex items-start gap-3 text-sm text-foreground">
         <Checkbox
           checked={accepted}
-          onCheckedChange={(checked) => onAcceptedChange(checked === true)}
-          aria-describedby={invalid ? "privacy-hint" : undefined}
+          onCheckedChange={(checked) => tryAccept(checked === true)}
+          aria-describedby={
+            [unreadNote ? "privacy-read-note" : null, invalid ? "privacy-hint" : null]
+              .filter(Boolean)
+              .join(" ") || undefined
+          }
           className="mt-0.5"
         />
         <span>
@@ -484,6 +563,16 @@ export function PrivacyConsent({
           </button>
         </span>
       </label>
+
+      {unreadNote && (
+        <p
+          id="privacy-read-note"
+          className="text-sm font-semibold text-destructive"
+          role="alert"
+        >
+          {unreadNote}
+        </p>
+      )}
 
       {invalid && (
         <p
@@ -506,7 +595,7 @@ export function PrivacyConsent({
             </DialogDescription>
           </DialogHeader>
 
-          <PolicyTabs />
+          <PolicyTabs onRead={markRead} />
 
           <DialogFooter className="border-t border-border p-6">
             <Button
@@ -519,6 +608,10 @@ export function PrivacyConsent({
             <Button
               className="rounded-full bg-stage-profile font-semibold text-stage-profile-foreground hover:bg-stage-profile/85"
               onClick={() => {
+                if (!hasRead) {
+                  setTriedUnread(true);
+                  return;
+                }
                 onAcceptedChange(true);
                 setOpen(false);
               }}

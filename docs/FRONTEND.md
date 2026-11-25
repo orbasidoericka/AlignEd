@@ -71,6 +71,7 @@ Next.js 16.2.5 App Router, React 19, TypeScript, Tailwind v4 (tokens in `apps/we
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 
+- 2026-11-25 · frontend · Consent in `privacy-consent.tsx`: the box and the dialog's "I agree" only take effect once both tabs were scrolled to the end (`ReadRegion`); trying earlier shows a "You must read the ..." message naming what is unread (`mustReadMessage`), there is no standing note. Reaching the end of the Data Privacy Policy tab jumps to Terms. A panel too short to scroll counts as read; an already-ticked box stays ticked. · Students must read the notice before agreeing.
 <<<<<<< HEAD
 - 2026-11-25 · frontend · Removed the per-session random statement order: `questionOrder`, `ensureQuestionOrder`, `shuffleQuestionIds`, `orderQuestions`, `isValidQuestionOrder` deleted; `assessment-runner.tsx` walks `QUESTIONS` directly. · Follow the original instrument order.
 

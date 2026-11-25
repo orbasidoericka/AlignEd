@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GRADE_LEVELS, SHS_STRANDS } from "@/lib/riasec/types";
 import { useAssessmentStore } from "@/store/useAssessmentStore";
 
+import { PRIVACY_CONTACT_EMAIL } from "./privacy-consent";
 import { ProfileForm } from "./profile-form";
 
 const push = vi.hoisted(() => vi.fn());
@@ -27,6 +28,18 @@ const strandSelect = () =>
 
 const consentBox = () =>
   screen.getByRole("checkbox", { name: /Terms and Conditions/i });
+
+// The box stays locked until both tabs have been read to the end. jsdom has
+// no layout, so a panel that mounts counts as fully scrolled.
+function readPolicy() {
+  fireEvent.click(
+    screen.getByRole("button", {
+      name: "Data Privacy Policy and Terms and Conditions",
+    }),
+  );
+  fireEvent.click(screen.getByRole("tab", { name: "Terms and Conditions" }));
+  fireEvent.click(screen.getAllByRole("button", { name: "Close" }).at(-1)!);
+}
 
 describe("ProfileForm scoring notice", () => {
   beforeEach(() => {
@@ -148,6 +161,7 @@ describe("ProfileForm layout and Others strand", () => {
   it("Others reveals a field, blocks Continue until it is filled, and clears when another strand is picked", () => {
     render(<ProfileForm />);
     fillProfile();
+    readPolicy();
     fireEvent.click(screen.getByRole("checkbox", { name: /Terms and Conditions/i }));
     expect(screen.queryByLabelText("Type your strand")).not.toBeInTheDocument();
 
@@ -197,6 +211,7 @@ describe("ProfileForm privacy consent", () => {
   it("blocks an age under 15 and says the minimum", () => {
     render(<ProfileForm />);
     fillProfile();
+    readPolicy();
     fireEvent.click(consentBox());
     const age = screen.getByLabelText(/How old are you/i);
 
@@ -227,6 +242,7 @@ describe("ProfileForm privacy consent", () => {
   it("continues once every field and the consent box are filled", () => {
     render(<ProfileForm />);
     fillProfile();
+    readPolicy();
     fireEvent.click(consentBox());
 
     fireEvent.click(screen.getByRole("button", { name: /Continue/i }));
@@ -235,11 +251,62 @@ describe("ProfileForm privacy consent", () => {
     expect(push).toHaveBeenCalledExactlyOnceWith("/assessment");
   });
 
+  it("will not tick until both documents are read, then jumps to the Terms", () => {
+    // jsdom has no layout: fake a tall panel so scrolling matters.
+    const spies = [
+      vi.spyOn(HTMLElement.prototype, "scrollHeight", "get").mockReturnValue(1000),
+      vi.spyOn(HTMLElement.prototype, "clientHeight", "get").mockReturnValue(200),
+    ];
+    try {
+      render(<ProfileForm />);
+      fillProfile();
+
+      // Ticking unread is refused with a "you must read" message.
+      fireEvent.click(consentBox());
+      expect(consentBox()).not.toBeChecked();
+      expect(
+        screen.getByText(
+          "You must read the Data Privacy Policy and the Terms and Conditions to the end before you agree.",
+        ),
+      ).toBeInTheDocument();
+
+      fireEvent.click(
+        screen.getByRole("button", {
+          name: "Data Privacy Policy and Terms and Conditions",
+        }),
+      );
+      const dialog = screen.getByRole("dialog");
+      const scrollToEnd = () => {
+        const panel = screen
+          .getByRole("tabpanel")
+          .querySelector("div.overflow-y-auto") as HTMLElement;
+        panel.scrollTop = 800;
+        fireEvent.scroll(panel);
+      };
+
+      // "I agree" too early is refused.
+      fireEvent.click(screen.getByRole("button", { name: /^I agree$/i }));
+      expect(useAssessmentStore.getState().profile.privacyAccepted).toBe(false);
+
+      // Reaching the end of the Privacy tab swings over to the Terms.
+      expect(dialog).toHaveTextContent(/All the data we collect/i);
+      scrollToEnd();
+      expect(dialog).toHaveTextContent(/Students under 18/i);
+
+      scrollToEnd();
+      fireEvent.click(screen.getByRole("button", { name: /^I agree$/i }));
+      expect(consentBox()).toBeChecked();
+    } finally {
+      spies.forEach((spy) => spy.mockRestore());
+    }
+  });
+
   it("agreeing inside the policy dialog ticks the box", () => {
     render(<ProfileForm />);
     fillProfile();
     expect(consentBox()).not.toBeChecked();
 
+    readPolicy();
     fireEvent.click(
       screen.getByRole("button", {
         name: "Data Privacy Policy and Terms and Conditions",
@@ -261,7 +328,7 @@ describe("ProfileForm privacy consent", () => {
     );
     const dialog = screen.getByRole("dialog");
 
-    expect(dialog).toHaveTextContent("aligned.career.support@gmail.com");
+    expect(dialog).toHaveTextContent(PRIVACY_CONTACT_EMAIL);
     expect(dialog).toHaveTextContent(/All the data we collect/i);
     expect(dialog.querySelectorAll("strong").length).toBeGreaterThan(0);
     expect(dialog).not.toHaveTextContent("**");
@@ -292,6 +359,7 @@ describe("ProfileForm privacy consent", () => {
   it("lets a student withdraw consent, which blocks the assessment again", () => {
     render(<ProfileForm />);
     fillProfile();
+    readPolicy();
     fireEvent.click(consentBox());
     fireEvent.click(consentBox());
 
