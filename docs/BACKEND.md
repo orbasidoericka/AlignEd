@@ -21,7 +21,7 @@ Server routes, data, secrets, and privacy controls. Client code lives in `FRONTE
 
 The session is checked before anything is sent, then the dashboard streams inside a `Suspense` boundary keyed by grade. Do not add a `loading.tsx` to this route: it would stream the page frame before the session check. `purgeExpired` runs in `after()`, once the page is sent, and `listResults` filters on `expires_at` so expired rows never show.
 
-Filters: `?grade=11|12` and `?period=7d|30d|3m|6m|1y` (`lib/saved-results/periods.ts`: `parsePeriod`, `withinPeriod`; a result is in a period when `created_at` is within 7, 30, 91, 182 or 365 days of the request; anything else is all time). The page narrows the loaded rows by period, then grade, before `summarize()`; with a period chosen the "Last 30 days" card becomes "In this period". The export route applies the same two filters, the sheet subtitles name them, and the file name carries them (`aligned-results-grade-11-30d-<date>.xlsx`).
+Filters: `?grade=11|12` and `?period=1y|5y|10y` (`lib/saved-results/periods.ts`: `parsePeriod`, `withinPeriod`; a result is in a period when `created_at` is within 365, 1826 or 3652 days of the request; anything else is all time). The page narrows the loaded rows by period, then grade, before `summarize()`; with a period chosen the "Last 30 days" card becomes "In this period". The export route applies the same two filters, the sheet subtitles name them, and the file name carries them (`aligned-results-grade-11-1y-<date>.xlsx`).
 
 `/admin/export` (same session check, 404 without it) downloads the current view as an Excel workbook, built by `lib/saved-results/export-xlsx.ts` with no library, in the classic Excel table look: blue (#4472C4) header rows with white bold text, light-blue banded rows, thin grey borders on every table cell, bold Total rows, gridlines on. Sheet 1, Summary, repeats the admin page from the same `summarize()` totals: an Overview table (saved results, each grade with its share, last 30 days, average age, most common code), then strongest interest area (trait-coloured letter cells), most common codes (top 10), strand and age, each with Students and Share ("0%", same rounding as the page) and, except the codes, a Total row. Sheet 2, Latest results, is the admin table: Taken, Code over three trait-coloured cells, Grade, Strand (short name), Age, R to C scores with the code's letters bold and the rest grey; real dates, frozen header, filters; missing values read "Not given". Styles are collected per workbook by a small `StyleSheet` class, so cells only describe how they look. The file is a hand-written zip of the OOXML parts using `node:zlib`, so the route needs the Node runtime.
 
@@ -65,6 +65,7 @@ Set in `apps/web/next.config.ts` for every path: `X-Frame-Options: DENY`, `nosni
 - No strict CSP yet; no Playwright specs yet; no Supabase contract test for `saved_results` constraints vs `validate-results.ts`.
 
 ## Changelog
+- 2026-11-25 · admin · `?period=` is now `1y|5y|10y` (365, 1826, 3652 days); `7d|30d|3m|6m` removed and fall back to all time · the team asked for yearly periods.
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 

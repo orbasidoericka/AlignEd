@@ -23,14 +23,14 @@ const savedDaysAgo = (days: number): SavedResult => ({
 describe("parsePeriod", () => {
   it("knows each preset and treats anything else as all time", () => {
     for (const period of PERIODS) expect(parsePeriod(period.id)).toBe(period);
-    for (const other of [undefined, null, "", "12m", "30", ["30d"], "30D"]) {
+    for (const other of [undefined, null, "", "7d", "30d", "12m", ["1y"], "1Y"]) {
       expect(parsePeriod(other)).toBeNull();
     }
   });
 });
 
 describe("withinPeriod", () => {
-  const results = [0, 6, 7, 8, 29, 30, 31, 90, 91, 92, 181, 182, 183, 300, 365, 366].map(savedDaysAgo);
+  const results = [0, 30, 365, 366, 1826, 1827, 3652, 3653].map(savedDaysAgo);
   const kept = (id: string | null) =>
     withinPeriod(results, parsePeriod(id), NOW).map((result) => result.resultsId);
   const ids = (...days: number[]) => days.map((days) => savedDaysAgo(days).resultsId);
@@ -40,16 +40,14 @@ describe("withinPeriod", () => {
   });
 
   it("keeps results saved within the last N days, the boundary included", () => {
-    expect(kept("7d")).toEqual(ids(0, 6, 7));
-    expect(kept("30d")).toEqual(ids(0, 6, 7, 8, 29, 30));
-    expect(kept("3m")).toEqual(ids(0, 6, 7, 8, 29, 30, 31, 90, 91));
-    expect(kept("6m")).toEqual(ids(0, 6, 7, 8, 29, 30, 31, 90, 91, 92, 181, 182));
-    expect(kept("1y")).toEqual(ids(0, 6, 7, 8, 29, 30, 31, 90, 91, 92, 181, 182, 183, 300, 365));
+    expect(kept("1y")).toEqual(ids(0, 30, 365));
+    expect(kept("5y")).toEqual(ids(0, 30, 365, 366, 1826));
+    expect(kept("10y")).toEqual(ids(0, 30, 365, 366, 1826, 1827, 3652));
   });
 
   it("never changes the list it was given", () => {
     const copy = [...results];
-    withinPeriod(results, parsePeriod("7d"), NOW);
+    withinPeriod(results, parsePeriod("1y"), NOW);
     expect(results).toEqual(copy);
   });
 });

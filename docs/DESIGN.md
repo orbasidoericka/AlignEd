@@ -248,6 +248,7 @@ One scale, defined in `globals.css` (`--elev-*` in `:root` and `.dark`, exposed 
 Dark values are black-based with no blue tint and a faint inset top highlight, because the light blue-tinted values vanish on the navy page. Print zeroes all shadows.
 
 ## Changelog
+- 2026-11-25 · tokens · New `--accent-strong-foreground` (#3A2800 in both themes) for ink on `accent-strong`; it pointed at `--highlight-foreground`, which is light yellow in dark, so the admin "Export to Excel" label was invisible (1.13:1, now 9.20:1) · bug report.
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 

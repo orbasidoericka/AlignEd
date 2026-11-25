@@ -9,7 +9,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 // GET /admin/export: every saved result as an Excel (.xlsx) download, for
 // the Export button on the admin page. ?grade=11 or ?grade=12 keeps only
-// that grade and ?period=7d|30d|3m|6m|1y only that window, matching the page's
+// that grade and ?period=1y|5y|10y only that window, matching the page's
 // filters. Needs the admin session cookie (PRD FR-10); without it this is a
 // plain 404.
 

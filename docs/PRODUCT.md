@@ -26,6 +26,7 @@ No accounts or authentication. No university/HEI directory or school mapping. No
 Product app with one brand surface: the landing page is brand register (identity, warmth, persuasion); Profile, Assessment, and Results are product register (task-focused, consistent, calm). See `DESIGN.md`.
 
 ## Changelog
+- 2026-11-25 · admin · Admin period filter is yearly: 1, 5 or 10 years, or all time · the team asked for yearly periods.
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 

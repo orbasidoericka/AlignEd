@@ -79,7 +79,7 @@ export default async function AdminPage({
   // anything else shows the overall view.
   const { grade, period: periodParam } = await searchParams;
   const gradeFilter = GRADE_LEVELS.find((level) => level === grade) ?? null;
-  // ?period=7d|30d|3m|6m|1y narrows to results saved in that window; absent is
+  // ?period=1y|5y|10y narrows to results saved in that window; absent is
   // all time (results are deleted after a year anyway). Combines with grade.
   const period = parsePeriod(periodParam);
 
