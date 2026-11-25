@@ -26,7 +26,7 @@ Next.js 16.2.5 App Router, React 19, TypeScript, Tailwind v4 (tokens in `apps/we
 
 - `store/useAssessmentStore.ts`: Zustand + `persist` (localStorage). Holds profile (nickname, grade, strand, `strandOther` for the typed "Others" strand, age; `merge` drops a `school` key left by older sessions), answers keyed by question id, scores, `questionOrder` (per-session shuffle), `language` (`en` | `fil`, set by `LanguageToggle`, always `en` while `FILIPINO_ENABLED` is false; persist version 10, which also force-resets `privacyAccepted` to `false` for any payload older than v10). Re-answer replaces the old contribution. Stored data from an older bank/scale is discarded on load (PRD E7).
 - Session TTL: 30 min after last change. Wiped on rehydrate by the store and live by `components/session-expiry-guard.tsx`.
-- Age: `isValidAge` (`lib/riasec/types.ts`, `AGE_MIN` 15 / `AGE_MAX` 30) gates `selectIsProfileComplete`; the profile form shows "Enter an age from 15 to 30." once two digits are typed or after Continue, never on the first digit.
+- Age: `isValidAge` (`lib/riasec/types.ts`, `AGE_MIN` 15, `AGE_MAX` 99 as the two-digit field ceiling) gates `selectIsProfileComplete`; the profile form shows "Enter an age of 15 or older." once two digits are typed or after Continue, never on the first digit.
 - Tab-close wipe: every load sets `sessionStorage` `aligned.tab`; a rehydrated session with `completedAt` set and no marker is wiped (`isOrphanedFinishedSession`). Unfinished quizzes keep resuming. Unreadable `sessionStorage` = no wipe (TTL only).
 - `components/journey/results-expiry-note.tsx`: countdown under the Results h1, from `sessionRemainingMs(lastUpdated)`; ticks 1 s, hidden in print, screen readers get a per-minute sentence.
 - `hooks/use-hydrated.ts`: gate anything that reads persisted state, so the server render never depends on it.
@@ -65,6 +65,7 @@ Next.js 16.2.5 App Router, React 19, TypeScript, Tailwind v4 (tokens in `apps/we
 - CI (`.github/workflows/ci.yml`): install, lint, typecheck, unit tests, seed determinism, build. No Lighthouse or E2E step yet.
 
 ## Changelog
+- 2026-11-25 · profile · Age has no upper limit: `isValidAge` accepts 15–99; message is "Enter an age of 15 or older." (FIL "Ilagay ang edad na 15 pataas.") · older returning learners were blocked.
 - 2026-11-25 · admin · `components/admin/period-picker.tsx` (client): "Time period" `NativeSelect` of presets plus Custom date range with native From/To date fields; every change is a `router.push` to `adminHref` (now in `periods.ts`), replacing the `PeriodFilter` pills · the team asked for finer and custom ranges.
 - 2026-11-25 · admin · `PERIODS` is now `1y`, `5y`, `10y` (pills "1 year", "5 years", "10 years"); the 7 day to 6 month pills are gone · the team asked for yearly periods.
 

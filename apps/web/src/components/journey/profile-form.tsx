@@ -213,8 +213,8 @@ export function ProfileForm() {
               role="alert"
             >
               {t
-                ? t.ageRangeHint(AGE_MIN, AGE_MAX)
-                : `Enter an age from ${AGE_MIN} to ${AGE_MAX}.`}
+                ? t.ageRangeHint(AGE_MIN)
+                : `Enter an age of ${AGE_MIN} or older.`}
             </p>
           )}
         </div>

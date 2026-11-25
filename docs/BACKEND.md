@@ -32,10 +32,11 @@ Filters: `?grade=11|12` and `?period=30d|3m|6m|1y|3y|5y|10y` or `?period=custom&
 | `0001_init.sql` | `careers`, `courses`, `course_careers` (public read), anonymous `assessments` (insert-only), `match_courses` RPC. |
 | `0002_universities.sql` | University directory. **Out of scope per PRD**; slated for removal (Implementation Plan 1.2). |
 | `0003_saved_results.sql` | `saved_results`: results ID, six scores, `max_score`, code, grade, date; expires after one year. RLS on with no policies, so only the service role (server routes) can touch it. |
-| `0004_saved_results_age.sql` | Adds nullable `age` (10–30). `/api/results` accepts only 15–30 (`AGE_MIN`/`AGE_MAX`), inside this wider check, so no migration was needed. |
+| `0004_saved_results_age.sql` | Adds nullable `age` (10–30). |
 | `0005_saved_results_strand.sql` | Adds nullable `strand`, limited to the `SHS_STRANDS` list. |
 | `0006_site_counters.sql` | `site_counters` (key, value, updated_at; RLS on, no policies), seeded with `tests_taken` from the existing row count, and `increment_site_counter(p_key)`: one atomic `security definer` upsert, execute granted to the service role only. The counter only goes up, so deleting or purging a saved result never lowers the public figure. |
 | `0007_saved_results_strand_others.sql` | Widens the `strand` check to also allow `'Others'`. Only the word is stored; a typed strand never reaches the server. Run it before deploying the Others option. |
+| `0008_saved_results_age_no_max.sql` | Widens the `age` check to 10–99 (was 10–30). `/api/results` accepts 15–99 (`AGE_MIN` 15, `AGE_MAX` 99, the two-digit field), so there is no product maximum. |
 
 - Clients: `lib/supabase/client.ts` (anon, browser) and `lib/supabase/admin.ts` (service role, server only). Repositories: `lib/saved-results/repository.ts` and `lib/site-counters/repository.ts`.
 - Landing tally: `lib/site-counters/tests-taken.ts` reads `tests_taken` through `unstable_cache` (`cacheComponents` is off in `next.config.ts`, so this is the classic caching model), revalidated every 300 s or on the `TESTS_TAKEN_TAG` tag after a save. It returns `null` when Supabase is unconfigured or the read fails, and the landing page then shows nothing.
@@ -65,6 +66,7 @@ Set in `apps/web/next.config.ts` for every path: `X-Frame-Options: DENY`, `nosni
 - No strict CSP yet; no Playwright specs yet; no Supabase contract test for `saved_results` constraints vs `validate-results.ts`.
 
 ## Changelog
+- 2026-11-25 · api · `/api/results` accepts ages 15–99 (`AGE_MAX` is now the two-digit field ceiling); migration `0008_saved_results_age_no_max.sql` widens the DB check to 10–99 · age upper limit removed.
 - 2026-11-25 · admin · `?period=` adds `30d|3m|6m|3y` and `custom` with `from`/`to` (Manila whole days); export file name carries the range (`…-2026-01-01-to-2026-11-25-…`) · the team asked for finer and custom ranges.
 - 2026-11-25 · admin · `?period=` is now `1y|5y|10y` (365, 1826, 3652 days); `7d|30d|3m|6m` removed and fall back to all time · the team asked for yearly periods.
 

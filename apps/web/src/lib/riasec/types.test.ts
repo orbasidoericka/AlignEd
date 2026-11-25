@@ -10,14 +10,14 @@ import {
 } from "./types";
 
 describe("isValidAge", () => {
-  it("accepts Senior High ages from 15 to 30", () => {
-    for (const age of ["15", "16", "17", "30"]) {
+  it("accepts any age from 15 up", () => {
+    for (const age of ["15", "16", "17", "30", "31", "45", "99"]) {
       expect(isValidAge(age)).toBe(true);
     }
   });
 
-  it("rejects ages outside the range, blanks, and non-numbers", () => {
-    for (const age of ["", "10", "14", "31", "1", "abc"]) {
+  it("rejects ages under 15, blanks, and non-numbers", () => {
+    for (const age of ["", "10", "14", "1", "100", "abc"]) {
       expect(isValidAge(age)).toBe(false);
     }
   });

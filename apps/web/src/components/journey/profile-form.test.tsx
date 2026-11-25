@@ -194,21 +194,21 @@ describe("ProfileForm privacy consent", () => {
     ).toBeInTheDocument();
   });
 
-  it("blocks an age outside 15 to 30 and says the range", () => {
+  it("blocks an age under 15 and says the minimum", () => {
     render(<ProfileForm />);
     fillProfile();
     fireEvent.click(consentBox());
     const age = screen.getByLabelText(/How old are you/i);
 
     fireEvent.change(age, { target: { value: "10" } });
-    expect(screen.getByText("Enter an age from 15 to 30.")).toBeInTheDocument();
+    expect(screen.getByText("Enter an age of 15 or older.")).toBeInTheDocument();
     expect(age).toHaveAttribute("aria-invalid", "true");
     fireEvent.click(screen.getByRole("button", { name: /Continue/i }));
     expect(push).not.toHaveBeenCalled();
 
-    fireEvent.change(age, { target: { value: "16" } });
+    fireEvent.change(age, { target: { value: "35" } });
     expect(
-      screen.queryByText("Enter an age from 15 to 30."),
+      screen.queryByText("Enter an age of 15 or older."),
     ).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /Continue/i }));
     expect(push).toHaveBeenCalledExactlyOnceWith("/assessment");
@@ -220,7 +220,7 @@ describe("ProfileForm privacy consent", () => {
       target: { value: "1" },
     });
     expect(
-      screen.queryByText("Enter an age from 15 to 30."),
+      screen.queryByText("Enter an age of 15 or older."),
     ).not.toBeInTheDocument();
   });
 

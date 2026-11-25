@@ -91,7 +91,7 @@ Captured before the assessment begins; stored client-side only (localStorage via
 | Nickname | Text | **Required.** 1–8 characters, uppercase letters `A–Z` and the hyphen `-` only. Input is normalized on every keystroke: characters are upper-cased, digits and all other symbols are discarded, and entry stops at 8 characters. It is a display handle, not a real name; it is never stored on the server and never included in the saved-results record. It reaches the server only inside an email request (FR-8), to name and password the PDF, and is discarded with the address. |
 | Grade Level | Enum | **Required.** Exactly two values: `Grade 11` and `Grade 12`. No free text. |
 | SHS Strand | Enum | **Required.** One of the supported academic, Arts and Design, Sports, or TVL strands: ABM, STEM, HUMSS, GAS, Arts and Design, Sports, AFA, HE, IA, or ICT, or **Others**. Choosing Others reveals a required "Type your strand" field (max 60). That text stays in the browser and the student's own downloaded PDF only; the server and admin page record just "Others". No other free text. |
-| Age | Whole number | **Required.** 15–30 (Senior High ages; the database check stays 10–30). Stored in the saved-results record for the admin page's age statistics. |
+| Age | Whole number | **Required.** 15 or older, no upper limit (late enrollees and returning learners); the field takes two digits, so 99 at most. Stored in the saved-results record for the admin page's age statistics. |
 | Terms and Conditions | Checkbox | **Required.** Card heading and inline link: "Data Privacy Policy and Terms and Conditions". Full checkbox text: "I have read and agree to the Data Privacy Policy and Terms and Conditions." Opens a dialog titled "Data Privacy Policy & Terms and Conditions" (RA 10173), versioned in `components/journey/privacy-consent.tsx` (Data Privacy Policy `v3.3`, Terms `v1.0`), with the two documents on separate tabs. It lists every piece of data collected and where it goes, without stating a specific retention period or a "so you can compare later" purpose. For a student under 18, the notice tells a parent or legal guardian to read it and be the one who ticks the box: there is no separate parent account or flow, so this single checkbox is how their consent is given. Contact email `aligned.career.support@gmail.com`. Key points are bold. Required before continuing. |
 
 - FR-2.1. The "Continue to assessment" action is unavailable until all required fields (nickname, grade level, SHS strand, age, privacy acceptance) are set.
@@ -205,7 +205,7 @@ Captured before the assessment begins; stored client-side only (localStorage via
 - **Given** a nickname already at 8 characters, **when** more characters are typed, **then** the value stays at 8.
 - **Given** an empty nickname, **when** continue is attempted, **then** the journey does not advance and an inline error names the missing nickname.
 - **Given** the grade level control, **then** it offers exactly `Grade 11` and `Grade 12` and no free-text entry.
-- **Given** the age field, **when** a value outside 15–30 or a non-whole number is entered, **then** it is not accepted and an inline message names the range.
+- **Given** the age field, **when** a value under 15 or a non-whole number is entered, **then** it is not accepted and an inline message says "Enter an age of 15 or older."
 
 ### Assessment
 - **Given** the assessment route at any point in the bank, **then** exactly one statement is visible, the only answer controls are Yes and No, and no "Next" control is shown on a statement that has not been answered (an answered one shows "Next" after Back).
@@ -302,6 +302,7 @@ AlignEd ships as a mostly-static, anonymous-first Next.js application.
 ---
 
 ## Changelog
+- 2026-11-25 · profile · FR-2: age upper limit of 30 removed; any age from 15 up is accepted · older returning learners were blocked.
 - 2026-11-25 · admin · FR-10.1: period pills replaced by a "Time period" dropdown (all time, 30 days to 10 years) plus a custom From/To date range · the team asked for finer and custom ranges.
 - 2026-11-25 · admin · FR-10.1: period filter is now yearly only (1, 5, 10 years); 7 days to 6 months removed · the team asked for yearly periods.
 

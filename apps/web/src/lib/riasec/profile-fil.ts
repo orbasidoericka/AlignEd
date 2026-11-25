@@ -44,8 +44,8 @@ export const PROFILE_TEXT_FIL = {
   strandOtherHint: "I-type ang iyong strand para magpatuloy.",
   ageLabel: "Ilang taon ka na?",
   ageHint: "Ilagay ang iyong edad para magpatuloy.",
-  ageRangeHint: (min: number, max: number) =>
-    `Ilagay ang edad mula ${min} hanggang ${max}.`,
+  ageRangeHint: (min: number) =>
+    `Ilagay ang edad na ${min} pataas.`,
   continueButton: "Magpatuloy sa pagtatasa",
   continueNote: "Maaari kang bumalik at baguhin ito bago matapos ang pagtatasa.",
 } as const;
