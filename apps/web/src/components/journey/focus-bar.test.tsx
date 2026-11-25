@@ -25,14 +25,13 @@ describe("FocusBar start over", () => {
   });
 
   function seedSession() {
-    const { setProfile, setAnswer, ensureQuestionOrder } =
+    const { setProfile, setAnswer } =
       useAssessmentStore.getState();
     setProfile({ nickname: "MARI", gradeLevel: "12" });
     setAnswer(QUESTIONS[0]!.id, { trait: QUESTIONS[0]!.trait, value: 1 });
-    ensureQuestionOrder();
   }
 
-  it("confirming wipes profile, answers and order, then routes to the start", () => {
+  it("confirming wipes profile, and answers, then routes to the start", () => {
     seedSession();
     render(<FocusBar />);
 
@@ -44,7 +43,6 @@ describe("FocusBar start over", () => {
     expect(state.answers).toEqual({});
     expect(state.profile.nickname).toBe("");
     expect(state.profile.gradeLevel).toBeNull();
-    expect(state.questionOrder).toEqual([]);
     expect(push).toHaveBeenCalledExactlyOnceWith("/assessment/profile");
   });
 

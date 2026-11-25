@@ -9,9 +9,7 @@ import {
 
 import {
   FILIPINO_ENABLED,
-  isValidQuestionOrder,
   QUESTIONS,
-  shuffleQuestionIds,
   type QuestionLanguage,
 } from "@/lib/riasec/questions";
 import { STRAND_OTHER } from "@/lib/riasec/types";
@@ -50,12 +48,6 @@ interface AssessmentState {
   totalQuestions: number;
   answers: Record<string, AssessmentAnswer>;
   scores: RiasecScores;
-  // The statements' presentation order for this session, as question ids.
-  // Persisted so a refresh or resume keeps the same order (and so the
-  // navigator's numbering stays stable); answers stay keyed by id, so a
-  // reshuffle never loses or misattributes one. Empty until the first visit
-  // seeds it via ensureQuestionOrder.
-  questionOrder: string[];
   // Language the statements are shown in. Presentation only: answers and
   // scoring are keyed by question id, so switching mid-quiz changes nothing
   // already recorded.
@@ -75,9 +67,6 @@ interface AssessmentActions {
   setCurrentStep: (step: number) => void;
   setAnswer: (questionId: string, answer: AssessmentAnswer) => void;
   clearAnswer: (questionId: string) => void;
-  // Seeds a random order on first use (or when the persisted one is stale),
-  // and leaves a valid one untouched so a resumed session keeps its order.
-  ensureQuestionOrder: () => void;
   setLanguage: (language: QuestionLanguage) => void;
   setProfile: (patch: Partial<ProfileState>) => void;
   setResultsId: (resultsId: string | null) => void;
@@ -264,7 +253,6 @@ export const useAssessmentStore = create<AssessmentStore>()(
       totalQuestions: 0,
       answers: {},
       scores: { ...emptyScores },
-      questionOrder: [],
       language: "en",
       profile: { ...emptyProfile },
       lastUpdated: null,
@@ -323,16 +311,6 @@ export const useAssessmentStore = create<AssessmentStore>()(
             completedAt: finished ? state.completedAt : null,
           };
         }),
-      // Only seeds when the stored order can't be trusted, so a resumed
-      // session keeps the order (and numbering) the student already saw.
-      ensureQuestionOrder: () =>
-        set((state) => {
-          if (isValidQuestionOrder(state.questionOrder)) return state;
-          return {
-            questionOrder: shuffleQuestionIds(),
-            lastUpdated: new Date().toISOString(),
-          };
-        }),
       // A display preference, not session activity: it must not restart the
       // 30-minute TTL, or toggling EN/FIL would keep a session alive forever.
       setLanguage: (language) => set({ language }),
@@ -343,13 +321,11 @@ export const useAssessmentStore = create<AssessmentStore>()(
         })),
       setResultsId: (resultsId) => set({ resultsId }),
       // Retake keeps the profile (PRD FR-3.6): only answers and scores clear.
-      // A fresh order too, so the statements come back in a new sequence.
       resetAnswers: () =>
         set({
           currentStep: 0,
           answers: {},
           scores: { ...emptyScores },
-          questionOrder: shuffleQuestionIds(),
           lastUpdated: new Date().toISOString(),
           completedAt: null,
           resultsId: null,
@@ -360,7 +336,6 @@ export const useAssessmentStore = create<AssessmentStore>()(
           totalQuestions: 0,
           answers: {},
           scores: { ...emptyScores },
-          questionOrder: [],
           language: "en",
           profile: { ...emptyProfile },
           lastUpdated: null,
@@ -416,7 +391,6 @@ export const useAssessmentStore = create<AssessmentStore>()(
         totalQuestions: state.totalQuestions,
         answers: state.answers,
         scores: state.scores,
-        questionOrder: state.questionOrder,
         language: state.language,
         profile: state.profile,
         lastUpdated: state.lastUpdated,
@@ -455,9 +429,9 @@ export const useAssessmentStore = create<AssessmentStore>()(
               }
             : withQuiz;
 
-        // v5 introduced the per-session question order. Older blobs have none;
-        // merge leaves questionOrder empty and ensureQuestionOrder seeds it on
-        // the next visit, so no explicit field is injected here.
+        // v5 added a per-session question order; it was removed (statements
+        // always run in printed order), so a stale questionOrder key in an old
+        // blob is ignored.
 
         // v6 added age, v7 the privacy consent, and v8 the SHS strand.
         // merge's spread over emptyProfile fills these for older blobs, so

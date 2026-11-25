@@ -17,13 +17,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  PRIVACY_POLICY_SECTIONS_FIL,
-  TERMS_SECTIONS_FIL,
-  PRIVACY_TEXT_FIL,
-} from "@/lib/riasec/privacy-fil";
-import type { QuestionLanguage } from "@/lib/riasec/questions";
-import { useAssessmentStore } from "@/store/useAssessmentStore";
 import { cn } from "@/lib/utils";
 
 // The Terms and Conditions and Data Privacy Policy the PRD requires (Data
@@ -31,7 +24,7 @@ import { cn } from "@/lib/utils";
 // data AlignEd handles: the profile and session kept on the device (see
 // `partialize` in the assessment store, the sound preference and the theme),
 // the saved-results record (grade, strand, age, RIASEC scores and code, date,
-// results ID; no name, nickname or answers; see
+// no name, nickname or answers; see
 // supabase/migrations/0003 to 0007), the site-wide tests-taken counter, the
 // private admin page, the email route (PDF only), the in-memory
 // abuse limiters, and PostHog analytics.
@@ -41,16 +34,17 @@ import { cn } from "@/lib/utils";
 // text no longer promises them; saved records expire after a year.
 // v3.3: the admin page no longer shows results IDs.
 // v3.4: no school field, and the results ID is no longer printed on the PDF.
-export const PRIVACY_POLICY_VERSION = "v3.4";
+// v3.5: no results ID, school guidance staff or typed-strand claim in the
+// text, and the Filipino translation is gone (the notice is English only).
+export const PRIVACY_POLICY_VERSION = "v3.5";
 
 // First standalone version: split out of the combined notice above at v3.0.
 // v1.1: the "keep your results ID private" rule went with the ID on the PDF.
 export const TERMS_VERSION = "v1.1";
 
-export const PRIVACY_CONTACT_EMAIL = "aligned.career.support@gmail.com";
+export const PRIVACY_CONTACT_EMAIL = "aligned.result.support@gmail.com";
 
 // Wrap a phrase in **double asterisks** to bold it. Only the key points get it.
-// Exported so privacy-fil.ts's Filipino translation matches this shape.
 export type PolicyItem =
   | { type: "para"; text: string }
   | { type: "list"; items: string[] }
@@ -100,8 +94,7 @@ const PRIVACY_POLICY_SECTIONS: PolicySection[] = [
           "your answers (Yes or No) to the 42 statements;",
           "your six RIASEC interest scores and your three-letter code;",
           "the language you chose for the statements (English or Filipino);",
-          "your place in the assessment, the time of your last activity, and the time you finished;",
-          "a random results ID, like ALGN-7KQ2-MX9P; and",
+          "your place in the assessment, the time of your last activity, and the time you finished; and",
           "your choices for theme (Vivid or Dark) and sound.",
         ],
       },
@@ -128,7 +121,7 @@ const PRIVACY_POLICY_SECTIONS: PolicySection[] = [
         type: "list",
         items: [
           "**Stays on your device only:** your nickname, answers, language, theme, sound choice, session timing, any strand you type under Others (it also prints in your own PDF), and any career look photo you take.",
-          "**Saved on our server (no name):** your grade level, SHS strand (only the word Others if you typed your own), age, six scores, three-letter code, date, and results ID.",
+          "**Saved on our server (no name):** your grade level, SHS strand (only the word Others if you typed your own), age, six scores, three-letter code, and date.",
           "**Sent once, then thrown away:** your email address.",
           "**Sent to our analytics provider:** website visit data, if analytics is on.",
         ],
@@ -136,7 +129,7 @@ const PRIVACY_POLICY_SECTIONS: PolicySection[] = [
       { type: "subheading", text: "What we do not collect" },
       {
         type: "para",
-        text: "**We do not collect** your full name, home address, phone number, or password, and we do not make accounts. **Your nickname, individual answers, typed strand, email address, and photo are never saved on our server.** Please do not type any of those private details into AlignEd.",
+        text: "**We do not collect** your full name, home address, phone number, or password, and we do not make accounts. **Your nickname, individual answers, email address, and photo are never saved on our server.** Please do not type any of those private details into AlignEd.",
       },
       {
         type: "para",
@@ -174,22 +167,17 @@ const PRIVACY_POLICY_SECTIONS: PolicySection[] = [
       { type: "subheading", text: "On our server after you finish" },
       {
         type: "para",
-        text: "When you reach your results, we save one small record in our database. It holds your **grade level, SHS strand, age, six scores, three-letter code, date, and results ID**.",
+        text: "When you reach your results, we save one small record in our database. It holds your **grade level, SHS strand, age, six scores, three-letter code, and date**.",
       },
       {
         type: "para",
         text: "**It does not hold your name, nickname, email, photo, or answers.** We still treat it as protected data, because we cannot promise it is impossible to link to a person.",
       },
-      {
-        type: "para",
-        text: "**The results ID is just a label** for that record. It is not shown to you or printed on your PDF, and AlignEd has no page where it can be used to look up results.",
-      },
       { type: "subheading", text: "Who can see it" },
       {
         type: "list",
         items: [
-          "AlignEd program administrators, through a private page that shows saved records, but no names;",
-          "school guidance staff the program authorizes; and",
+          "AlignEd program administrators, through a private page that shows saved records, but no names; and",
           "the services that run AlignEd, only as needed to keep it working: Supabase (database), Google Gmail (sends the emails you ask for), PostHog (website statistics, when on), and our website hosting provider.",
         ],
       },
@@ -410,38 +398,27 @@ function renderSections(sections: readonly PolicySection[]) {
 // dialog and the footer's read-only dialog, so the notice can only ever say
 // one thing. One checkbox and one "I agree" still cover both tabs.
 function PolicyTabs({
-  language,
   defaultTab = "privacy",
 }: {
-  language: QuestionLanguage;
   defaultTab?: "privacy" | "terms";
 }) {
-  const fil = language === "fil";
-  const t = fil ? PRIVACY_TEXT_FIL : null;
-  const privacySections = fil ? PRIVACY_POLICY_SECTIONS_FIL : PRIVACY_POLICY_SECTIONS;
-  const termsSections = fil ? TERMS_SECTIONS_FIL : TERMS_SECTIONS;
-
   return (
-    <Tabs defaultValue={defaultTab} lang={fil ? "fil" : undefined} className="p-6 pb-0">
+    <Tabs defaultValue={defaultTab} className="p-6 pb-0">
       <TabsList>
-        <TabsTrigger value="privacy">
-          {t ? t.tabPrivacy : "Data Privacy Policy"}
-        </TabsTrigger>
-        <TabsTrigger value="terms">
-          {t ? t.tabTerms : "Terms and Conditions"}
-        </TabsTrigger>
+        <TabsTrigger value="privacy">Data Privacy Policy</TabsTrigger>
+        <TabsTrigger value="terms">Terms and Conditions</TabsTrigger>
       </TabsList>
       <TabsContent
         value="privacy"
         className="flex max-h-[50vh] flex-col gap-5 overflow-y-auto pb-6"
       >
-        {renderSections(privacySections)}
+        {renderSections(PRIVACY_POLICY_SECTIONS)}
       </TabsContent>
       <TabsContent
         value="terms"
         className="flex max-h-[50vh] flex-col gap-5 overflow-y-auto pb-6"
       >
-        {renderSections(termsSections)}
+        {renderSections(TERMS_SECTIONS)}
       </TabsContent>
     </Tabs>
   );
@@ -464,9 +441,6 @@ export function PrivacyConsent({
 }: PrivacyConsentProps) {
   const [open, setOpen] = useState(false);
   const invalid = showHint && !accepted;
-  const language = useAssessmentStore((state) => state.language);
-  const fil = language === "fil";
-  const t = fil ? PRIVACY_TEXT_FIL : null;
 
   return (
     <section
@@ -475,44 +449,21 @@ export function PrivacyConsent({
         invalid ? "border-destructive" : "border-border",
       )}
     >
-      <h2
-        lang={fil ? "fil" : undefined}
-        className="flex items-center gap-2 text-base font-semibold text-foreground"
-      >
+      <h2 className="flex items-center gap-2 text-base font-semibold text-foreground">
         <ShieldCheck className="size-5 text-stage-profile-strong" aria-hidden />
-        {t ? t.cardHeading : "Data Privacy Policy and Terms and Conditions"}
+        Data Privacy Policy and Terms and Conditions
       </h2>
-      <p lang={fil ? "fil" : undefined} className="text-sm text-muted-foreground">
-        {t ? (
-          <>
-            <strong className="font-semibold text-foreground">
-              {t.cardBlurbLead}
-            </strong>{" "}
-            {t.cardBlurbRest}{" "}
-            <strong className="font-semibold text-foreground">
-              {t.cardBlurbNoName}
-            </strong>
-            {t.cardBlurbTail}
-          </>
-        ) : (
-          <>
-            <strong className="font-semibold text-foreground">
-              No account and no real name needed.
-            </strong>{" "}
-            Your session erases from this device after 30 minutes. Only your
-            grade, strand, age, and interest scores are saved,{" "}
-            <strong className="font-semibold text-foreground">
-              with no name
-            </strong>
-            , for program statistics.
-          </>
-        )}
+      <p className="text-sm text-muted-foreground">
+        <strong className="font-semibold text-foreground">
+          No account and no real name needed.
+        </strong>{" "}
+        Your session erases from this device after 30 minutes. Only your
+        grade, strand, age, and interest scores are saved,{" "}
+        <strong className="font-semibold text-foreground">with no name</strong>,
+        for program statistics.
       </p>
 
-      <label
-        lang={fil ? "fil" : undefined}
-        className="flex items-start gap-3 text-sm text-foreground"
-      >
+      <label className="flex items-start gap-3 text-sm text-foreground">
         <Checkbox
           checked={accepted}
           onCheckedChange={(checked) => onAcceptedChange(checked === true)}
@@ -520,15 +471,13 @@ export function PrivacyConsent({
           className="mt-0.5"
         />
         <span>
-          {t ? t.consentPrefix : "I have read and agree to the"}{" "}
+          I have read and agree to the{" "}
           <button
             type="button"
             onClick={() => setOpen(true)}
             className="inline cursor-pointer rounded-sm font-semibold text-stage-profile-strong underline underline-offset-2 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
           >
-            {t
-              ? t.consentLinkText
-              : "Data Privacy Policy and Terms and Conditions"}
+            Data Privacy Policy and Terms and Conditions
             <span aria-hidden className="ml-0.5 [text-decoration:none]">
               <span className="text-destructive">*</span>
             </span>
@@ -539,42 +488,33 @@ export function PrivacyConsent({
       {invalid && (
         <p
           id="privacy-hint"
-          lang={fil ? "fil" : undefined}
           className="text-sm font-semibold text-destructive"
           role="alert"
         >
-          {t ? t.hint : "Agree to the Terms and Conditions to continue."}
+          Agree to the Terms and Conditions to continue.
         </p>
       )}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-xl gap-0 p-0">
-          <DialogHeader
-            lang={fil ? "fil" : undefined}
-            className="border-b border-border p-6 pr-14"
-          >
+          <DialogHeader className="border-b border-border p-6 pr-14">
             <DialogTitle className="text-xl">
-              {t ? t.dialogTitle : "Data Privacy Policy & Terms and Conditions"}
+              Data Privacy Policy & Terms and Conditions
             </DialogTitle>
             <DialogDescription>
-              {t
-                ? t.dialogDescriptionConsent(PRIVACY_POLICY_VERSION, TERMS_VERSION)
-                : `Data Privacy Policy ${PRIVACY_POLICY_VERSION} and Terms and Conditions ${TERMS_VERSION}. Please read both before you start the assessment.`}
+              {`Data Privacy Policy ${PRIVACY_POLICY_VERSION} and Terms and Conditions ${TERMS_VERSION}. Please read both before you start the assessment.`}
             </DialogDescription>
           </DialogHeader>
 
-          <PolicyTabs language={language} />
+          <PolicyTabs />
 
-          <DialogFooter
-            lang={fil ? "fil" : undefined}
-            className="border-t border-border p-6"
-          >
+          <DialogFooter className="border-t border-border p-6">
             <Button
               variant="outline"
               className="rounded-full"
               onClick={() => setOpen(false)}
             >
-              {t ? t.close : "Close"}
+              Close
             </Button>
             <Button
               className="rounded-full bg-stage-profile font-semibold text-stage-profile-foreground hover:bg-stage-profile/85"
@@ -583,7 +523,7 @@ export function PrivacyConsent({
                 setOpen(false);
               }}
             >
-              {t ? t.agree : "I agree"}
+              I agree
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -606,59 +546,31 @@ export function PrivacyPolicyDialog({
   /** Which single document this dialog shows. */
   defaultTab: "privacy" | "terms";
 }) {
-  const language = useAssessmentStore((state) => state.language);
-  const fil = language === "fil";
-  const t = fil ? PRIVACY_TEXT_FIL : null;
   const isPrivacy = defaultTab === "privacy";
-  const sections = isPrivacy
-    ? fil
-      ? PRIVACY_POLICY_SECTIONS_FIL
-      : PRIVACY_POLICY_SECTIONS
-    : fil
-      ? TERMS_SECTIONS_FIL
-      : TERMS_SECTIONS;
+  const sections = isPrivacy ? PRIVACY_POLICY_SECTIONS : TERMS_SECTIONS;
 
   return (
     <Dialog>
       <DialogTrigger render={trigger}>{children}</DialogTrigger>
       <DialogContent className="max-w-xl gap-0 p-0">
-        <DialogHeader
-          lang={fil ? "fil" : undefined}
-          className="border-b border-border p-6 pr-14"
-        >
+        <DialogHeader className="border-b border-border p-6 pr-14">
           <DialogTitle className="text-xl">
-            {isPrivacy
-              ? t
-                ? t.tabPrivacy
-                : "Data Privacy Policy"
-              : t
-                ? t.tabTerms
-                : "Terms and Conditions"}
+            {isPrivacy ? "Data Privacy Policy" : "Terms and Conditions"}
           </DialogTitle>
           <DialogDescription>
             {isPrivacy
-              ? t
-                ? t.dialogDescriptionReadOnlyPrivacy(PRIVACY_POLICY_VERSION)
-                : `Data Privacy Policy ${PRIVACY_POLICY_VERSION}.`
-              : t
-                ? t.dialogDescriptionReadOnlyTerms(TERMS_VERSION)
-                : `Terms and Conditions ${TERMS_VERSION}.`}
+              ? `Data Privacy Policy ${PRIVACY_POLICY_VERSION}.`
+              : `Terms and Conditions ${TERMS_VERSION}.`}
           </DialogDescription>
         </DialogHeader>
 
-        <div
-          lang={fil ? "fil" : undefined}
-          className="flex max-h-[55vh] flex-col gap-5 overflow-y-auto p-6"
-        >
+        <div className="flex max-h-[55vh] flex-col gap-5 overflow-y-auto p-6">
           {renderSections(sections)}
         </div>
 
-        <DialogFooter
-          lang={fil ? "fil" : undefined}
-          className="border-t border-border p-6"
-        >
+        <DialogFooter className="border-t border-border p-6">
           <DialogClose render={<Button variant="outline" className="rounded-full" />}>
-            {t ? t.close : "Close"}
+            Close
           </DialogClose>
         </DialogFooter>
       </DialogContent>

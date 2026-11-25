@@ -61,9 +61,6 @@ describe("AssessmentRunner hardening", () => {
       toFake: ["setTimeout", "clearTimeout", "performance", "queueMicrotask"],
     });
     useAssessmentStore.getState().reset();
-    // Pin the printed order so index-based assertions are deterministic;
-    // the shuffle itself is covered in the store's own tests.
-    useAssessmentStore.setState({ questionOrder: QUESTIONS.map((q) => q.id) });
     playSound.mockClear();
     push.mockClear();
   });
@@ -358,9 +355,6 @@ describe("AssessmentRunner question navigator", () => {
       toFake: ["setTimeout", "clearTimeout", "performance", "queueMicrotask"],
     });
     useAssessmentStore.getState().reset();
-    // Pin the printed order so index-based assertions are deterministic;
-    // the shuffle itself is covered in the store's own tests.
-    useAssessmentStore.setState({ questionOrder: QUESTIONS.map((q) => q.id) });
     playSound.mockClear();
     push.mockClear();
   });

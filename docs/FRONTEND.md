@@ -24,7 +24,7 @@ Next.js 16.2.5 App Router, React 19, TypeScript, Tailwind v4 (tokens in `apps/we
 
 ## State
 
-- `store/useAssessmentStore.ts`: Zustand + `persist` (localStorage). Holds profile (nickname, grade, strand, `strandOther` for the typed "Others" strand, age; `merge` drops a `school` key left by older sessions), answers keyed by question id, scores, `questionOrder` (per-session shuffle), `language` (`en` | `fil`, set by `LanguageToggle`, always `en` while `FILIPINO_ENABLED` is false; persist version 10, which also force-resets `privacyAccepted` to `false` for any payload older than v10). Re-answer replaces the old contribution. Stored data from an older bank/scale is discarded on load (PRD E7).
+- `store/useAssessmentStore.ts`: Zustand + `persist` (localStorage). Holds profile (nickname, grade, strand, `strandOther` for the typed "Others" strand, age; `merge` drops a `school` key left by older sessions), answers keyed by question id, scores, `language` (`en` | `fil`, set by `LanguageToggle`, always `en` while `FILIPINO_ENABLED` is false; persist version 10, which also force-resets `privacyAccepted` to `false` for any payload older than v10). Re-answer replaces the old contribution. Stored data from an older bank/scale is discarded on load (PRD E7).
 - Session TTL: 30 min after last change. Wiped on rehydrate by the store and live by `components/session-expiry-guard.tsx`.
 - Tab-close wipe: every load sets `sessionStorage` `aligned.tab`; a rehydrated session with `completedAt` set and no marker is wiped (`isOrphanedFinishedSession`). Unfinished quizzes keep resuming. Unreadable `sessionStorage` = no wipe (TTL only).
 - `components/journey/results-expiry-note.tsx`: countdown under the Results h1, from `sessionRemainingMs(lastUpdated)`; ticks 1 s, hidden in print, screen readers get a per-minute sentence.
@@ -35,7 +35,7 @@ Next.js 16.2.5 App Router, React 19, TypeScript, Tailwind v4 (tokens in `apps/we
 
 ## Logic (`lib/riasec`)
 
-- `questions.ts`: 42 verbatim statements + `shuffleQuestionIds` / `orderQuestions`; `questionText` / `answerLabel` pick English or Filipino.
+- `questions.ts`: 42 verbatim statements in printed order (no shuffle); `questionText` / `answerLabel` pick English or Filipino.
 - `questions-fil.ts`: supplied Filipino translation keyed by question id. A test requires one entry per id.
 - `scoring.ts`: pure, order-independent; top 3 with R→I→A→S→E→C tie-break.
 - `career-pathways.ts`: official sheet data (descriptions, majors, pathways). Landing trait strip reads from it too.
@@ -55,7 +55,7 @@ Next.js 16.2.5 App Router, React 19, TypeScript, Tailwind v4 (tokens in `apps/we
 - **Finish pop-up** (`components/journey/finish-dialog.tsx`, Base UI `Dialog`): `assessment-runner` opens it via `requestFinish` once the store has all 42 answers (after the 280ms advance delay); the runner's "Finish assessment" button is absent until the student leaves the pop-up through Review my answers (button, Escape or outside click; `reviewing` state), and then goes straight to `/results` through `seeResults`, with no second pop-up. `DialogContent` takes an `overlayClassName`; the pop-up uses it for `supports-backdrop-filter:backdrop-blur-sm`.
 - **Analytics** (`components/analytics.tsx`): PostHog, no-op unless `NEXT_PUBLIC_POSTHOG_KEY` is set.
 - **Trait carousel** (`components/riasec/trait-carousel.tsx`): `PathwayResults` passes its three cards as slides. A ring held in one `focused` index; each slide's `data-position` (`front`, `left`, `right`) sets an inline transform from the stage's per-breakpoint `--shift` and `--tilt`. No carousel library. Touch and pen swipes follow the finger through a `--drag` property written straight to the DOM (no re-render per move, `touch-pan-y` keeps vertical page scroll); mouse drags are ignored so card text stays selectable. Horizontal wheel or trackpad rotates once per gesture (200ms quiet gap). The card (rank banner, mascot, emblem, description, tag lists) is `PathwayCard` in `components/riasec/pathway-card.tsx`, shared with `OtherTypesDialog` (`components/riasec/other-types-dialog.tsx`): a Base UI dialog behind a "See the other types" button under the carousel, rendering ranks #4 to #6 (`rankTraits(scores).slice(3)` from `lib/riasec/scoring.ts`, passed as `PathwayResults`' `otherLetters`) in a `lg:grid-cols-3` grid; nothing mounts until opened; `TraitMascot` no longer draws a badge or bleeds to the card edge.
-- **Terms and privacy** (`components/journey/privacy-consent.tsx`): two section arrays, `PRIVACY_POLICY_SECTIONS` and `TERMS_SECTIONS`, rendered as separate tabs (`components/ui/tabs.tsx`, a Base UI `Tabs` wrapper) inside the same dialog — the profile step's consent dialog and the footer's read-only `PrivacyPolicyDialog` both render `PolicyTabs`. One checkbox and one "I agree" still cover both tabs. Text wrapped in `**...**` renders bold via `renderInline`. `PRIVACY_POLICY_VERSION` (`v3.4`), `TERMS_VERSION` (`v1.1`), and `PRIVACY_CONTACT_EMAIL` are exported. The data list must match what the code collects; change one, change the other.
+- **Terms and privacy** (`components/journey/privacy-consent.tsx`): two section arrays, `PRIVACY_POLICY_SECTIONS` and `TERMS_SECTIONS`, rendered as separate tabs (`components/ui/tabs.tsx`, a Base UI `Tabs` wrapper) inside the same dialog — the profile step's consent dialog and the footer's read-only `PrivacyPolicyDialog` both render `PolicyTabs`. One checkbox and one "I agree" still cover both tabs. Text wrapped in `**...**` renders bold via `renderInline`. `PRIVACY_POLICY_VERSION` (`v3.5`), `TERMS_VERSION` (`v1.1`), and `PRIVACY_CONTACT_EMAIL` are exported. The data list must match what the code collects; change one, change the other.
 
 ## Testing
 
@@ -66,6 +66,10 @@ Next.js 16.2.5 App Router, React 19, TypeScript, Tailwind v4 (tokens in `apps/we
 ## Changelog
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
+
+- 2026-11-25 · frontend · Removed the per-session random statement order: `questionOrder`, `ensureQuestionOrder`, `shuffleQuestionIds`, `orderQuestions`, `isValidQuestionOrder` deleted; `assessment-runner.tsx` walks `QUESTIONS` directly. · Follow the original instrument order.
+
+- 2026-11-25 · frontend · Privacy notice (`privacy-consent.tsx`) v3.5: drops results ID, school guidance staff and the "typed strand is never saved" claim; Filipino translation removed (`lib/riasec/privacy-fil.ts` deleted, notice is English only). · Text must match what is collected and who sees it.
 
 - 2026-11-23 · admin · `PERIODS` gains `1y` ("Last 12 months", pill "1 year") · the team asked for a yearly option.
 - 2026-11-23 · frontend · New `rankTraits()` in `lib/riasec/scoring.ts` (all six letters, same tie-break; `computeHollandCode` = its top 3). Card markup moved to `riasec/pathway-card.tsx` (`PathwayCard`, banners #1 to #6). New `riasec/other-types-dialog.tsx`; `PathwayResults` takes optional `otherLetters` and renders the button + popup; `results-dashboard.tsx` passes them. `RESULTS_TEXT_FIL` gains banners 4 to 6 and `otherTypes`. Tests added. · PRD FR-5.5.

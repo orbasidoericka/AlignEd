@@ -305,6 +305,8 @@ AlignEd ships as a mostly-static, anonymous-first Next.js application.
 
 Newest first. Format: `- YYYY-MM-DD · area · what changed · why`.
 
+- 2026-11-25 · privacy · FR-2: policy v3.5 drops results ID, school guidance staff and the typed-strand claim; the notice is English only. · Notice matches actual data and access.
+
 - 2026-11-23 · admin · FR-10.1: period filter gains "Last 12 months" (1 year) · the team asked for a yearly option.
 - 2026-11-23 · results · Added FR-5.5: "See the other types" popup showing ranks #4 to #6 as the same cards, browse-only. · Requested: let students look at their remaining types without changing the code.
 - 2026-11-23 · profile/results · FR-2: the optional School field is removed from Profile Setup (and from the PDF); policy v3.4, Terms v1.1. FR-7.1/FR-8.3/FR-9.2: the results ID is no longer printed on the downloaded or emailed PDF; it stays server-side and in the client store only. · Requested removal of School and of the PDF results ID.

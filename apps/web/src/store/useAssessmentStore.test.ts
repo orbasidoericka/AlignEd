@@ -157,46 +157,6 @@ describe("useAssessmentStore", () => {
     }
   });
 
-  it("ensureQuestionOrder seeds a full permutation and then leaves it", () => {
-    const { ensureQuestionOrder } = useAssessmentStore.getState();
-    expect(useAssessmentStore.getState().questionOrder).toEqual([]);
-
-    ensureQuestionOrder();
-    const order = useAssessmentStore.getState().questionOrder;
-    const ids = QUESTIONS.map((q) => q.id);
-    // A permutation: every id once, nothing invented.
-    expect([...order].sort()).toEqual([...ids].sort());
-
-    // A valid order is left untouched (a resumed session keeps its sequence).
-    ensureQuestionOrder();
-    expect(useAssessmentStore.getState().questionOrder).toBe(order);
-  });
-
-  it("ensureQuestionOrder rebuilds an order that no longer fits the bank", () => {
-    useAssessmentStore.setState({ questionOrder: ["q1", "q1", "ghost"] });
-    useAssessmentStore.getState().ensureQuestionOrder();
-    const order = useAssessmentStore.getState().questionOrder;
-    expect(order).toHaveLength(QUESTIONS.length);
-    expect(new Set(order).size).toBe(QUESTIONS.length);
-  });
-
-  it("resetAnswers reshuffles so a retake comes back in a new order", () => {
-    const ids = QUESTIONS.map((q) => q.id);
-    useAssessmentStore.setState({ questionOrder: ids });
-
-    useAssessmentStore.getState().resetAnswers();
-    const order = useAssessmentStore.getState().questionOrder;
-    // Still a full permutation, just reseeded.
-    expect([...order].sort()).toEqual([...ids].sort());
-    expect(order).toHaveLength(QUESTIONS.length);
-  });
-
-  it("reset clears the question order back to empty", () => {
-    useAssessmentStore.setState({ questionOrder: QUESTIONS.map((q) => q.id) });
-    useAssessmentStore.getState().reset();
-    expect(useAssessmentStore.getState().questionOrder).toEqual([]);
-  });
-
   it("clears completedAt on a retake", () => {
     const { setAnswer } = useAssessmentStore.getState();
     for (const question of QUESTIONS) {

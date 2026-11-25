@@ -31,7 +31,6 @@ import { playSound } from "@/lib/sound/sound-manager";
 import {
   ANSWER_OPTIONS,
   answerLabel,
-  orderQuestions,
   QUESTIONS,
   questionText,
 } from "@/lib/riasec/questions";
@@ -153,26 +152,10 @@ export function AssessmentRunner() {
     (state) => state.setTotalQuestions,
   );
   const setCurrentStep = useAssessmentStore((state) => state.setCurrentStep);
-  const questionOrder = useAssessmentStore((state) => state.questionOrder);
-  const ensureQuestionOrder = useAssessmentStore(
-    (state) => state.ensureQuestionOrder,
-  );
   const language = useAssessmentStore((state) => state.language);
 
-  // The statements in this session's random order (printed order until the
-  // store seeds one, which happens in the effect below). Index-based
-  // navigation walks this list; answers and scoring stay keyed by id, so the
-  // order only changes what the student sees, never what they get.
-  const questions = useMemo(
-    () => orderQuestions(questionOrder),
-    [questionOrder],
-  );
-
-  // Seed a per-session order on first visit; a valid persisted one is left
-  // alone so a resume keeps the same sequence and the same navigator numbers.
-  useEffect(() => {
-    ensureQuestionOrder();
-  }, [ensureQuestionOrder]);
+  // The statements always run in the instrument's printed order.
+  const questions = QUESTIONS;
 
   const firstUnanswered = useMemo(() => {
     const index = questions.findIndex((q) => !(q.id in answers));
