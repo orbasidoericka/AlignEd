@@ -34,8 +34,8 @@ import { cn } from "@/lib/utils";
 // text no longer promises them; saved records expire after a year.
 // v3.3: the admin page no longer shows results IDs.
 // v3.4: no school field, and the results ID is no longer printed on the PDF.
-// The consent box only ticks once both tabs are scrolled to the end; trying
-// sooner shows a "you must read" message instead.
+// The consent box can require both tabs scrolled to the end before it ticks
+// (see REQUIRE_READ_BEFORE_CONSENT, currently off).
 // v3.5: no results ID, school guidance staff or typed-strand claim in the
 // text, and the Filipino translation is gone (the notice is English only).
 export const PRIVACY_POLICY_VERSION = "v3.5";
@@ -43,6 +43,10 @@ export const PRIVACY_POLICY_VERSION = "v3.5";
 // First standalone version: split out of the combined notice above at v3.0.
 // v1.1: the "keep your results ID private" rule went with the ID on the PDF.
 export const TERMS_VERSION = "v1.1";
+
+// Off for now: the box ticks without scrolling both tabs to the end. Set to
+// true to bring back the read-both-tabs gate and its "you must read" message.
+export const REQUIRE_READ_BEFORE_CONSENT = false;
 
 export const PRIVACY_CONTACT_EMAIL = "aligned.result.support@gmail.com";
 
@@ -503,7 +507,8 @@ export function PrivacyConsent({
       setRead((prev) => (prev[tab] ? prev : { ...prev, [tab]: true })),
     [],
   );
-  const hasRead = read.privacy && read.terms;
+  const hasRead =
+    !REQUIRE_READ_BEFORE_CONSENT || (read.privacy && read.terms);
   // Set when the student tries to agree before reading both documents.
   const [triedUnread, setTriedUnread] = useState(false);
   const unreadNote = triedUnread && !hasRead ? mustReadMessage(read) : null;

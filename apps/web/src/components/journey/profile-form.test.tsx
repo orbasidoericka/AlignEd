@@ -4,7 +4,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GRADE_LEVELS, SHS_STRANDS } from "@/lib/riasec/types";
 import { useAssessmentStore } from "@/store/useAssessmentStore";
 
-import { PRIVACY_CONTACT_EMAIL } from "./privacy-consent";
+import {
+  PRIVACY_CONTACT_EMAIL,
+  REQUIRE_READ_BEFORE_CONSENT,
+} from "./privacy-consent";
 import { ProfileForm } from "./profile-form";
 
 const push = vi.hoisted(() => vi.fn());
@@ -251,7 +254,16 @@ describe("ProfileForm privacy consent", () => {
     expect(push).toHaveBeenCalledExactlyOnceWith("/assessment");
   });
 
-  it("will not tick until both documents are read, then jumps to the Terms", () => {
+  it.skipIf(REQUIRE_READ_BEFORE_CONSENT)("ticks straight away while the read-both-tabs gate is off", () => {
+    render(<ProfileForm />);
+    fillProfile();
+    fireEvent.click(consentBox());
+    expect(consentBox()).toBeChecked();
+    fireEvent.click(screen.getByRole("button", { name: /Continue/i }));
+    expect(push).toHaveBeenCalledExactlyOnceWith("/assessment");
+  });
+
+  it.skipIf(!REQUIRE_READ_BEFORE_CONSENT)("will not tick until both documents are read, then jumps to the Terms", () => {
     // jsdom has no layout: fake a tall panel so scrolling matters.
     const spies = [
       vi.spyOn(HTMLElement.prototype, "scrollHeight", "get").mockReturnValue(1000),

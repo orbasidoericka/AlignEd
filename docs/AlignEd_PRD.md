@@ -302,6 +302,7 @@ AlignEd ships as a mostly-static, anonymous-first Next.js application.
 ---
 
 ## Changelog
+- 2026-11-27 · profile · FR-2: read-both-tabs gate paused; the consent box ticks without scrolling both tabs (ticking still required to continue) · temporarily removed on request.
 - 2026-11-25 · profile · FR-2: age upper limit of 30 removed; any age from 15 up is accepted · older returning learners were blocked.
 - 2026-11-25 · admin · FR-10.1: period pills replaced by a "Time period" dropdown (all time, 30 days to 10 years) plus a custom From/To date range · the team asked for finer and custom ranges.
 - 2026-11-25 · admin · FR-10.1: period filter is now yearly only (1, 5, 10 years); 7 days to 6 months removed · the team asked for yearly periods.
