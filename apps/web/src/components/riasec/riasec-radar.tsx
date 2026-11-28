@@ -11,7 +11,9 @@
 
 import dynamic from "next/dynamic";
 
-import { RESULTS_TEXT_FIL, TRAIT_LABEL_FIL } from "@/lib/riasec/results-fil";
+import { RIASEC_PATHWAYS } from "@/lib/riasec/career-pathways";
+import { PATHWAY_NAME_FIL } from "@/lib/riasec/career-pathways-fil";
+import { RESULTS_TEXT_FIL } from "@/lib/riasec/results-fil";
 import { TRAIT_META, TRAIT_ORDER } from "@/lib/riasec/scoring";
 import { useAssessmentStore } from "@/store/useAssessmentStore";
 import type { RiasecScores } from "@/store/useAssessmentStore";
@@ -33,8 +35,10 @@ interface RiasecRadarProps {
 export function RiasecRadar({ scores, max, className }: RiasecRadarProps) {
   const fil = useAssessmentStore((state) => state.language) === "fil";
   const t = RESULTS_TEXT_FIL;
-  const label = (trait: (typeof TRAIT_ORDER)[number]) =>
-    fil ? TRAIT_LABEL_FIL[trait] : TRAIT_META[trait].label;
+  const label = (trait: (typeof TRAIT_ORDER)[number]) => {
+    const { letter } = TRAIT_META[trait];
+    return fil ? PATHWAY_NAME_FIL[letter] : RIASEC_PATHWAYS[letter].name;
+  };
   const safeMax = max > 0 ? max : 1;
   const data = TRAIT_ORDER.map((trait) => ({
     letter: TRAIT_META[trait].letter,

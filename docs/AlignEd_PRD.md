@@ -75,9 +75,9 @@ Navigation rules:
 
 ### FR-1 Landing Page
 - FR-1.1. Communicates the value proposition: discover your Holland Code and find the right college degree using Holland's RIASEC framework.
-- FR-1.2. Calls to action that start the journey at Profile Setup, each with its own wording: "Take Assessment" in the navbar and "Find your path" in the closing panel. The hero carries no button, since the navbar CTA sits directly above it.
+- FR-1.2. Calls to action that start the journey at Profile Setup: "Take Assessment" in the navbar (from 1024px) and "Find your path" in the closing panel. Below 1024px the hamburger menu holds section links only, and the landing hero carries "Take Assessment", between the badges and the subtitle. From 1024px the hero carries no button, since the navbar CTA sits directly above it.
 - FR-1.3. Explains the journey as three steps (Tell us about yourself, Discover yourself, See your alignment) and the expected duration (~5 minutes, also a badge in the hero).
-- FR-1.4. Journey-aware CTA: if a completed assessment exists in local storage, the navbar CTA becomes "View My Results" and the closing CTA "View my results".
+- FR-1.4. Journey-aware CTA: if a completed assessment exists in local storage, the navbar CTA (and the hero button below 1024px) becomes "View My Results" and the closing CTA "View my results".
 - FR-1.5. Shows the lifetime number of assessments taken, read from an aggregate counter (`site_counters`, key `tests_taken`) incremented once per completion. The figure is cumulative and never decreases: deleting a saved result or purging an expired one does not un-take the test. It is a count only — no identifiers, nothing per student — so it stays inside the anonymous-by-design commitment. When the count cannot be read, nothing is shown; a placeholder or estimate is never substituted.
 - FR-1.6. Explains the scoring procedure in plain language (42 statements, 7 per trait, Yes = 1 point / No = 0, scores 0 to 7, top three form the code, ties broken R→I→A→S→E→C per FR-4.2) with a worked example computed by the real scoring function; reachable from the navbar ("Scoring").
 - FR-1.7. Directly after the hero and before the journey steps, explains Holland's theory of career choice in plain, paraphrased language (John L. Holland, 1959; interests reflect personality; six RIASEC types; most people are a blend, which is why the code has three letters), with the six types drawn on Holland's hexagon in R→I→A→S→E→C order. No type is ranked or scored.
@@ -94,8 +94,8 @@ Captured before the assessment begins; stored client-side only (localStorage via
 | Age | Whole number | **Required.** 15 or older, no upper limit (late enrollees and returning learners); the field takes two digits, so 99 at most. Stored in the saved-results record for the admin page's age statistics. |
 | Terms and Conditions | Checkbox | **Required.** Card heading and inline link: "Data Privacy Policy and Terms and Conditions". Full checkbox text: "I have read and agree to the Data Privacy Policy and Terms and Conditions." Opens a dialog titled "Data Privacy Policy & Terms and Conditions" (RA 10173), versioned in `components/journey/privacy-consent.tsx` (Data Privacy Policy `v3.3`, Terms `v1.0`), with the two documents on separate tabs. It lists every piece of data collected and where it goes, without stating a specific retention period or a "so you can compare later" purpose. For a student under 18, the notice tells a parent or legal guardian to read it and be the one who ticks the box: there is no separate parent account or flow, so this single checkbox is how their consent is given. Contact email `aligned.career.support@gmail.com`. Key points are bold. Required before continuing. |
 
-- FR-2.1. The "Continue to assessment" action is unavailable until all required fields (nickname, grade level, SHS strand, age, privacy acceptance) are set.
-- FR-2.2. Profile values are editable by returning to this step before completing the assessment.
+- FR-2.1. The "Take Assessment" action is unavailable until all required fields (nickname, grade level, SHS strand, age, privacy acceptance) are set.
+- FR-2.2. Profile values are editable by returning to this step before completing the assessment. While the assessment is unfinished (at least one answer, fewer than 42), the single action is replaced by two, under the same required-field rule: "Continue Assessment" resumes at the first unanswered statement with answers intact, and "New Assessment", after a confirmation, erases the answers and scores, keeps the profile and starts at the first statement.
 - FR-2.3. **Scoring notice.** On arrival the step opens with a blocking notice, "How your code is scored" (the same four steps as the landing page's scoring section), over a blurred profile. It is dismissed with "I understand" (or Escape / an outside click), but only once the student has read it and started: it is remembered per browser tab (`sessionStorage`) and honoured only while the profile has a nickname, so a refresh or a return from the quiz does not bring it back, while an empty form (left to the landing page and returned, Start over, Retake) opens it again. It follows the English / Filipino toggle and carries its own toggle (both hidden while Filipino is on hold, FR-3.8). It collects nothing and gates nothing beyond being read first.
 
 ### FR-3 RIASEC Assessment Engine
@@ -117,7 +117,7 @@ Captured before the assessment begins; stored client-side only (localStorage via
 ### FR-4 Holland Code Computation
 - FR-4.1. The 3-letter Holland Code is the three highest-scoring traits, ordered by score descending.
 - FR-4.2. **Tie-breaking (deterministic):** ties at any rank are broken by fixed trait order `R → I → A → S → E → C`. The same answer set always yields the same code.
-- FR-4.3. The results dashboard displays the code (e.g. `I-A-S`) plus a per-trait breakdown of all six scores (radar chart, normalized against the per-trait ceiling of 7) and short plain-language descriptions of the top three traits, and a Disclaimer card stating that the result is an exploratory tool, not a prediction.
+- FR-4.3. The results dashboard displays the code (e.g. `I-A-S`) plus a per-trait breakdown of all six scores (radar chart, normalized against the per-trait ceiling of 7, with a written key saying how to read it, beside a bar for each of the six types with its name and score, the three in the code in their trait colors), and a Disclaimer card after the type cards stating that the result is an exploratory tool, not a prediction.
 
 ### FR-5 Majors and Related Pathways
 - FR-5.1. Source is the official RIASEC results sheet ("Which Career Pathway is right for you?"), stored as static data in `apps/web/src/lib/riasec/career-pathways.ts`: for each letter, its description, college majors, and related pathways, transcribed in full (only two obvious source typos corrected).
@@ -302,6 +302,11 @@ AlignEd ships as a mostly-static, anonymous-first Next.js application.
 ---
 
 ## Changelog
+- 2026-11-29 · results · FR-4.3: radar and score bars merged into one full-width card (the separate top-three breakdown is gone); Disclaimer moved below the RIASEC type cards; email dialog reordered so the PDF password leads and the privacy and spam notes are fine print · requested.
+- 2026-11-28 · results · FR-4.3: the radar has a how-to-read key and a named legend; the Holland Code emblems are labelled with the type names (Realistic, Investigative, ...) · evaluators found the graph confusing; requested.
+- 2026-11-28 · profile · FR-2.1, FR-2.2: the button reads "Take Assessment"; with unfinished progress it becomes "Continue Assessment" and "New Assessment" (confirmed, keeps the profile) · requested: let students choose to resume or restart.
+- 2026-11-28 · landing/nav · FR-1.2: "Take Assessment" / "View My Results" removed from the hamburger menu · requested: it duplicated the hero button.
+- 2026-11-28 · landing · FR-1.2, FR-1.4: below 1024px the hero carries a journey-aware "Take Assessment" button between the badges and the subtitle · requested: the navbar button is hidden in the hamburger menu there.
 - 2026-11-27 · profile · FR-2: read-both-tabs gate paused; the consent box ticks without scrolling both tabs (ticking still required to continue) · temporarily removed on request.
 - 2026-11-25 · profile · FR-2: age upper limit of 30 removed; any age from 15 up is accepted · older returning learners were blocked.
 - 2026-11-25 · admin · FR-10.1: period pills replaced by a "Time period" dropdown (all time, 30 days to 10 years) plus a custom From/To date range · the team asked for finer and custom ranges.

@@ -480,22 +480,6 @@ export function AssessmentRunner() {
     // is not a scroll container, so the question panel can stay sticky.
     <div className="relative isolate flex flex-1 flex-col overflow-clip bg-stage-assessment-soft">
       <FocusBackground litCells={litCells} />
-      {/* Hexi keeps the student company through the 42 statements, parked in
-          the dead space under the question column. Same <img> reasoning as the
-          finish screen: the file animates itself and respects reduced motion.
-          Below lg the column runs the full width and there is no dead space
-          left, so it is not rendered rather than squeezed. */}
-      {/* eslint-disable-next-line @next/next/no-img-element -- see the finish
-          screen above: the optimizer cannot serve SVG without
-          dangerouslyAllowSVG, and this one has to keep its animation. */}
-      <img
-        src="/hexi.svg"
-        alt=""
-        aria-hidden
-        width={800}
-        height={600}
-        className="pointer-events-none absolute bottom-0 left-0 -z-10 hidden h-auto w-72 select-none lg:block xl:w-96 print:hidden"
-      />
       <RapidAnswerDialog open={isBlocked} onAcknowledge={acknowledge} />
       <FinishDialog
         open={showFinish}
@@ -518,7 +502,7 @@ export function AssessmentRunner() {
           and swallow their clicks. */}
       <div
         data-grid={gridOpen ? "open" : "closed"}
-        className="relative mx-auto grid w-full max-w-2xl grid-cols-1 gap-8 px-4 pt-16 pb-10 sm:pt-20 lg:max-w-5xl lg:grid-cols-[minmax(0,1fr)_19rem] lg:gap-x-12 lg:data-[grid=closed]:max-w-2xl lg:data-[grid=closed]:grid-cols-1 min-[1328px]:data-[grid=open]:max-w-2xl min-[1328px]:data-[grid=open]:grid-cols-1"
+        className="relative mx-auto grid w-full max-w-2xl grid-cols-1 gap-8 px-4 pt-[clamp(2rem,calc(100svh-44rem),4rem)] pb-4 sm:pt-20 sm:pb-10 lg:max-w-5xl lg:grid-cols-[minmax(0,1fr)_19rem] lg:gap-x-12 lg:data-[grid=closed]:max-w-2xl lg:data-[grid=closed]:grid-cols-1 min-[1328px]:data-[grid=open]:max-w-2xl min-[1328px]:data-[grid=open]:grid-cols-1"
       >
         <QuestionNavigator
           questions={questions}
@@ -591,7 +575,7 @@ export function AssessmentRunner() {
                   id={statementId(question.id)}
                   tabIndex={-1}
                   lang={language === "fil" ? "fil" : undefined}
-                  className="mt-4 min-h-20 text-2xl font-bold text-foreground outline-none sm:text-3xl"
+                  className="mt-[clamp(0px,calc(100svh-40rem),1rem)] min-h-20 text-2xl font-bold text-foreground outline-none sm:mt-4 sm:text-3xl"
                 >
                   {questionText(question, language)}
                 </h1>
@@ -613,7 +597,8 @@ export function AssessmentRunner() {
                     aria-labelledby={statementId(question.id)}
                     value={currentAnswer ?? null}
                     onValueChange={(value) => handleChoice(value as number)}
-                    className="grid grid-cols-2 gap-3"
+                    // Stacked on phones, side by side from tablets up.
+                    className="grid grid-cols-1 gap-3 sm:grid-cols-2"
                   >
                     {ANSWER_OPTIONS.map((option) => (
                       // Gradient border at rest; glows and pans on hover,
@@ -644,7 +629,7 @@ export function AssessmentRunner() {
           // place. --highlight-soft is a pale fill in BOTH themes, so the
           // checked card sets its own ink and everything inside follows it.
                           className={cn(
-                            "relative h-full min-h-28 w-full flex-col justify-center gap-2 rounded-3xl bg-card shadow-bento",
+                            "relative h-full min-h-[clamp(4.5rem,11svh,6rem)] w-full flex-col justify-center gap-2 rounded-3xl bg-card shadow-bento sm:min-h-28",
                             ANSWER_TONE[option.value].card,
                           )}
                         >
@@ -656,7 +641,8 @@ export function AssessmentRunner() {
                           />
                           {/* The word carries the card: body face at display
                               size, tight tracking, with the shortcut shown
-                              quietly beneath it on pointer-sized screens. */}
+                              quietly beneath it on large screens with a mouse.
+                              Phones and tablets have no keyboard to press. */}
                           <span
                             className={cn(
                               "font-sans text-4xl leading-none font-extrabold tracking-tight text-foreground transition-colors duration-150 sm:text-5xl",
@@ -675,7 +661,7 @@ export function AssessmentRunner() {
                               own hue (7.03:1). */}
                           <span
                             className={cn(
-                              "hidden items-center gap-1.5 text-sm text-muted-foreground transition-colors duration-150 group-hover:text-foreground sm:flex",
+                              "hidden items-center gap-1.5 text-sm text-muted-foreground transition-colors duration-150 group-hover:text-foreground lg:pointer-fine:flex",
                               ANSWER_TONE[option.value].hint,
                             )}
                           >
@@ -737,7 +723,7 @@ export function AssessmentRunner() {
             ) : shownControl === "hint" ? (
               <p className="text-right text-sm text-muted-foreground">
                 Tap an answer to continue
-                <span className="hidden sm:inline">
+                <span className="hidden lg:pointer-fine:inline">
                   {language === "fil" ? ", or press O or H" : ", or press Y or N"}
                 </span>
               </p>
@@ -756,6 +742,27 @@ export function AssessmentRunner() {
           )}
         </div>
       </div>
+      {/* Hexi keeps the student company through the 42 statements. On phones
+          and tablets it sits centred under the controls, in flow so it can
+          never cover them, and sized by the screen's height so short phones get
+          a smaller one. The two spacers split the leftover height 3:2, which
+          lifts it off the bottom edge only when there is room. On a large
+          screen with a mouse it parks in the dead space at the lower left
+          instead. A plain image tag: the file animates itself and respects
+          reduced motion. */}
+      <div aria-hidden className="grow-3" />
+      {/* eslint-disable-next-line @next/next/no-img-element -- the optimizer
+          cannot serve SVG without dangerouslyAllowSVG, and this one has to
+          keep its animation. */}
+      <img
+        src="/hexi.svg"
+        alt=""
+        aria-hidden
+        width={800}
+        height={600}
+        className="pointer-events-none -z-10 h-[clamp(6rem,calc(100svh-37.5rem),10rem)] w-auto shrink-0 self-center select-none sm:h-[clamp(7rem,22svh,15rem)] lg:pointer-fine:absolute lg:pointer-fine:bottom-0 lg:pointer-fine:left-0 lg:pointer-fine:h-auto lg:pointer-fine:w-72 xl:pointer-fine:w-96 print:hidden"
+      />
+      <div aria-hidden className="grow-2" />
     </div>
   );
 }

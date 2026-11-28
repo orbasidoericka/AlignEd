@@ -480,33 +480,28 @@ function EmailResultsDialog() {
           <DialogDescription>
             {t
               ? t.description
-              : "We email your results as a password-protected PDF. We send one copy and don't keep your address; to stop spam, we only keep a scrambled code of it for a day."}
+              : "We'll send your results as a PDF locked with a password."}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex flex-col gap-1 rounded-2xl bg-muted p-4">
-          <p className="text-sm font-medium text-muted-foreground">
-            {t ? t.passwordLabel : "Your PDF password"}
+        {/* The one thing the student must act on, so it is the loudest:
+            without this password the emailed PDF will not open. */}
+        <div className="flex flex-col gap-1.5 rounded-2xl bg-muted p-4">
+          <p className="text-sm font-semibold text-foreground">
+            {t ? t.passwordLabel : "Password to open your PDF"}
           </p>
-          <p className="font-mono text-xl font-bold tracking-wider break-all text-foreground">
+          <p className="font-mono text-2xl font-bold tracking-wider break-all text-foreground">
             {password}
           </p>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm font-semibold text-foreground">
+            {t ? t.passwordSave : "Save it now. It isn't in the email."}
+          </p>
+          <p className="text-xs text-muted-foreground">
             {t
               ? t.passwordHint
-              : "Your nickname, then your three-letter RIASEC code. Password is CASE-SENSITIVE. It isn't written in the email, so keep it somewhere safe."}
+              : "Your nickname, then your three-letter code. Case-sensitive."}
           </p>
         </div>
-
-        {/* Shown before and after sending, so students know where to look
-            before they decide the email never came. */}
-        <p className="flex items-start gap-2 text-sm text-muted-foreground">
-          <InfoIcon className="mt-0.5 size-4 shrink-0" aria-hidden />
-          <span lang="en">
-            Not in your inbox after a few minutes? Check your Spam or Junk
-            folder, and mark it as Not spam so you can open the PDF.
-          </span>
-        </p>
 
         {outcome === "sent" ? (
           <div
@@ -514,7 +509,7 @@ function EmailResultsDialog() {
             role="status"
           >
             <CheckCircle2Icon className="mt-0.5 size-5 shrink-0 text-primary-strong" />
-            <p className="text-sm text-foreground">
+            <p className="text-base text-foreground">
               {t ? (
                 t.sent(email.trim())
               ) : (
@@ -537,10 +532,12 @@ function EmailResultsDialog() {
             <div className="flex flex-col gap-1.5">
               <label
                 htmlFor="results-email"
-                className="text-sm font-medium text-foreground"
+                className="text-sm font-semibold text-foreground"
               >
                 {t ? t.emailLabel : "Email address"}
               </label>
+              {/* The shared Input capitalizes placeholders for the nickname
+                  field; an address reads wrong in capitals. */}
               <Input
                 id="results-email"
                 type="email"
@@ -549,7 +546,7 @@ function EmailResultsDialog() {
                 onChange={(event) => setEmail(event.target.value)}
                 placeholder="you@example.com"
                 aria-invalid={email.length > 0 && !emailValid}
-                className="h-11 rounded-xl text-base"
+                className="h-11 rounded-xl text-base placeholder:normal-case md:text-base"
               />
               {email.length > 0 && !emailValid && (
                 <p
@@ -570,7 +567,7 @@ function EmailResultsDialog() {
               onChange={(event) => setWebsite(event.target.value)}
               className="absolute -left-2499.75 size-px opacity-0"
             />
-            <label className="flex items-start gap-3 text-sm text-muted-foreground">
+            <label className="flex items-start gap-3 text-sm text-foreground">
               <Checkbox
                 checked={consent}
                 onCheckedChange={(checked) => setConsent(checked === true)}
@@ -604,6 +601,24 @@ function EmailResultsDialog() {
             </DialogFooter>
           </form>
         )}
+
+        {/* Fine print, kept small. The spam tip shows before and after
+            sending, so students know where to look before they decide the
+            email never came. */}
+        <div className="flex flex-col gap-1.5 border-t border-border pt-3 text-xs text-muted-foreground">
+          <p className="flex items-start gap-1.5">
+            <InfoIcon className="mt-px size-3.5 shrink-0" aria-hidden />
+            <span lang="en">
+              Not in your inbox after a few minutes? Check your Spam or Junk
+              folder, and mark it as Not spam so you can open the PDF.
+            </span>
+          </p>
+          <p>
+            {t
+              ? t.privacyNote
+              : "We send one copy and don't keep your address. To stop spam, we keep only a scrambled code of it for a day."}
+          </p>
+        </div>
       </DialogContent>
     </Dialog>
   );

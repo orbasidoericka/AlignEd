@@ -3,9 +3,19 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, XIcon } from "lucide-react";
+import { ArrowRight, RotateCcw, XIcon } from "lucide-react";
 
 import { AuroraBackground } from "@/components/aceternity/aurora-background";
+import {
+  AlertDialog,
+  AlertDialogClose,
+  AlertDialogContent,
+  AlertDialogCornerClose,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { PrivacyConsent } from "@/components/journey/privacy-consent";
 import { ScoringNoticeDialog } from "@/components/journey/scoring-notice-dialog";
 import { useHydrated } from "@/hooks/use-hydrated";
@@ -29,6 +39,7 @@ import {
 } from "@/lib/riasec/types";
 import type { GradeLevel, ShsStrand } from "@/lib/riasec/types";
 import { PROFILE_TEXT_FIL, STRAND_LABEL_FIL } from "@/lib/riasec/profile-fil";
+import { QUESTIONS } from "@/lib/riasec/questions";
 import {
   selectIsProfileComplete,
   useAssessmentStore,
@@ -81,7 +92,12 @@ export function ProfileForm() {
   const setProfile = useAssessmentStore((state) => state.setProfile);
   const complete = useAssessmentStore(selectIsProfileComplete);
   const language = useAssessmentStore((state) => state.language);
+  const resetAnswers = useAssessmentStore((state) => state.resetAnswers);
+  const answeredCount = useAssessmentStore(
+    (state) => Object.keys(state.answers).length,
+  );
   const [showHints, setShowHints] = useState(false);
+  const [confirmingRestart, setConfirmingRestart] = useState(false);
   // Flag an out-of-range age once both digits are in (so typing "1" on the
   // way to "17" never flashes an error), or after Continue is pressed.
   const ageOutOfRange =
@@ -89,6 +105,9 @@ export function ProfileForm() {
     !isValidAge(profile.age) &&
     (profile.age.length >= 2 || showHints);
   const hydrated = useHydrated();
+  // A quiz left partway: the student chooses to resume it or begin again.
+  const unfinished =
+    hydrated && answeredCount > 0 && answeredCount < QUESTIONS.length;
   const started = useAssessmentStore((state) => state.profile.nickname !== "");
   const [seenBefore] = useState(readNoticeSeen);
   const [noticeDismissed, setNoticeDismissed] = useState(false);
@@ -110,12 +129,56 @@ export function ProfileForm() {
     router.push("/assessment");
   };
 
+  // A new assessment throws answers away, so it is confirmed first, and only
+  // once the form could actually open the quiz.
+  const requestRestart = () => {
+    if (!complete) {
+      setShowHints(true);
+      return;
+    }
+    setConfirmingRestart(true);
+  };
+
+  const restart = () => {
+    resetAnswers();
+    router.push("/assessment");
+  };
+
+  const primaryButtonClass = cn(
+    "h-13 w-full rounded-full bg-stage-profile font-heading text-lg font-semibold text-stage-profile-foreground hover:bg-stage-profile/85",
+    !complete && "opacity-60",
+  );
+
   return (
     <AuroraBackground>
       <ScoringNoticeDialog
         open={hydrated && !noticeDismissed && !(seenBefore && started)}
         onAcknowledge={acknowledgeNotice}
       />
+      <AlertDialog open={confirmingRestart} onOpenChange={setConfirmingRestart}>
+        <AlertDialogContent lang={fil ? "fil" : undefined}>
+          <AlertDialogCornerClose label={t ? t.restartClose : "Close"} />
+          <AlertDialogHeader className="pr-10">
+            <AlertDialogTitle>
+              {t ? t.restartTitle : "Start a new assessment?"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {t
+                ? t.restartBody
+                : "This erases every answer you have given. Your details above are kept. It cannot be undone."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogClose
+              render={
+                <Button variant="destructive" size="lg" onClick={restart} />
+              }
+            >
+              {t ? t.restartButton : "New Assessment"}
+            </AlertDialogClose>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <div
         lang={fil ? "fil" : undefined}
         className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-4 py-10"
@@ -355,18 +418,42 @@ export function ProfileForm() {
         />
 
         <div className="mt-auto flex flex-col gap-2 pb-4">
-          <Button
-            size="lg"
-            onClick={handleContinue}
-            aria-disabled={!complete}
-            className={cn(
-              "h-13 w-full rounded-full bg-stage-profile font-heading text-lg font-semibold text-stage-profile-foreground hover:bg-stage-profile/85",
-              !complete && "opacity-60",
-            )}
-          >
-            {t ? t.continueButton : "Continue to assessment"}
-            <ArrowRight className="size-5" />
-          </Button>
+          {unfinished ? (
+            <div className="flex flex-col gap-3">
+              <Button
+                size="lg"
+                onClick={handleContinue}
+                aria-disabled={!complete}
+                className={primaryButtonClass}
+              >
+                {t ? t.resumeButton : "Continue Assessment"}
+                <ArrowRight className="size-5" />
+              </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={requestRestart}
+                aria-disabled={!complete}
+                className={cn(
+                  "h-13 w-full rounded-full bg-card font-heading text-lg font-semibold",
+                  !complete && "opacity-60",
+                )}
+              >
+                <RotateCcw className="size-5" aria-hidden />
+                {t ? t.restartButton : "New Assessment"}
+              </Button>
+            </div>
+          ) : (
+            <Button
+              size="lg"
+              onClick={handleContinue}
+              aria-disabled={!complete}
+              className={primaryButtonClass}
+            >
+              {t ? t.continueButton : "Take Assessment"}
+              <ArrowRight className="size-5" />
+            </Button>
+          )}
           <p className="text-center text-sm text-muted-foreground">
             {t
               ? t.continueNote

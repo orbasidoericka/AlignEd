@@ -257,6 +257,10 @@ describe("PathwayResults", () => {
       expect(dialog).toHaveTextContent("Your fourth RIASEC type");
       expect(dialog).toHaveTextContent("Your sixth RIASEC type");
       expect(dialog.textContent).not.toMatch(/%|best match|strong match/i);
+      // Below lg, chips jump to each card.
+      expect(
+        within(dialog).getByRole("button", { name: "#5 Enterprising" }),
+      ).toBeInTheDocument();
       // Not a carousel: no slide controls inside.
       expect(within(dialog).queryByRole("button", { name: /^Show / })).toBeNull();
     });

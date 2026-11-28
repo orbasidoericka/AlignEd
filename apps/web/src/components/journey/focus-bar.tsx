@@ -9,6 +9,7 @@ import {
   AlertDialog,
   AlertDialogClose,
   AlertDialogContent,
+  AlertDialogCornerClose,
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
@@ -17,7 +18,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Wordmark } from "@/components/blocks/wordmark";
 import { LanguageToggle } from "@/components/journey/language-toggle";
-import { SoundToggle } from "@/components/sound-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { useHydrated } from "@/hooks/use-hydrated";
@@ -80,7 +80,6 @@ export function FocusBar() {
           )}
 
           {showLanguageToggle && <LanguageToggle />}
-          <SoundToggle />
           <ThemeToggle />
 
           {onAssessment && (
@@ -98,7 +97,8 @@ export function FocusBar() {
                 <span className="sr-only sm:not-sr-only">Start over</span>
               </AlertDialogTrigger>
               <AlertDialogContent>
-                <AlertDialogHeader>
+                <AlertDialogCornerClose />
+                <AlertDialogHeader className="pr-10">
                   <AlertDialogTitle>Start over?</AlertDialogTitle>
                   <AlertDialogDescription>
                     This erases your profile and every answer on this device
@@ -106,11 +106,6 @@ export function FocusBar() {
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogClose
-                    render={<Button variant="outline" size="lg" />}
-                  >
-                    Keep my progress
-                  </AlertDialogClose>
                   <AlertDialogClose
                     render={
                       <Button
@@ -136,7 +131,8 @@ export function FocusBar() {
               <XIcon />
             </AlertDialogTrigger>
             <AlertDialogContent>
-              <AlertDialogHeader>
+              <AlertDialogCornerClose />
+              <AlertDialogHeader className="pr-10">
                 <AlertDialogTitle>Take a break?</AlertDialogTitle>
                 <AlertDialogDescription>
                   Your answers are saved on this device. You can come back
@@ -145,14 +141,9 @@ export function FocusBar() {
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogClose
-                  render={<Button variant="outline" size="lg" />}
-                >
-                  Keep going
-                </AlertDialogClose>
-                <AlertDialogClose
                   render={
                     <Button
-                      variant="secondary"
+                      variant="destructive"
                       size="lg"
                       onClick={() => router.push("/")}
                     />

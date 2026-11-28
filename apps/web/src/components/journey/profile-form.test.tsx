@@ -1,6 +1,7 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { QUESTIONS } from "@/lib/riasec/questions";
 import { GRADE_LEVELS, SHS_STRANDS } from "@/lib/riasec/types";
 import { useAssessmentStore } from "@/store/useAssessmentStore";
 
@@ -170,13 +171,13 @@ describe("ProfileForm layout and Others strand", () => {
 
     fireEvent.change(strandSelect(), { target: { value: "Others" } });
     const field = screen.getByLabelText("Type your strand");
-    fireEvent.click(screen.getByRole("button", { name: /Continue/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Take Assessment/i }));
     expect(push).not.toHaveBeenCalled();
     expect(screen.getByText(/Type your strand to continue/i)).toBeInTheDocument();
 
     fireEvent.change(field, { target: { value: "Cookery" } });
     expect(useAssessmentStore.getState().profile.strandOther).toBe("Cookery");
-    fireEvent.click(screen.getByRole("button", { name: /Continue/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Take Assessment/i }));
     expect(push).toHaveBeenCalledExactlyOnceWith("/assessment");
 
     // The inline row replaces the dropdown; its X brings the dropdown back.
@@ -203,7 +204,7 @@ describe("ProfileForm privacy consent", () => {
     render(<ProfileForm />);
     fillProfile();
 
-    fireEvent.click(screen.getByRole("button", { name: /Continue/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Take Assessment/i }));
 
     expect(push).not.toHaveBeenCalled();
     expect(
@@ -221,14 +222,14 @@ describe("ProfileForm privacy consent", () => {
     fireEvent.change(age, { target: { value: "10" } });
     expect(screen.getByText("Enter an age of 15 or older.")).toBeInTheDocument();
     expect(age).toHaveAttribute("aria-invalid", "true");
-    fireEvent.click(screen.getByRole("button", { name: /Continue/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Take Assessment/i }));
     expect(push).not.toHaveBeenCalled();
 
     fireEvent.change(age, { target: { value: "35" } });
     expect(
       screen.queryByText("Enter an age of 15 or older."),
     ).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: /Continue/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Take Assessment/i }));
     expect(push).toHaveBeenCalledExactlyOnceWith("/assessment");
   });
 
@@ -248,7 +249,7 @@ describe("ProfileForm privacy consent", () => {
     readPolicy();
     fireEvent.click(consentBox());
 
-    fireEvent.click(screen.getByRole("button", { name: /Continue/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Take Assessment/i }));
 
     expect(useAssessmentStore.getState().profile.privacyAccepted).toBe(true);
     expect(push).toHaveBeenCalledExactlyOnceWith("/assessment");
@@ -259,7 +260,7 @@ describe("ProfileForm privacy consent", () => {
     fillProfile();
     fireEvent.click(consentBox());
     expect(consentBox()).toBeChecked();
-    fireEvent.click(screen.getByRole("button", { name: /Continue/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Take Assessment/i }));
     expect(push).toHaveBeenCalledExactlyOnceWith("/assessment");
   });
 
@@ -375,9 +376,103 @@ describe("ProfileForm privacy consent", () => {
     fireEvent.click(consentBox());
     fireEvent.click(consentBox());
 
-    fireEvent.click(screen.getByRole("button", { name: /Continue/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Take Assessment/i }));
 
     expect(useAssessmentStore.getState().profile.privacyAccepted).toBe(false);
     expect(push).not.toHaveBeenCalled();
+  });
+});
+
+describe("ProfileForm with an unfinished assessment", () => {
+  beforeEach(() => {
+    window.sessionStorage.setItem("aligned.scoring-notice", "1");
+    useAssessmentStore.getState().reset();
+    useAssessmentStore.getState().setProfile({
+      nickname: "MARI",
+      gradeLevel: "12",
+      strand: "Sports",
+      age: "17",
+      privacyAccepted: true,
+    });
+    push.mockClear();
+  });
+
+  const answer = (count: number) => {
+    for (const question of QUESTIONS.slice(0, count)) {
+      useAssessmentStore
+        .getState()
+        .setAnswer(question.id, { trait: question.trait, value: 1 });
+    }
+  };
+  const button = (name: string) => screen.queryByRole("button", { name });
+  const answered = () =>
+    Object.keys(useAssessmentStore.getState().answers).length;
+
+  it.each([0, QUESTIONS.length])(
+    "keeps the single button with %i answers",
+    (count) => {
+      answer(count);
+      render(<ProfileForm />);
+
+      expect(button("Take Assessment")).toBeInTheDocument();
+      expect(button("Continue Assessment")).toBeNull();
+      expect(button("New Assessment")).toBeNull();
+    },
+  );
+
+  it("continues with the saved answers", () => {
+    answer(3);
+    render(<ProfileForm />);
+
+    expect(button("Take Assessment")).toBeNull();
+    fireEvent.click(button("Continue Assessment")!);
+
+    expect(answered()).toBe(3);
+    expect(push).toHaveBeenCalledExactlyOnceWith("/assessment");
+  });
+
+  it("starts over only after the confirmation, keeping the profile", () => {
+    answer(3);
+    render(<ProfileForm />);
+
+    fireEvent.click(button("New Assessment")!);
+    const dialog = screen.getByRole("alertdialog");
+    expect(answered()).toBe(3);
+    fireEvent.click(
+      within(dialog).getByRole("button", { name: "New Assessment" }),
+    );
+
+    expect(answered()).toBe(0);
+    expect(useAssessmentStore.getState().profile.nickname).toBe("MARI");
+    expect(push).toHaveBeenCalledExactlyOnceWith("/assessment");
+  });
+
+  it("keeps the answers when the confirmation is closed", () => {
+    answer(3);
+    render(<ProfileForm />);
+
+    fireEvent.click(button("New Assessment")!);
+    fireEvent.click(
+      within(screen.getByRole("alertdialog")).getByRole("button", {
+        name: "Close",
+      }),
+    );
+
+    expect(answered()).toBe(3);
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  it("asks for the missing details before either choice", () => {
+    answer(3);
+    useAssessmentStore.getState().setProfile({ privacyAccepted: false });
+    render(<ProfileForm />);
+
+    fireEvent.click(button("New Assessment")!);
+
+    expect(screen.queryByRole("alertdialog")).toBeNull();
+    expect(
+      screen.getByText(/Agree to the Terms and Conditions to continue/i),
+    ).toBeInTheDocument();
+    expect(answered()).toBe(3);
   });
 });

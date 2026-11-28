@@ -46,15 +46,13 @@ describe("FocusBar start over", () => {
     expect(push).toHaveBeenCalledExactlyOnceWith("/assessment/profile");
   });
 
-  it("keeping progress leaves the session untouched", () => {
+  it("closing the dialog leaves the session untouched", () => {
     seedSession();
     render(<FocusBar />);
 
     fireEvent.click(screen.getByRole("button", { name: "Start over" }));
     const dialog = screen.getByRole("alertdialog");
-    fireEvent.click(
-      within(dialog).getByRole("button", { name: "Keep my progress" }),
-    );
+    fireEvent.click(within(dialog).getByRole("button", { name: "Close" }));
 
     const state = useAssessmentStore.getState();
     expect(state.profile.nickname).toBe("MARI");

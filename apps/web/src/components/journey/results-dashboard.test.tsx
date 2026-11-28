@@ -103,6 +103,57 @@ describe("ResultsDashboard greeting", () => {
     }
   });
 
+  it("names the emblems and the graph legend by RIASEC type", () => {
+    completeAssessment("FERF");
+    render(<ResultsDashboard />);
+
+    const card = (name: RegExp | string) =>
+      screen.getByRole("heading", { level: 2, name }).closest("section")!;
+    expect(
+      within(card(/You are an/))
+        .getAllByRole("listitem")
+        .map((item) => item.textContent),
+    ).toEqual(["Realistic", "Investigative", "Artistic"]);
+
+    const radar = card("Your six RIASEC types");
+    expect(radar).toHaveTextContent("Blue shape: your scores");
+    const legend = [...radar.querySelectorAll("ul > li")];
+    expect(legend).toHaveLength(6);
+    expect(legend.at(-1)).toHaveTextContent(/^CConventional\d+ \/ 7/);
+  });
+
+  it("shows all six bars beside the graph, the code's in their type's color", () => {
+    completeAssessment("FERF");
+    render(<ResultsDashboard />);
+
+    // One card for the graph and the bars; the old breakdown card is gone.
+    expect(
+      screen.queryByRole("heading", { name: "What your code means" }),
+    ).toBeNull();
+    const fills = screen
+      .getByRole("heading", { level: 2, name: "Your six RIASEC types" })
+      .closest("section")!
+      .querySelectorAll('[data-slot="progress-indicator"]');
+    expect([...fills].map((fill) => fill.className)).toEqual([
+      ...["r", "i", "a"].map((letter) =>
+        expect.stringContaining(`bg-trait-${letter}`),
+      ),
+      ...[0, 1, 2].map(() => expect.stringContaining("bg-muted-foreground")),
+    ]);
+  });
+
+  it("puts the disclaimer after the RIASEC type cards", () => {
+    completeAssessment("FERF");
+    render(<ResultsDashboard />);
+
+    const disclaimer = screen.getByRole("heading", { name: "Disclaimer" });
+    const topCard = screen.getByRole("heading", { level: 2, name: "Realistic" });
+    expect(
+      topCard.compareDocumentPosition(disclaimer) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
   it("drops the name, not the greeting, when there is no nickname", () => {
     // A v1-v3 payload that predates the nickname field rehydrates with "".
     const { reset, setAnswer } = useAssessmentStore.getState();

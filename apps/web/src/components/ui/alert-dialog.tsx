@@ -3,7 +3,9 @@
 
 import * as React from "react";
 import { AlertDialog as AlertDialogPrimitive } from "@base-ui/react/alert-dialog";
+import { XIcon } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 function AlertDialog({ ...props }: AlertDialogPrimitive.Root.Props) {
@@ -21,6 +23,21 @@ function AlertDialogTrigger({
 function AlertDialogClose({ ...props }: AlertDialogPrimitive.Close.Props) {
   return (
     <AlertDialogPrimitive.Close data-slot="alert-dialog-close" {...props} />
+  );
+}
+
+// The X that backs out of a confirmation. Render it first in the content:
+// focus lands on the first control, which must be the harmless one.
+function AlertDialogCornerClose({ label = "Close" }: { label?: string }) {
+  return (
+    <AlertDialogClose
+      aria-label={label}
+      render={
+        <Button variant="ghost" size="icon" className="absolute top-4 right-4" />
+      }
+    >
+      <XIcon aria-hidden />
+    </AlertDialogClose>
   );
 }
 
@@ -111,6 +128,7 @@ export {
   AlertDialog,
   AlertDialogTrigger,
   AlertDialogClose,
+  AlertDialogCornerClose,
   AlertDialogContent,
   AlertDialogHeader,
   AlertDialogFooter,

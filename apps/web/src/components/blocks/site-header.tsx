@@ -19,7 +19,6 @@ import {
 } from "@/components/aceternity/resizable-navbar";
 import { Wordmark } from "@/components/blocks/wordmark";
 import { LanguageToggle } from "@/components/journey/language-toggle";
-import { SoundToggle } from "@/components/sound-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { buttonVariants } from "@/components/ui/button";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -40,7 +39,8 @@ const ctaClasses =
 // sections only; the assessment itself is reached through the CTA, and About
 // Us lives in the footer. No separate My Results link anywhere: the CTA
 // already says "View My Results" once it unlocks, and a link to the same page
-// would just repeat it.
+// would just repeat it. The CTA is desktop only: the hamburger menu holds
+// links, since below lg the landing hero carries the button itself.
 export function SiteHeader() {
   const pathname = usePathname();
   const hydrated = useHydrated();
@@ -85,7 +85,6 @@ export function SiteHeader() {
           <NavItems items={items} />
           <div className="relative z-20 flex shrink-0 items-center gap-2">
             {showLanguageToggle && <LanguageToggle />}
-            <SoundToggle />
             <ThemeToggle />
             {showCta && (
               <Link
@@ -106,7 +105,6 @@ export function SiteHeader() {
             </NavbarLogo>
             <div className="flex items-center gap-1">
               {showLanguageToggle && <LanguageToggle />}
-              <SoundToggle />
               <ThemeToggle />
               <MobileNavToggle
                 isOpen={menuOpen}
@@ -149,20 +147,6 @@ export function SiteHeader() {
                   {item.name}
                 </Link>
               ),
-            )}
-            {showCta && (
-              <Link
-                href={ctaHref}
-                onClick={closeMenu}
-                className={cn(
-                  buttonVariants({ size: "lg" }),
-                  ctaClasses,
-                  "mt-2 w-full",
-                )}
-              >
-                {ctaLabel}
-                <ArrowRight className="size-4" />
-              </Link>
             )}
           </MobileNavMenu>
         </MobileNav>

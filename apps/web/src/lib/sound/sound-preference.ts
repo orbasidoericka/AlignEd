@@ -4,8 +4,8 @@
 import { useSyncExternalStore } from "react";
 
 // Whether UI sound is allowed to play. Sound ships on, because the feedback is
-// the point, but students may be taking the quiz in a classroom or on a shared
-// phone, so the choice has to persist and has to be one tap away.
+// the point. No control on screen changes it at present; a choice stored
+// earlier is still honoured.
 export const SOUND_STORAGE_KEY = "aligned.sound";
 
 const ON = "on";

@@ -82,7 +82,8 @@ like one continuous corridor, not a form then a quiz.
   (six fixed stars, one per RIASEC trait, brightening with each answer —
   pure CSS opacity, virtually free).
 - Questions: one statement per card, framer-motion `AnimatePresence` slide;
-  the answer is a side-by-side Yes/No pair as two large tappable cards
+  the answer is a Yes/No pair as two large tappable cards (stacked on phones,
+  side by side from tablets up)
   (shadcn `RadioGroup` restyled, thumb-sized, emoji-anchored). Tapping either
   one advances on its own — there is no Next button — and a quiet `Back`
   returns to the previous statement with its answer still selected.

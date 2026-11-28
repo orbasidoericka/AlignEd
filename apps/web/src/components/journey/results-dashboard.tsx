@@ -17,9 +17,11 @@ import { PathwayResults } from "@/components/riasec/pathway-results";
 import { RiasecRadar } from "@/components/riasec/riasec-radar";
 import { Progress } from "@/components/ui/progress";
 import { TraitEmblem } from "@/components/riasec/trait-emblem";
+import { RIASEC_PATHWAYS } from "@/lib/riasec/career-pathways";
+import { PATHWAY_NAME_FIL } from "@/lib/riasec/career-pathways-fil";
 import { letterChip } from "@/lib/riasec/letter-chip-styles";
 import { QUESTIONS } from "@/lib/riasec/questions";
-import { RESULTS_TEXT_FIL, TRAIT_LABEL_FIL } from "@/lib/riasec/results-fil";
+import { RESULTS_TEXT_FIL } from "@/lib/riasec/results-fil";
 import {
   computeHollandCode,
   rankTraits,
@@ -27,11 +29,14 @@ import {
   maxScorePerTrait,
   TRAIT_META,
   TRAIT_ORDER,
-  traitForLetter,
 } from "@/lib/riasec/scoring";
 import { useHydrated } from "@/hooks/use-hydrated";
+import type { RiasecLetter } from "@/lib/riasec/types";
 import { useAssessmentStore } from "@/store/useAssessmentStore";
 import { cn } from "@/lib/utils";
+
+const DISCLAIMER_EN =
+  "The RIASEC assessment is designed solely to evaluate career interests; it does not measure a student’s skills, abilities, or academic aptitudes. Results provide general suggestions for potential career pathways based on current preferences and should not be interpreted as a definitive prediction of future employment or career success. This inventory is best used as an exploratory tool alongside skill evaluations, academic performance records, and career counseling.";
 
 // Bento spans collapse in the printed PDF so it stays one column.
 const printSingle = "print:col-span-1 print:row-span-1";
@@ -43,8 +48,9 @@ export function ResultsDashboard() {
   const nickname = useAssessmentStore((state) => state.profile.nickname);
   const fil = useAssessmentStore((state) => state.language) === "fil";
   const t = RESULTS_TEXT_FIL;
-  const traitLabel = (trait: (typeof TRAIT_ORDER)[number]) =>
-    fil ? TRAIT_LABEL_FIL[trait] : TRAIT_META[trait].label;
+  // The type's formal name (Realistic, Investigative, ...).
+  const typeName = (letter: RiasecLetter) =>
+    fil ? PATHWAY_NAME_FIL[letter] : RIASEC_PATHWAYS[letter].name;
   // JourneyGuard already withholds this whole subtree until the persisted
   // store has rehydrated, which is why `scores` above is safe. The greeting
   // keeps its own gate anyway: it is the one string a student would notice
@@ -80,7 +86,7 @@ export function ResultsDashboard() {
 
         <BentoGrid className="print:grid-cols-1">
           {/* Holland Code */}
-          <BlurFade inView className={cn("md:col-span-2", printSingle)}>
+          <BlurFade inView className={cn("md:col-span-3", printSingle)}>
             <BentoGridItem
               headingId="code-heading"
               // Blue into yellow, with the card's own white as the middle
@@ -122,9 +128,14 @@ export function ResultsDashboard() {
                 ]}
                 className="-z-10 -scale-x-100 stroke-primary/40 mask-[linear-gradient(to_right,white,transparent_75%)] print:hidden dark:stroke-primary/20"
               />
+              {/* Full width; from lg the emblems move to the right of the
+                  text so the wide card is not half empty. Grid placement
+                  only, so the reading order stays label, code, emblems,
+                  actions. */}
+              <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center lg:gap-x-8">
               <p
                 lang={fil ? "fil" : undefined}
-                className="text-sm font-semibold text-muted-foreground"
+                className="text-sm font-semibold text-muted-foreground lg:col-start-1"
               >
                 {fil ? t.hollandCodeLabel : "Your Holland Code"}
               </p>
@@ -133,7 +144,7 @@ export function ResultsDashboard() {
               <h2
                 id="code-heading"
                 lang={fil ? "fil" : undefined}
-                className="-mt-2 text-3xl font-bold text-foreground sm:text-4xl"
+                className="-mt-2 text-3xl font-bold text-foreground sm:text-4xl lg:col-start-1 lg:text-5xl"
               >
                 {fil ? t.youAre : "You are an"}{" "}
                 <span className="whitespace-nowrap">
@@ -146,37 +157,42 @@ export function ResultsDashboard() {
               {/* Plain 1fr (not Tailwind's minmax(0,1fr)): under w-fit, only
                   an auto minimum makes the three columns share the widest
                   name's width. */}
-              <ul className="grid w-fit grid-cols-[repeat(3,1fr)] gap-x-3 sm:gap-x-5">
+              <ul className="grid w-fit grid-cols-[repeat(3,1fr)] gap-x-1 min-[360px]:gap-x-2 min-[400px]:gap-x-3 sm:gap-x-5 lg:col-start-2 lg:row-span-3 lg:row-start-1 lg:mr-32 lg:gap-x-8">
                 {code.map((letter) => (
                   <li
                     key={letter}
                     className="flex flex-col items-center gap-1.5 text-center"
                   >
-                    <TraitEmblem letter={letter} className="size-16 sm:size-20" />
+                    <TraitEmblem
+                      letter={letter}
+                      className="size-16 sm:size-20 lg:size-24"
+                    />
                     <span
                       lang={fil ? "fil" : undefined}
-                      className="text-sm text-muted-foreground sm:text-base"
+                      className="text-[0.6875rem] text-muted-foreground min-[360px]:text-xs min-[400px]:text-sm sm:text-base"
                     >
-                      {traitLabel(traitForLetter(letter))}
+                      {typeName(letter)}
                     </span>
                   </li>
                 ))}
               </ul>
               <div
-                className="flex flex-wrap items-center gap-2 print:hidden"
+                className="flex flex-wrap items-center gap-2 lg:col-start-1 print:hidden"
                 data-print-hidden
               >
                 <CareerLookDialog code={code} />
                 <ResultsKeepsakeActions />
               </div>
+              </div>
             </BentoGridItem>
           </BlurFade>
 
-          {/* Six-trait radar */}
+          {/* Scores: the radar and all six score bars in one full-width
+              card. Graph and its key on the left, bars on the right from md. */}
           <BlurFade
             inView
             delay={0.06}
-            className={cn("md:row-span-2", printSingle)}
+            className={cn("md:col-span-3", printSingle)}
           >
             <BentoGridItem
               headingId="radar-heading"
@@ -195,77 +211,105 @@ export function ResultsDashboard() {
               }
               className="h-full"
             >
-              <RiasecRadar scores={scores} max={max} className="my-auto" />
-              {/* Visual legend; the radar's sr-only table carries the data. */}
-              <ul className="grid grid-cols-3 gap-2" aria-hidden>
-                {TRAIT_ORDER.map((trait) => {
-                  const { letter } = TRAIT_META[trait];
-                  const inCode = code.includes(letter);
-                  return (
-                    <li
-                      key={trait}
-                      className={cn(
-                        "flex items-center justify-between rounded-xl px-3 py-2 font-heading text-sm font-semibold",
-                        // Letters in the code carry their own color; the rest
-                        // stay quiet so the code still reads first.
-                        inCode
-                          ? letterChip(letter)
-                          : "bg-muted text-muted-foreground",
-                      )}
-                    >
-                      <span>{letter}</span>
-                      <span className="tabular-nums">{scores[trait]}</span>
-                    </li>
-                  );
-                })}
-              </ul>
-            </BentoGridItem>
-          </BlurFade>
-
-          {/* Top-three trait breakdown */}
-          <BlurFade
-            inView
-            delay={0.1}
-            className={cn("md:col-span-2", printSingle)}
-          >
-            <BentoGridItem
-              headingId="traits-heading"
-              title={
-                fil ? (
-                  <span lang="fil">{t.codeMeaningTitle}</span>
-                ) : (
-                  "What your code means"
-                )
-              }
-              className="h-full"
-            >
-              <ul className="flex flex-col gap-5">
-                {code.map((letter) => {
-                  const trait = traitForLetter(letter);
-                  const percent =
-                    max > 0 ? Math.round((scores[trait] / max) * 100) : 0;
-                  const label = traitLabel(trait);
-                  return (
-                    <li key={letter} className="flex flex-col gap-2">
-                      <div className="flex items-baseline justify-between gap-2">
-                        <h3
-                          lang={fil ? "fil" : undefined}
-                          className="font-heading text-base font-bold text-foreground"
-                        >
-                          {letter}: {label}
-                        </h3>
-                        <span className="font-heading text-sm font-semibold text-primary-strong tabular-nums">
-                          <NumberTicker value={scores[trait]} /> / {max}
-                        </span>
-                      </div>
-                      <Progress
-                        value={percent}
-                        aria-label={`${label}: ${scores[trait]} ${fil ? t.outOf(max) : `out of ${max}`}`}
+              <div className="grid grid-cols-1 items-center gap-6 md:grid-cols-[minmax(0,20rem)_minmax(0,1fr)] md:gap-10 lg:grid-cols-[minmax(0,24rem)_minmax(0,1fr)]">
+                <div className="flex flex-col items-center gap-4">
+                  <RiasecRadar scores={scores} max={max} className="w-full" />
+                  {/* How to read the graph, in words: the picture and bare
+                      letters alone confused readers. */}
+                  <div
+                    lang={fil ? "fil" : undefined}
+                    className="flex w-full flex-col gap-1 text-sm text-muted-foreground"
+                  >
+                    <p className="flex items-center gap-2 font-semibold text-foreground">
+                      <span
+                        aria-hidden
+                        className="size-3.5 shrink-0 rounded-sm border-2 border-primary-strong bg-chart-1/50"
                       />
-                    </li>
-                  );
-                })}
-              </ul>
+                      {fil ? t.radarKey : "Blue shape: your scores"}
+                    </p>
+                    <p>
+                      {fil
+                        ? t.radarHowTo(max)
+                        : `Each corner is one type. The farther the shape reaches toward a corner, the higher your score. The center is 0 and the outer edge is ${max}.`}
+                    </p>
+                  </div>
+                </div>
+
+                {/* All six scores as bars, in the radar's R to C order. The
+                    three in the code wear their trait color; the rest stay
+                    quiet so the code still reads first. Visual only: the
+                    radar's sr-only table carries the data. */}
+                <div className="flex flex-col gap-4">
+                  <p
+                    lang={fil ? "fil" : undefined}
+                    className="text-sm text-muted-foreground"
+                  >
+                    {fil
+                      ? t.radarCodeNote
+                      : "Colored bars are the three types in your code."}
+                  </p>
+                  <ul className="flex flex-col gap-3.5" aria-hidden>
+                    {TRAIT_ORDER.map((trait) => {
+                      const { letter } = TRAIT_META[trait];
+                      const inCode = code.includes(letter);
+                      const percent =
+                        max > 0 ? Math.round((scores[trait] / max) * 100) : 0;
+                      return (
+                        <li key={trait} className="flex items-center gap-3">
+                          <span
+                            className={cn(
+                              "flex size-9 shrink-0 items-center justify-center rounded-xl font-heading text-sm font-bold",
+                              inCode
+                                ? letterChip(letter)
+                                : "bg-muted text-muted-foreground",
+                            )}
+                          >
+                            {letter}
+                          </span>
+                          <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                            <div className="flex items-baseline justify-between gap-2">
+                              <span
+                                lang={fil ? "fil" : undefined}
+                                className={cn(
+                                  "font-heading text-sm",
+                                  inCode
+                                    ? "font-bold text-foreground"
+                                    : "font-semibold text-muted-foreground",
+                                )}
+                              >
+                                {typeName(letter)}
+                              </span>
+                              <span
+                                className={cn(
+                                  "font-heading text-sm font-semibold tabular-nums",
+                                  inCode
+                                    ? "text-foreground"
+                                    : "text-muted-foreground",
+                                )}
+                              >
+                                <NumberTicker value={scores[trait]} /> / {max}
+                              </span>
+                            </div>
+                            {/* The pale trait fills need an edge to stand
+                                out from the track. */}
+                            <Progress
+                              value={percent}
+                              indicatorClassName={
+                                inCode
+                                  ? cn(
+                                      letterChip(letter),
+                                      "inset-ring inset-ring-trait-foreground/45",
+                                    )
+                                  : "bg-muted-foreground/45"
+                              }
+                            />
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              </div>
             </BentoGridItem>
           </BlurFade>
 
@@ -273,7 +317,18 @@ export function ResultsDashboard() {
               stats (PRD FR-9, BACKEND.md), so it must stay on the page. */}
           <SavedResultsPanel />
 
-          {/* Scope disclaimer, in its own box just above the trait cards. */}
+          {/* Majors and related pathways for each code letter (official
+              RIASEC sheet). Every item listed, no ranking or match labels. */}
+          <BlurFade
+            inView
+            delay={0.1}
+            className={cn("md:col-span-3", printSingle)}
+          >
+            <PathwayResults topThreeLetters={code} otherLetters={otherLetters} />
+          </BlurFade>
+
+          {/* Scope disclaimer, closing the results: it frames everything
+              above as exploratory. */}
           <BlurFade
             inView
             delay={0.12}
@@ -291,21 +346,9 @@ export function ResultsDashboard() {
                 {fil ? t.disclaimerTitle : "Disclaimer"}
               </h2>
               <p className="text-sm text-muted-foreground">
-              {fil
-                ? t.disclaimer
-                : "The RIASEC assessment is designed solely to evaluate career interests; it does not measure a student’s skills, abilities, or academic aptitudes. Results provide general suggestions for potential career pathways based on current preferences and should not be interpreted as a definitive prediction of future employment or career success. This inventory is best used as an exploratory tool alongside skill evaluations, academic performance records, and career counseling."}
+                {fil ? t.disclaimer : DISCLAIMER_EN}
               </p>
             </section>
-          </BlurFade>
-
-          {/* Majors and related pathways for each code letter (official
-              RIASEC sheet). Every item listed, no ranking or match labels. */}
-          <BlurFade
-            inView
-            delay={0.14}
-            className={cn("md:col-span-3", printSingle)}
-          >
-            <PathwayResults topThreeLetters={code} otherLetters={otherLetters} />
           </BlurFade>
         </BentoGrid>
 

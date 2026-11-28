@@ -47,5 +47,11 @@ export const PROFILE_TEXT_FIL = {
   ageRangeHint: (min: number) =>
     `Ilagay ang edad na ${min} pataas.`,
   continueButton: "Magpatuloy sa pagtatasa",
+  resumeButton: "Ituloy ang pagtatasa",
+  restartButton: "Bagong pagtatasa",
+  restartTitle: "Magsimula ng bagong pagtatasa?",
+  restartBody:
+    "Buburahin nito ang lahat ng naisagot mo. Mananatili ang mga detalye mo sa itaas. Hindi na ito maibabalik.",
+  restartClose: "Isara",
   continueNote: "Maaari kang bumalik at baguhin ito bago matapos ang pagtatasa.",
 } as const;

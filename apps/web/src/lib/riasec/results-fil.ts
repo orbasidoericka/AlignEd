@@ -27,6 +27,11 @@ export const RESULTS_TEXT_FIL = {
     `Iskor sa labas ng ${max} para sa bawat uri ng RIASEC.`,
   radarCaption: "Ang iyong mga iskor sa mga uri ng RIASEC",
   outOf: (max: number) => `sa ${max}`,
+  radarKey: "Asul na hugis: ang iyong mga iskor",
+  radarHowTo: (max: number) =>
+    `Isang uri ang bawat sulok. Mas mataas ang iskor kapag mas malayo ang abot ng hugis patungo sa sulok. 0 sa gitna at ${max} sa pinakadulo.`,
+  radarCodeNote:
+    "Ang mga may kulay na hanay sa ibaba ang tatlong uri sa iyong code.",
   codeMeaningTitle: "Ano ang Ibig Sabihin ng Iyong Code",
   collegeMajors: "Mga major sa kolehiyo",
   relatedPathways: "Mga kaugnay na landas",
@@ -41,7 +46,8 @@ export const RESULTS_TEXT_FIL = {
   otherTypes: {
     button: "Tingnan ang iba pang uri",
     title: "Ang iba pang uri ng RIASEC",
-    description: "Silipin ang iba pang uri ng RIASEC.",
+    description:
+      "Ang iyong ikaapat hanggang ikaanim na uri. Mas mababa ang iskor nila kaysa sa iyong code, pero maaari pa rin nilang ipakita ang mga bagay na gusto mo.",
   },
   carousel: {
     label: "Ang iyong tatlong nangungunang uri ng RIASEC",
@@ -85,10 +91,13 @@ export const RESULTS_ACTIONS_TEXT_FIL = {
     tooltip: "I-email sa akin ang aking resulta",
     title: "I-email ang aking resulta",
     description:
-      "Ie-email namin ang iyong resulta bilang isang password-protected na PDF. Nagpapadala kami ng isang kopya at hindi namin itinatago ang iyong address; para pigilan ang spam, isang naka-scramble na code lang nito ang itinatago namin sa loob ng isang araw.",
-    passwordLabel: "Ang iyong PDF password",
+      "Ipapadala namin ang iyong resulta bilang PDF na may password.",
+    passwordLabel: "Password para mabuksan ang PDF",
+    passwordSave: "I-save ito ngayon. Wala ito sa email.",
     passwordHint:
-      "Ang iyong palayaw, pagkatapos ang iyong tatlong-titik na RIASEC code. CASE-SENSITIVE ang password. Hindi ito nakasulat sa email, kaya itago ito sa ligtas na lugar.",
+      "Ang iyong palayaw at ang iyong tatlong-titik na code. Case-sensitive.",
+    privacyNote:
+      "Isang kopya lang ang ipapadala at hindi namin itinatago ang iyong address. Para pigilan ang spam, isang naka-scramble na code lang nito ang itinatago namin sa loob ng isang araw.",
     sent: (email: string) =>
       `Naipadala na! Tingnan ang ${email} para sa iyong results PDF. Maaaring tumagal ito ng isang minuto.`,
     emailLabel: "Email address",

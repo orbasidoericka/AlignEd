@@ -26,6 +26,11 @@ No accounts or authentication. No university/HEI directory or school mapping. No
 Product app with one brand surface: the landing page is brand register (identity, warmth, persuasion); Profile, Assessment, and Results are product register (task-focused, consistent, calm). See `DESIGN.md`.
 
 ## Changelog
+- 2026-11-29 · results · One scores card (graph + six bars), Disclaimer last, clearer other-types popup and email dialog. See PRD FR-4.3. · Requested.
+- 2026-11-28 · results · Radar gains a key and named legend; emblem labels use the RIASEC type names; code bars take each type's color. See PRD FR-4.3. · Requested.
+- 2026-11-28 · profile · Returning with an unfinished assessment offers "Continue Assessment" or "New Assessment". See PRD FR-2.2. · Requested.
+- 2026-11-28 · nav · The hamburger menu no longer has a "Take Assessment" button; the hero button covers it. See PRD FR-1.2. · Requested: redundant.
+- 2026-11-28 · landing · Phones and tablets show a "Take Assessment" button in the hero. See PRD FR-1.2. · Requested: the navbar button is hidden in the hamburger menu there.
 - 2026-11-25 · profile · Age has no upper limit: any age from 15 up · older returning learners were blocked.
 - 2026-11-25 · admin · Admin time filter is a dropdown (all time, 30 days to 10 years) with a custom From/To date range · the team asked for finer and custom ranges.
 - 2026-11-25 · admin · Admin period filter is yearly: 1, 5 or 10 years, or all time · the team asked for yearly periods.

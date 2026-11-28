@@ -22,6 +22,7 @@ import {
 import { ClosingCta } from "@/components/blocks/closing-cta";
 import { HollandTheory } from "@/components/blocks/holland-theory";
 import { TestsTaken } from "@/components/blocks/tests-taken";
+import { HeroCta } from "@/components/journey/hero-cta";
 import { RIASEC_PATHWAYS } from "@/lib/riasec/career-pathways";
 import { letterHoverWash } from "@/lib/riasec/letter-chip-styles";
 import { SCORING_NOTICE_EN } from "@/lib/riasec/scoring-notice";
@@ -119,7 +120,15 @@ const heroCells = scatterHexagons({
     heroGreenCell,
   ],
   seed: 7,
-});
+})
+  // Two hand edits to the scatter. The cell at 1-6 sat right under the phone
+  // hero button, so it is off. The green cell at 0-2 was stacked on the one at
+  // 0-1 and read as a duplicate, so it moves to the top right of a phone.
+  .filter(([col, row]) => !(col === 1 && row === 6))
+  .map((cell): [number, number, string] => {
+    const [col, row, fill = ""] = cell;
+    return col === 0 && row === 2 ? [5, 0, fill] : [col, row, fill];
+  });
 
 // The scoring procedure (lib/riasec/scoring.ts, PRD FR-4.1/4.2) in plain
 // words. Change the scoring and this changes too.
@@ -221,6 +230,16 @@ export default function HomePage() {
             ))}
           </ul>
 
+          {/* Below lg the navbar's call to action is folded into the
+              hamburger menu, so the hero carries it instead. Same wording as
+              that button; hidden from lg, where the navbar shows it. */}
+          <div
+            className="mt-6 motion-safe:animate-fade-up lg:hidden"
+            style={{ "--fade-delay": "200ms" } as React.CSSProperties}
+          >
+            <HeroCta label="Take Assessment" doneLabel="View My Results" />
+          </div>
+
           {/* Words fade in, first to last inside 1.4s (the source's 0.2s a
               word would take over five on a sentence this long). No wrapper
               entrance around it: the reveal is the entrance. */}
@@ -243,8 +262,7 @@ export default function HomePage() {
           {/* The six traits as the hero's image: the code the student is
               about to find, in the same emblems the results page uses. A
               dock: each emblem magnifies under the pointer and jumps to its
-              row in "Explore the six RIASEC interest types,". The journey's call to action
-              lives in the navbar directly above. */}
+              row in "Explore the six RIASEC interest types". */}
           <div
             className="mt-9 motion-safe:animate-fade-up md:mt-6"
             style={{ "--fade-delay": "400ms" } as React.CSSProperties}
