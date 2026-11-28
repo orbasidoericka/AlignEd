@@ -119,7 +119,7 @@ describe("ResultsDashboard greeting", () => {
     expect(radar).toHaveTextContent("Blue shape: your scores");
     const legend = [...radar.querySelectorAll("ul > li")];
     expect(legend).toHaveLength(6);
-    expect(legend.at(-1)).toHaveTextContent(/^CConventional\d+ \/ 7/);
+    expect(legend.at(-1)).toHaveTextContent(/^Conventional\d+ \/ 7/);
   });
 
   it("shows all six bars beside the graph, the code's in their type's color", () => {

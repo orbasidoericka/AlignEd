@@ -204,111 +204,97 @@ export function ResultsDashboard() {
               }
               description={
                 fil ? (
-                  <span lang="fil">{t.sixTraitsDescription(max)}</span>
+                  <span lang="fil">
+                    {t.sixTraitsDescription(max)} {t.radarCodeNote}
+                  </span>
                 ) : (
-                  `Scores out of ${max} for each RIASEC type.`
+                  `Scores out of ${max}. Colored bars are the three types in your code.`
                 )
               }
               className="h-full"
             >
-              <div className="grid grid-cols-1 items-center gap-6 md:grid-cols-[minmax(0,20rem)_minmax(0,1fr)] md:gap-10 lg:grid-cols-[minmax(0,24rem)_minmax(0,1fr)]">
-                <div className="flex flex-col items-center gap-4">
-                  <RiasecRadar scores={scores} max={max} className="w-full" />
-                  {/* How to read the graph, in words: the picture and bare
-                      letters alone confused readers. */}
-                  <div
-                    lang={fil ? "fil" : undefined}
-                    className="flex w-full flex-col gap-1 text-sm text-muted-foreground"
-                  >
-                    <p className="flex items-center gap-2 font-semibold text-foreground">
-                      <span
-                        aria-hidden
-                        className="size-3.5 shrink-0 rounded-sm border-2 border-primary-strong bg-chart-1/50"
-                      />
-                      {fil ? t.radarKey : "Blue shape: your scores"}
-                    </p>
-                    <p>
-                      {fil
-                        ? t.radarHowTo(max)
-                        : `Each corner is one type. The farther the shape reaches toward a corner, the higher your score. The center is 0 and the outer edge is ${max}.`}
-                    </p>
-                  </div>
+              <div className="grid grid-cols-1 items-center gap-4 md:grid-cols-[minmax(0,18rem)_minmax(0,1fr)] md:gap-x-8">
+                <RiasecRadar
+                  scores={scores}
+                  max={max}
+                  className="mx-auto w-full max-w-72 md:row-span-2"
+                />
+                {/* How to read the graph, in words: the picture alone
+                    confused readers. From md it sits under the bars, so both
+                    columns end up about the same height. */}
+                <div
+                  lang={fil ? "fil" : undefined}
+                  className="flex w-full flex-col gap-1 text-sm text-muted-foreground md:col-start-2 md:row-start-2 md:self-start"
+                >
+                  <p className="flex items-center gap-2 font-semibold text-foreground">
+                    <span
+                      aria-hidden
+                      className="size-3.5 shrink-0 rounded-sm border-2 border-primary-strong bg-primary/40"
+                    />
+                    {fil ? t.radarKey : "Blue shape: your scores"}
+                  </p>
+                  <p>
+                    {fil
+                      ? t.radarHowTo(max)
+                      : `The farther it reaches, the higher your score! The center means 0, and the outermost grid line means 7. Hover over or tap an icon to learn what each type means.`}
+                  </p>
                 </div>
 
                 {/* All six scores as bars, in the radar's R to C order. The
                     three in the code wear their trait color; the rest stay
                     quiet so the code still reads first. Visual only: the
                     radar's sr-only table carries the data. */}
-                <div className="flex flex-col gap-4">
-                  <p
-                    lang={fil ? "fil" : undefined}
-                    className="text-sm text-muted-foreground"
-                  >
-                    {fil
-                      ? t.radarCodeNote
-                      : "Colored bars are the three types in your code."}
-                  </p>
-                  <ul className="flex flex-col gap-3.5" aria-hidden>
-                    {TRAIT_ORDER.map((trait) => {
-                      const { letter } = TRAIT_META[trait];
-                      const inCode = code.includes(letter);
-                      const percent =
-                        max > 0 ? Math.round((scores[trait] / max) * 100) : 0;
-                      return (
-                        <li key={trait} className="flex items-center gap-3">
+                <ul
+                  className="flex flex-col gap-2.5 md:col-start-2 md:row-start-1 md:self-end"
+                  aria-hidden
+                >
+                  {TRAIT_ORDER.map((trait) => {
+                    const { letter } = TRAIT_META[trait];
+                    const inCode = code.includes(letter);
+                    const percent =
+                      max > 0 ? Math.round((scores[trait] / max) * 100) : 0;
+                    return (
+                      <li key={trait} className="flex flex-col gap-1">
+                        <div className="flex items-baseline justify-between gap-2">
                           <span
+                            lang={fil ? "fil" : undefined}
                             className={cn(
-                              "flex size-9 shrink-0 items-center justify-center rounded-xl font-heading text-sm font-bold",
+                              "font-heading text-sm",
                               inCode
-                                ? letterChip(letter)
-                                : "bg-muted text-muted-foreground",
+                                ? "font-bold text-foreground"
+                                : "font-semibold text-muted-foreground",
                             )}
                           >
-                            {letter}
+                            {typeName(letter)}
                           </span>
-                          <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-                            <div className="flex items-baseline justify-between gap-2">
-                              <span
-                                lang={fil ? "fil" : undefined}
-                                className={cn(
-                                  "font-heading text-sm",
-                                  inCode
-                                    ? "font-bold text-foreground"
-                                    : "font-semibold text-muted-foreground",
-                                )}
-                              >
-                                {typeName(letter)}
-                              </span>
-                              <span
-                                className={cn(
-                                  "font-heading text-sm font-semibold tabular-nums",
-                                  inCode
-                                    ? "text-foreground"
-                                    : "text-muted-foreground",
-                                )}
-                              >
-                                <NumberTicker value={scores[trait]} /> / {max}
-                              </span>
-                            </div>
-                            {/* The pale trait fills need an edge to stand
-                                out from the track. */}
-                            <Progress
-                              value={percent}
-                              indicatorClassName={
-                                inCode
-                                  ? cn(
-                                      letterChip(letter),
-                                      "inset-ring inset-ring-trait-foreground/45",
-                                    )
-                                  : "bg-muted-foreground/45"
-                              }
-                            />
-                          </div>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
+                          <span
+                            className={cn(
+                              "font-heading text-sm font-semibold tabular-nums",
+                              inCode
+                                ? "text-foreground"
+                                : "text-muted-foreground",
+                            )}
+                          >
+                            <NumberTicker value={scores[trait]} /> / {max}
+                          </span>
+                        </div>
+                        {/* The pale trait fills need an edge to stand
+                            out from the track. */}
+                        <Progress
+                          value={percent}
+                          indicatorClassName={
+                            inCode
+                              ? cn(
+                                  letterChip(letter),
+                                  "inset-ring inset-ring-trait-foreground/45",
+                                )
+                              : "bg-muted-foreground/45"
+                          }
+                        />
+                      </li>
+                    );
+                  })}
+                </ul>
               </div>
             </BentoGridItem>
           </BlurFade>

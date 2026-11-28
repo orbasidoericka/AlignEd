@@ -6,7 +6,7 @@ How the client app is built: routes, state, journey logic, and client-side featu
 
 ## Stack
 
-Next.js 16.2.5 App Router, React 19, TypeScript, Tailwind v4 (tokens in `apps/web/src/app/globals.css`), Base UI wrappers in `components/ui`, framer-motion 12, Zustand 5, Recharts, sonner, next-themes. Read `Next16_Delta_Notes.md` before framework work.
+Next.js 16.2.5 App Router, React 19, TypeScript, Tailwind v4 (tokens in `apps/web/src/app/globals.css`), Base UI wrappers in `components/ui`, framer-motion 12, Zustand 5, sonner, next-themes. Read `Next16_Delta_Notes.md` before framework work.
 
 ## Routes (`apps/web/src/app`)
 
@@ -65,6 +65,10 @@ Next.js 16.2.5 App Router, React 19, TypeScript, Tailwind v4 (tokens in `apps/we
 - CI (`.github/workflows/ci.yml`): install, lint, typecheck, unit tests, seed determinism, build. No Lighthouse or E2E step yet.
 
 ## Changelog
+- 2026-11-29 · frontend · `results-dashboard.tsx` score rows drop the letter tile · requested.
+- 2026-11-29 · frontend · `riasec-radar.tsx` draws a ring-and-spoke grid (`data-testid="score-grid"`) in place of the dashed ring · requested.
+- 2026-11-29 · frontend · `riasec-radar.tsx`: corner labels replaced by per-emblem buttons with a CSS hover / focus-within name pill · requested.
+- 2026-11-29 · frontend · `riasec-radar.tsx` is now plain SVG + HTML; `riasec-radar-chart.tsx` (Recharts, lazy) deleted, so `ui/chart.tsx` and the `recharts` dependency are unused. New `lib/riasec/hexagon.ts` shared with `holland-theory.tsx` · requested restyle.
 - 2026-11-29 · frontend · `results-dashboard.tsx`: radar + bars in one `md:col-span-3` cell, disclaimer after `PathwayResults` (`DISCLAIMER_EN` constant); `other-types-dialog.tsx` adds jump buttons (`#other-type-<letter>` targets); `results-actions.tsx` email dialog restructured, new `passwordSave` / `privacyNote` keys in `RESULTS_ACTIONS_TEXT_FIL.email` · requested.
 - 2026-11-28 · frontend · `results-dashboard.tsx` labels emblems from `RIASEC_PATHWAYS` / `PATHWAY_NAME_FIL`, adds the radar key and named legend, and passes a trait-color `indicatorClassName` to `Progress`; `riasec-radar.tsx` tooltip and table use the same type names · requested.
 - 2026-11-28 · frontend · `profile-form.tsx` shows Continue / New Assessment when `0 < answers < 42`; New confirms, calls `resetAnswers()` and routes to `/assessment`. The corner X moved to `ui/alert-dialog.tsx` as `AlertDialogCornerClose`, shared with `focus-bar.tsx` · requested.

@@ -3,6 +3,7 @@
 import { BlurFade } from "@/components/magic/blur-fade";
 import { TraitEmblem } from "@/components/riasec/trait-emblem";
 import { RIASEC_PATHWAYS } from "@/lib/riasec/career-pathways";
+import { hexPoint, hexPolygon } from "@/lib/riasec/hexagon";
 import { TRAIT_META, TRAIT_ORDER } from "@/lib/riasec/scoring";
 
 // The figure lives in a 100 x 118 box (taller than wide so the labels under
@@ -15,26 +16,9 @@ const CENTER = { x: 50, y: 54 };
 const OUTER_R = 38;
 const INNER_R = 20;
 
-// Pointy-top hexagon, clockwise from the top: R, I, A, S, E, C, the order
-// Holland drew them in.
-function hexPoint(index: number, radius: number) {
-  const angle = ((-90 + index * 60) * Math.PI) / 180;
-  return {
-    x: CENTER.x + radius * Math.cos(angle),
-    y: CENTER.y + radius * Math.sin(angle),
-  };
-}
-
-function hexPolygon(radius: number) {
-  return Array.from({ length: 6 }, (_, i) => {
-    const { x, y } = hexPoint(i, radius);
-    return `${x.toFixed(2)},${y.toFixed(2)}`;
-  }).join(" ");
-}
-
 const vertices = TRAIT_ORDER.map((trait, index) => {
   const { letter, label } = TRAIT_META[trait];
-  const { x, y } = hexPoint(index, OUTER_R);
+  const { x, y } = hexPoint(CENTER, index, OUTER_R);
   return {
     letter,
     label,
@@ -98,13 +82,13 @@ export function HollandTheory() {
               className="absolute inset-0 size-full"
             >
               <polygon
-                points={hexPolygon(OUTER_R)}
+                points={hexPolygon(CENTER, OUTER_R)}
                 strokeWidth={0.8}
                 strokeLinejoin="round"
                 className="fill-stage-assessment-soft stroke-primary/40 dark:stroke-primary/30"
               />
               <polygon
-                points={hexPolygon(INNER_R)}
+                points={hexPolygon(CENTER, INNER_R)}
                 strokeWidth={0.5}
                 strokeLinejoin="round"
                 strokeDasharray="1.5 1.5"

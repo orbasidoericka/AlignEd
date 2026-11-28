@@ -117,7 +117,7 @@ Captured before the assessment begins; stored client-side only (localStorage via
 ### FR-4 Holland Code Computation
 - FR-4.1. The 3-letter Holland Code is the three highest-scoring traits, ordered by score descending.
 - FR-4.2. **Tie-breaking (deterministic):** ties at any rank are broken by fixed trait order `R → I → A → S → E → C`. The same answer set always yields the same code.
-- FR-4.3. The results dashboard displays the code (e.g. `I-A-S`) plus a per-trait breakdown of all six scores (radar chart, normalized against the per-trait ceiling of 7, with a written key saying how to read it, beside a bar for each of the six types with its name and score, the three in the code in their trait colors), and a Disclaimer card after the type cards stating that the result is an exploratory tool, not a prediction.
+- FR-4.3. The results dashboard displays the code (e.g. `I-A-S`) plus a per-trait breakdown of all six scores (a six-corner hexagon graph with each type's emblem, naming the type on hover, focus or tap, normalized against the per-trait ceiling of 7, with a written key saying how to read it, beside a bar for each of the six types with its name and score, the three in the code in their trait colors), and a Disclaimer card after the type cards stating that the result is an exploratory tool, not a prediction.
 
 ### FR-5 Majors and Related Pathways
 - FR-5.1. Source is the official RIASEC results sheet ("Which Career Pathway is right for you?"), stored as static data in `apps/web/src/lib/riasec/career-pathways.ts`: for each letter, its description, college majors, and related pathways, transcribed in full (only two obvious source typos corrected).
@@ -302,6 +302,8 @@ AlignEd ships as a mostly-static, anonymous-first Next.js application.
 ---
 
 ## Changelog
+- 2026-11-29 · results · FR-4.3: the graph's corners show emblems only; the type name appears on hover, focus or tap · requested: names and scores already sit in the bars beside it.
+- 2026-11-29 · results · FR-4.3: the radar is redrawn as the landing-page hexagon with named emblem corners · requested.
 - 2026-11-29 · results · FR-4.3: radar and score bars merged into one full-width card (the separate top-three breakdown is gone); Disclaimer moved below the RIASEC type cards; email dialog reordered so the PDF password leads and the privacy and spam notes are fine print · requested.
 - 2026-11-28 · results · FR-4.3: the radar has a how-to-read key and a named legend; the Holland Code emblems are labelled with the type names (Realistic, Investigative, ...) · evaluators found the graph confusing; requested.
 - 2026-11-28 · profile · FR-2.1, FR-2.2: the button reads "Take Assessment"; with unfinished progress it becomes "Continue Assessment" and "New Assessment" (confirmed, keeps the profile) · requested: let students choose to resume or restart.
